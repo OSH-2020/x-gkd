@@ -14,7 +14,7 @@
 
   * 当你的视频还在上传中，已经可以自由选择AI推荐的封面。这里采用了webassembly+AI的前端整合。
 
-    ![image-20200315011135269](C:\Users\dell\AppData\Roaming\Typora\typora-user-images\image-20200315011135269.png)
+    ![](D:\GIT\Git\x-gkd\docs\photo\1.png)
 
   * webassembly 负责读取本地视频，生成图片；
 
@@ -74,7 +74,7 @@
 * 安全性更高了。相比传统的浏览器插件（Plug-in），WebAssembly 的权限设计更好。传统的插件权力太大，它在后台执行了什么，用户根本不知道。而 WebAssembly 再使用某一项权限时都会得到用户的同意才能进行
 * **Rust提供了`first class`对WebAssembly 的支持**（sym)
 * **Rust在标准rust编译器（`rustc`）中构建了自己的WebAssembly工具链。这使Rust开发人员能够将Rust代码编译为WebAssembly模块。**(sym)
-* ![æ¿ä»£æå­](C:\Users\dell\Desktop\3p93jecfi2t7p26tvboh.png)
+* ![](D:\GIT\Git\x-gkd\docs\photo\2.png)
 * ![img](https://i1.wp.com/softwareengineeringdaily.com/wp-content/uploads/2018/09/webassembly-rust-300x169.jpg?resize=573%2C322&ssl=1)
 * 
 
