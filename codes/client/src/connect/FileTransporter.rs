@@ -4,27 +4,30 @@ use std::fs::File;
 
 pub fn send_file(mut f:File)->bool{
     //将文件全部发送到stdout
-    std::io::stdout().flush();
 
     let mut send_bytes = [0; 1024];
-    let mut buffer = Vec::new();
-    //let mut length = f.read_to_end(&mut buffer);
 
     let mut length = f.read(&mut send_bytes[..]);
     let length = match length{
         Ok(len) => len as i64,
-        Err(error) => return false,
+        Err(error) => {
+            println!("can't read file :{:?}", error);
+            return false},
     };
-    std::io::stdout().write_fmt(format_args!("{}\n", length));
+    //println!("read:{}", length);
+    let bytes = length.to_be_bytes();
+    std::io::stdout().write(&bytes);//TODO:
     std::io::stdout().flush();
-    std::io::stdout().write(&mut buffer);
+    let n2 = std::io::stdout().write(&mut send_bytes[..]);
+    let n2 = match n2{
+        Ok(n) => n as i32,
+        Err(error) => panic!("Problem write file: {:?}", error),
+    };
     std::io::stdout().flush();
-    
     return true
 }
 
 pub fn recv_file(mut f:File, mut soc_in:Stdin)->bool{
-    //从stdin中读取并存储到文件中。
     //原java文件中socout这个参数并没有用到，此处删去
     //手动实现读取一个long类型的数据
     let mut buffer = [0; 8];
