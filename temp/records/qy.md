@@ -27,11 +27,18 @@
 
 ### FileTransporter.rs
 
-这个文件定义了 recv_file 和 send_file 两个函数。目前可以通过编译，还没有通过测试。
+这个文件定义了 recv_file 和 send_file 两个函数。recv_file函数还没有通过测试。
 
 * 这两个收发文件的函数是可以测试的，但我总是不能成功运行 read 函数，报错`thread 'main' panicked at 'Problem read file: Os { code: 5, kind: PermissionDenied, message: "拒绝访问。" }', src\main.rs:19:23`
-
 * 错误处理待完善
 * 我没有找到和 DataInputStream DataOutputStream 对应的处理方式，目前使用输出到 stdout ，输入到 stdin 的方式实现。
 * 目前接收文件是1024字节一次，分多次接收。发送文件是一次性发送。
 * 还没有找到发送文件时指定写入字节数的方法，有待更改。
+
+
+
+### ServerThread.rs
+
+这个文件定义了 ServerThread 结构体，以及构造函数和 run 函数，有调用 ClientThread 文件中的内容。
+
+* 原文件中的 ServerThread 类是从 Thread 类继承而来的，但 Rust 没有类继承，可能因此出问题。如果别的地方用到其他继承来的方法或字段，再对本文件进行相应补充。
