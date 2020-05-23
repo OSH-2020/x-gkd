@@ -21,7 +21,7 @@ or the following for the version which tries to utilise SIMD
 
 ```
 [dependencies]
-reed-solomon-erasure = { version = "4.0", features = "simd-accel" }
+reed-solomon-erasure = "4.0"
 ```
 
 and the following to your crate root
