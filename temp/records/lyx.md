@@ -180,3 +180,138 @@ java中File类的使用主要是遍历文件夹里内容啥的，std::fs里read_
 后端框架: actix-web（https://github.com/actix/actix，https://www.cnblogs.com/b612/articles/12026497.html）,rocket（https://rocket.rs/v0.4/guide/）
 
 rust 开发完整的web程序:(yew+actix_web，但我还没复现成功) https://xiaozhuanlan.com/topic/2067148395
+
+
+
+rocket尝试
+
+actix尝试
+
+js及node.js复习，了解呈现界面的机制(js或html?)以及把本地文件通过后端传递到前端，并让前端下载的机制
+
+wasm学习：
+
+数据库学习
+
+任务布置: 
+
+数据库学习及讲解(重要概念以及操作啥的)，把17级详细设计报告里关于数据库表单啥的，操作啥的弄清楚，记录并讲解(lyf,sym)
+
+wasm书籍学习，思考如何把client 和 server 编译为Wasm，以及更多的js和Rust互调的情况(对每种情况做好记录)?因为目前来看，Node.js的使用，需要调用一些模块，但这在Rust中应该不太现实? 感觉仅仅是字符串的传递?考虑要怎么尝试。（qy,pqz,lyx)
+
+Rocket文档研究，感觉有望和yew结合起来，实现和node.js一样的效果(但目前文件下载还没看到)，另外就是说对文件夹遍历并呈现在前端，还有跳转什么的一些细节功能的实现，用Rust的话还不太确定，不过node.js应该是可以的。(lyx)
+
+问题:纠删码的矩阵转换，数据库，在非main里引用模块(lyf,sym)
+
+
+
+
+
+把数据实现后在前端尝试
+
+### Node.js
+
+![](D:\科大\大二下\操作系统\结题报告与思考记录\web.JPG)
+
+简单搭建一个web服务器，通过浏览器访问时返回html文件
+
+
+
+Express 是一个简洁而灵活的 node.js Web应用框架, 提供了一系列强大特性帮助你创建各种 Web 应用，和丰富的 HTTP 工具。
+
+使用 Express 可以快速地搭建一个完整功能的网站。
+
+Express 框架核心特性：
+
+- 可以设置中间件来响应 HTTP 请求。
+- 定义了路由表用于执行不同的 HTTP 请求动作。
+- 可以通过向模板传递参数来动态渲染 HTML 页面。
+
+- **body-parser** - node.js 中间件，用于处理 JSON, Raw, Text 和 URL 编码的数据。
+
+  ```css
+  1. bodyParser.json(options): 解析json数据
+  2. bodyParser.raw(options): 解析二进制格式(Buffer流数据)
+  3. bodyParser.text(options): 解析文本数据
+  4. bodyParser.urlencoded(options): 解析UTF-8的编码的数据。
+  请求体解析后，解析值都会被放到req.body属性，内容为空时是一个{}空对象。
+  ```
+
+- **cookie-parser** - 这就是一个解析Cookie的工具。通过req.cookies可以取到传过来的cookie，并把它们转成对象。
+
+- **multer** - node.js 中间件，用于处理 enctype="multipart/form-data"（设置表单的MIME编码）的表单数据。
+
+
+
+基本概念
+
+* Express 应用使用回调函数的参数： **request** 和 **response** 对象来处理请求和响应的数据(有一系列方法)
+
+  ​	res.download(path [, filename] [, fn])，实现文件传送到客户端被下载
+
+  ​	res.sendFile( __dirname + "/" + "index1.html" );将对应文件发送到浏览器，显示其内容
+
+* 路由决定了由谁(指定脚本)去响应客户端请求。
+
+  在HTTP请求中，我们可以通过路由提取出请求的URL以及GET/POST参数。
+
+  eg:http://127.0.0.1:8081/list_user,http://127.0.0.1:8081/
+
+* 静态文件
+* GET与POST(后者更安全，适合密码输入)
+* 文件上传
+* cookie管理
+
+
+
+
+
+### HTML
+
+* HTML 表单用于搜集不同类型的用户输入。
+
+  * <input type="text" name="first_name">定义用于文本输入的单行输入字段
+
+  * radio: 单选按钮
+
+  * 定义用于向表单处理程序（form-handler）提交表单的按钮。
+
+    表单处理程序通常是包含用来处理输入数据的脚本的服务器页面。
+
+    表单处理程序在表单的 *action* 属性中指定：action 属性定义在提交表单时执行的动作。
+
+    <form action="http://127.0.0.1:8081/process_get" method="GET">
+
+    First Name: <input type="text" name="first_name"> <br>
+
+    Last Name: <input type="text" name="last_name">
+
+    <input type="submit" value="Submit">
+
+    </form>
+
+
+
+
+
+### Rocket
+
+* Lifecycle：Routing, validation,processing,response
+
+  - A set of parameters to match an incoming request against.
+  - A handler to process the request and return a response
+
+* 路由(Routing):
+
+  要匹配的参数包括静态路径，动态路径，路径段，表单，查询字符串，请求格式 说明符和主体数据
+
+* 挂载(Mounting):
+
+* Requests:
+
+  * methods
+  * dynamic paths
+  * Forwarding（含Default ranking)
+  * Query Strings
+  * Request Guards
+
