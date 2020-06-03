@@ -29,7 +29,6 @@
 
 这个文件定义了 recv_file 和 send_file 两个函数。recv_file函数还没有通过测试。
 
-* 这两个收发文件的函数是可以测试的，但我总是不能成功运行 read 函数，报错`thread 'main' panicked at 'Problem read file: Os { code: 5, kind: PermissionDenied, message: "拒绝访问。" }', src\main.rs:19:23`
 * 错误处理待完善
 * 我没有找到和 DataInputStream DataOutputStream 对应的处理方式，目前使用输出到 stdout ，输入到 stdin 的方式实现。
 * 目前接收文件是1024字节一次，分多次接收。发送文件是一次性发送。
@@ -37,8 +36,27 @@
 
 
 
-### ServerThread.rs
+### dataConnect/ServerThread.rs
 
 这个文件定义了 ServerThread 结构体，以及构造函数和 run 函数，有调用 ClientThread 文件中的内容。
 
 * 原文件中的 ServerThread 类是从 Thread 类继承而来的，但 Rust 没有类继承，可能因此出问题。如果别的地方用到其他继承来的方法或字段，再对本文件进行相应补充。
+
+
+
+### dataConnect/ClientThread.rs
+
+* 调用 FileTransporter.rs 中的函数，目前对于流式输入输出的实现还有待修改。
+* 调用 query.rs 和 DeviceItem.rs 中内容，还不知道具体组织形式和调用方法，因此本文档这部分内容未通过编译。这一问题在 controlConnect/ClientThread.rs 中也存在。
+
+
+
+### controlConnect/ClientThread.rs
+
+* ```
+          //以下两行未实现：（推测为心跳机制保持连接功能）
+          //clientsocket.setKeepAlive(true);
+          //clientsocket.setSoTimeout(60000);
+  ```
+
+  
