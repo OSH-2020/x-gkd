@@ -2,55 +2,55 @@
 
 pub struct RequestItem {
     id: i32,
-    type: i32,
+    type_: i32,
     fragmentId: i32,
     deviceId: i32,
 }
 
 impl RequestItem {
-    fn init(id: i32, type: i32, fid: i32, did: i32) -> self {
+    fn init(id: i32, type_: i32, fid: i32, did: i32) -> Self {
         RequestItem {
             id,
-            type,
-            self.fragmentId: fid,
-            self.deviceId: did,
-        }
-    }
-
-    pub fn init_2(type: i32, fid: i32, did: i32) -> self {
-        RequestItem {
-            id: 0,
-            type,
+            type_,
             fragmentId: fid,
             deviceId: did,
         }
     }
 
-    pub fn getId(&mut self) -> i32 {
+    pub fn init_2(type_: i32, fid: i32, did: i32) -> Self {
+        RequestItem {
+            id: 0,
+            type_,
+            fragmentId: fid,
+            deviceId: did,
+        }
+    }
+
+    pub fn get_id(&mut self) -> i32 {
         self.id
     }
 
-    pub fn getType(&mut self) -> i32 {
-        self.type
+    pub fn get_type(&mut self) -> i32 {
+        self.type_
     }
 
-    pub fn setType(&mut self, type: i32) {
-        self.type = type;
+    pub fn set_type(&mut self, type_: i32) {
+        self.type_ = type_;
     }
 
-    pub fn getFragmentId(&mut self) -> i32 {
+    pub fn get_fragment_id(&mut self) -> i32 {
         self.fragmentId
     }
 
-    pub fn setFragmentId(&mut self, fragmentId: i32) {
+    pub fn set_fragment_id(&mut self, fragmentId: i32) {
         self.fragmentId = fragmentId;
     }
 
-    pub fn getDeviceId(&mut self) -> i32 {
+    pub fn get_device_id(&mut self) -> i32 {
         self.deviceId
     }
 
-    pub fn setDeviceId(&mut self, id: i32) {
+    pub fn set_device_id(&mut self, id: i32) {
         self.deviceId = id;
     }
 }

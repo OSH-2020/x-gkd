@@ -2,54 +2,59 @@ pub struct DeviceItem {
     id: i32,
     ip: String,
     port: i32,
-    isOnline: bool,
+    is_online: bool,
     rs: i32,
 }
 
 impl DeviceItem {
-    pub fn init(id: i32, ip: String, port: i32, isOnline: bool, rs: i32) -> Self{
+    pub fn init(id: i32, ip: String, port: i32, is_online: bool, rs: i32) -> Self{
         DeviceItem {
             id: id,
             ip: ip,
             port: port,
-            isOnline: isOnline,
+            is_online: is_online,
             rs: rs,
         }
     }
 
-    pub fn getId(&mut self) -> i32 {
+    pub fn get_id(&mut self) -> i32 {
         self.id
     }
 
-    pub fn getIp(&mut self) -> String {
-        self.ip
+    pub fn get_ip(&mut self) -> String {
+        let chars: Vec<char> = self.ip.chars().collect();
+        let mut string = String::new();
+        for c in chars {
+            string.push(c);
+        }
+        string //返回有问题
     }
 
-    pub fn setIp(&mut self, ip: String) {
+    pub fn set_ip(&mut self, ip: String) {
         self.ip = ip;
     }
 
-    pub fn getPort(&mut self) -> i32 {
+    pub fn get_port(&mut self) -> i32 {
         self.port
     }
 
-    pub fn setPort(&mut self, port:i32) {
+    pub fn set_port(&mut self, port:i32) {
         self.port = port;
     }
 
-    pub fn isOnline(&mut self) -> bool {
-        self.isOnline
+    pub fn is_online(&mut self) -> bool {
+        self.is_online
     }
 
-    pub fn setIsOnline(&mut self, isOnline:bool) {
-        self.isOnline = isOnline;
+    pub fn set_is_online(&mut self, is_online:bool) {
+        self.is_online = is_online;
     }
 
-    pub fn getRs(&mut self) -> i32 {
+    pub fn get_rs(&mut self) -> i32 {
         self.rs
     }
 
-    pub fn setRs(&mut self, rs: i32) {
+    pub fn set_rs(&mut self, rs: i32) {
         self.rs = rs;
     }
 }
