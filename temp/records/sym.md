@@ -100,7 +100,8 @@ conn.exec_batch(
 
 // Let's insert payments to the database
     // We will use into_iter() because we do not need to map Stmt to anything else.
-    // Also we assume that no error happened in `prepare`.
+    // Also we assume that no e
+    rror happened in `prepare`.
     for mut stmt in pool.prepare(r"INSERT INTO tmp.payment
                                        (customer_id, amount, account_name)
                                    VALUES
@@ -180,3 +181,7 @@ conn.exec_batch(
 调用另一个文件？
 
 Query/FileItem.rs
+
+使用 use FileItem 解决，同时，假如使用 pub mod 就可以让 mod 有传递性。
+
+先建立一个 Query 文件夹，在里面放 FileItem.rs
