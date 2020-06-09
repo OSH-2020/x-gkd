@@ -1,3 +1,5 @@
+* 一些调用其他模块中内容的变量，可能涉及到漏设置 mut 属性！！
+
 ### ServerConnecter.rs
 
 目前为1.0版。这个文件定义了 ServerConnect 结构体，以及 new, init, run, stopConnect 四个方法。这个文件可以通过编译，但还有一些 warning 没有解决。
@@ -27,12 +29,13 @@
 
 ### FileTransporter.rs
 
-这个文件定义了 recv_file 和 send_file 两个函数。recv_file函数还没有通过测试。
+这个文件定义了 recv_file 和 send_file 两个函数。
 
 * 错误处理待完善
-* 我没有找到和 DataInputStream DataOutputStream 对应的处理方式，目前使用输出到 stdout ，输入到 stdin 的方式实现。
-* 目前接收文件是1024字节一次，分多次接收。发送文件是一次性发送。
-* 还没有找到发送文件时指定写入字节数的方法，有待更改。
+* 根据调用情况， DataInputStream DataOutputStream 对应都视为 TcpStream
+* 目前接收文件是1024字节一次，分多次接收。发送文件是一次性发送，无法发送 4096 字节以上的文件。
+* 还没有找到得到文件大小的方法，即 f.length() 的对应实现。
+* 涉及到 client\src\fileDetector\FileUploader, client\src\connect\FragmentManager 中的调用，对应函数传参还没有更改。
 
 
 

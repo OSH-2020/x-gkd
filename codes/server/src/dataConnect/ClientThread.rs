@@ -92,8 +92,7 @@ impl ClientThread{
             let recv_file = File::create(s).unwrap();
             self.client_socket.write(b"received!\n");
             self.client_socket.flush();
-            let soc = std::io::stdin();
-            status = recv_file(recv_file, soc);
+            status = recv_file(recv_file, self.client_socket);
             if status {
                 self.client_socket.write(b"received!\n");
                 self.client_socket.flush();
@@ -127,7 +126,7 @@ impl ClientThread{
                     query.daleteRequest(request.getId());
                 },
                 Some(file) =>{
-                    status = send_file(file);
+                    status = send_file(file, self.client_socket);
                     if status{
                         let mut in_from_cilent = BufReader::new(client_socket);
                         let sentence = String::new();
@@ -217,7 +216,7 @@ impl ClientThread{
             self.client_socket.flush();
 
             let soc = std::io::stdin();
-            status = recv_file(recv_file, soc);
+            status = recv_file(recv_file, self.client_socket);
             if status{
                 query.addFragment(temp, "-1");
                 if fragment_num == fragment_count - 1 {
