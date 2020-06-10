@@ -1,6 +1,11 @@
 use std::thread;
 use std::path::Path;
 use std::fs::metadata;
+use std::fs;
+
+const BYTES_IN_SHARDS:u32 = 500000;
+fn main() {
+
 /* NOTE:
    两个try catch 语句未实现
    文件写权限 writeonly 未实现
@@ -14,7 +19,6 @@ use std::fs::metadata;
  */
 
  struct FolderScanner{
-     pub BYTES_IN_SHARDS:u32 = 500000,
 
      folder:Vec<Path>,
      address:Vec<String>,
@@ -30,51 +34,53 @@ use std::fs::metadata;
  }
 
  impl FolderScanner{
-     pub fn new(f:vec<Path>,addr:Vec<String>,syn:client.synItem){
-         FolderScanner{fold:f,address:adr,synItem:syn}
+     /* 参数syn是client.synItem类型，最后整合时记得改一下*/
+     pub fn new(f:Vec<Path>,addr:Vec<String>,syn:client.synItem){
+         FolderScanner{fold:f,address:addr,synItem:syn}
      }
      pub fn init(&self,tmp:Path){
-         tmpFragmentFolder = tmp;
+         self.tmpFragmentFolder = tmp;
      }
      pub fn run(&self){
-         fUploader:FileUploader;
-         if !fUploader.checkFolders(address){
+         let fUploader:FileUploader;
+         if !fUploader.checkFolders(self.address){
              println!("ERR: can not register folder");
-             synItem.setStatus(2);
+             self.synItem.setStatus(2);
              return;
          }
-         while detecting{
+         while self.detecting{
              //!try catch
          }
 
      }
 
      // 扫描文件夹，如果有文件加入则处理该文件
-     fn scanFiles(){
-
-        for i:i32 in 0..folder.len {
-            files:Vec<Path> = FileUtil.getAllFiles(folder[i]);
+     fn scanFiles(&self){
+        let mut i:i32 = 0;
+        for i in 0..self.folder.len {
+            let files:Vec<Path> = FileUtil.getAllFiles(self.folder[i]);
             for file in files{
-                if(!handlerFile(file,i));
+                if !self.handleFile(file,i){
                     return;
+                }
             }
             // 处理完毕之后，清空文件夹
-			FileUtil.clearFolder(folder[i]);
+			FileUtil.clearFolder(self.folder[i]);
         }
      }
 
      // 停止检测
-     pub fn stopDetecting(){
-         detecting = false;
+     pub fn stopDetecting(&self){
+         self.detecting = false;
      }
 
-     pub fn handleFile(file:Path,i:i32) -> boolean{
-         let fileName:String = file.file_name;
-         let filePath:String = file.to_str + '/';
+     pub fn handleFile(&self,file:Path,i:i32) -> bool{
+         let fileName:String = file.file_name();
+         let filePath:String = file.to_str() + '/';
          /*let mut s1 = "Hello,".to_string();
 let s2 = "world".to_string();
 s1 += &s2;*/
-         let attribut::String = "";
+         let mut attribute:String = "";
          let metadata = fs::metadata(&file);
          if metadata.permissions.readonly() == true {
              attribute = attribute + 'r';
@@ -89,25 +95,25 @@ s1 += &s2;*/
             } else {
                 attribute = attribute + '-';
             }*/
-        let mut noa:i32 = (i32)(metadata.len() /BYTES_IN_SHARDS) + 1;   //metadata.len()返回值类型为u64
+        let mut noa:i32 = (metadata.len() / BYTES_IN_SHARDS) + 1;   //metadata.len()返回值类型为u64
         noa = noa * 2;
         
         let fileAttrs = FileAttrs::new(fileName,filePath,attribute,noa);
         
-        let fuploader:FileUploader;
+        let fUploader:FileUploader;
 
-        id:i32 = fUploader.registerFile(fileAttrs);
+        let id:i32 = fUploader.registerFile(fileAttrs);
         if id == -2 {
             println!("ERR: can not get file id");
-            synItem:setStatus(2);
+            synItem.setStatus(2);
             return false;
         } else if id == -1 {
             println!("ERR: server already has this file, skip it");
             return true;
         }
-        //trycatch
-
-        for j:i32 in 0.. noa {
+        /*NOTE: trycatch */
+        let mut j:i32 = 0;
+        for j in 0.. noa {
             if(!fUploader.pushFragment(id,j,noa)){
                 println!("ERR: can not upload fragments");
                 synItem.setStatus(2);
@@ -116,8 +122,9 @@ s1 += &s2;*/
         }
 
         // 处理完毕，清空块文件夹
-        FileUtil.clearFolder(tmpFragmentFolder);
+        FileUtil.clearFolder(self.tmpFragmentFolder);
         
         return true;
      }
  }
+}

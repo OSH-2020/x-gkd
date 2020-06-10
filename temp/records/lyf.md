@@ -1,4 +1,4 @@
-# 纠删码相关说明文档
+# I 纠删码相关说明文档
 
 ### 一、相关文档链接
 
@@ -150,7 +150,7 @@ pub struct ReedSolomon<F: Field> { /* fields omitted */ }
 
 - backblaze 的纠删码算法中的方法定义可能与 Rust中的纠删码算法不太一样。
 
-# SQL 笔记
+# II SQL 笔记
 
 廖雪峰 SQL 教程原网址：https://www.liaoxuefeng.com/wiki/1177760294764384
 
@@ -1106,4 +1106,29 @@ SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
 
    
 
-   
+
+# III 其他
+
+#### std::path::Path
+
+- `pub fn display(&self) -> Display`
+
+打印 Path
+
+Returns an object that implements [`Display`](https://doc.rust-lang.org/std/fmt/trait.Display.html) for safely printing paths that may contain non-Unicode data.
+
+```rust
+use std::path::Path;
+
+let path = Path::new("/tmp/foo.rs");
+
+println!("{}", path.display());
+```
+
+- pub fn [is_file](https://doc.rust-lang.org/std/path/struct.Path.html#method.is_file)(&self) -> [bool](https://doc.rust-lang.org/std/primitive.bool.html)
+
+Returns `true` if the path exists on disk and is pointing at a regular file.
+
+- pub fn [is_dir](https://doc.rust-lang.org/std/path/struct.Path.html#method.is_dir)(&self) -> [bool](https://doc.rust-lang.org/std/primitive.bool.html)
+
+Returns `true` if the path exists on disk and is pointing at a directory.
