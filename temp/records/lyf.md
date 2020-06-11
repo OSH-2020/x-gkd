@@ -1104,10 +1104,33 @@ SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
    INSERT INTO students (class_id,name,gender) VALUES(1,'lyf','female');
    ```
 
-   
 
+## 11 postgreSQL 管理命令
 
-# III 其他
+查看已有数据库：\l
+
+创建数据库：CREATE DATABASE dbname;
+
+进入数据库：\c + 数据库名
+
+查看已有表格：\d
+
+创建表格：
+
+```
+//例子：（注意没有AUTO_INCREMENT，表格名字也不能有单引号''）
+CREATE TABLE COMPANY(
+   ID INT PRIMARY KEY     NOT NULL,
+   NAME           TEXT    NOT NULL,
+   AGE            INT     NOT NULL,
+   ADDRESS        CHAR(50),
+   SALARY         REAL
+);
+```
+
+删除表格：DROP TABLE table_name;
+
+# III 改写笔记
 
 #### std::path::Path
 
@@ -1132,3 +1155,225 @@ Returns `true` if the path exists on disk and is pointing at a regular file.
 - pub fn [is_dir](https://doc.rust-lang.org/std/path/struct.Path.html#method.is_dir)(&self) -> [bool](https://doc.rust-lang.org/std/primitive.bool.html)
 
 Returns `true` if the path exists on disk and is pointing at a directory.
+
+# IV 改写的问题
+
+### Decoder 部分
+
+- File shardFile = new File(shardsFolder, Integer.toString(fid * 100 + i));
+
+方法`java.io.File.File(File parent, String child)` 找不到对应的rust 方法。不确定是否是在shardsFolder下创建了child目录
+
+- long java.io.File.length()
+
+  所述 **java.io.File.length（）** 返回此抽象路径名定义的文件的长度。如果此路径名定义目录，则未指定返回值。
+
+# V 进度记录
+
+### SQL示例程序
+
+- MySQL
+
+  我在pc上安装的 mysql 版本为`mysql-8.0.20-winx64`，安装教程与 zip 安装的常见问题解决帖 在 II SQL笔记 2安装MySQL 中。
+
+  ```
+  //cargo.toml中crate mysql的版本
+  [dependencies]
+  mysql = "17.0.0"
+  ```
+
+  ```rust
+  //官方示例程序
+  #[macro_use]
+  extern crate mysql;
+  // ...
+  
+  use mysql as my;
+  
+  #[derive(Debug, PartialEq, Eq)]
+  struct Payment {
+      customer_id: i32,
+      amount: i32,
+      account_name: Option<String>,
+  }
+  
+  
+  fn main() {
+      // See docs on the `OptsBuilder`'s methods for the list of options available via URL.
+      let pool = my::Pool::new("mysql://root:password@localhost:3306/mysql").unwrap();
+  
+      // Let's create payment table.
+      // Unwrap just to make sure no error happened.
+      //！示例程序给的是TEMPORARY TABLE，但由于会报错找不到这张表，所以我去掉了TEMPORARY
+      // pool.prep_exec(r"CREATE TEMPORARY TABLE payment (
+      //                      customer_id int not null,
+      //                      amount int not null,
+      //                      account_name text
+      //                  )", ()).unwrap();
+  
+      pool.prep_exec(r"CREATE TABLE payment (
+          customer_id int not null,
+          amount int not null,
+          account_name text
+      )", ()).unwrap();
+  
+      let payments = vec![
+          Payment { customer_id: 1, amount: 2, account_name: None },
+          Payment { customer_id: 3, amount: 4, account_name: Some("foo".into()) },
+          Payment { customer_id: 5, amount: 6, account_name: None },
+          Payment { customer_id: 7, amount: 8, account_name: None },
+          Payment { customer_id: 9, amount: 10, account_name: Some("bar".into()) },
+      ];
+  
+      // Let's insert payments to the database
+      // We will use into_iter() because we do not need to map Stmt to anything else.
+      // Also we assume that no error happened in `prepare`.
+      for mut stmt in pool.prepare(r"INSERT INTO payment
+                                         (customer_id, amount, account_name)
+                                     VALUES
+                                         (:customer_id, :amount, :account_name)").into_iter() {
+          for p in payments.iter() {
+              // `execute` takes ownership of `params` so we pass account name by reference.
+              // Unwrap each result just to make sure no errors happened.
+              stmt.execute(params!{
+                  "customer_id" => p.customer_id,
+                  "amount" => p.amount,
+                  "account_name" => &p.account_name,
+              }).unwrap();
+          }
+      }
+  
+      // Let's select payments from database
+      let selected_payments: Vec<Payment> =
+      pool.prep_exec("SELECT customer_id, amount, account_name from payment", ())
+      .map(|result| { // In this closure we will map `QueryResult` to `Vec<Payment>`
+          // `QueryResult` is iterator over `MyResult<row, err>` so first call to `map`
+          // will map each `MyResult` to contained `row` (no proper error handling)
+          // and second call to `map` will map each `row` to `Payment`
+          result.map(|x| x.unwrap()).map(|row| {
+              // ⚠️ Note that from_row will panic if you don't follow your schema
+              let (customer_id, amount, account_name) = my::from_row(row);
+              Payment {
+                  customer_id: customer_id,
+                  amount: amount,
+                  account_name: account_name,
+              }
+          }).collect() // Collect payments so now `QueryResult` is mapped to `Vec<Payment>`
+      }).unwrap(); // Unwrap `Vec<Payment>`
+  
+      // Now make sure that `payments` equals to `selected_payments`.
+      // Mysql gives no guaranties on order of returned rows without `ORDER BY`
+      // so assume we are lukky.
+      assert_eq!(payments, selected_payments);
+      println!("Yay!");
+  }
+```
+  
+  ```
+      let pool = my::Pool::new("mysql://root:password@localhost:3306/mysql").unwrap();
+```
+  
+- 端口号
+  
+  我pc上的mysql端口号是3306，但安装不同版本的mysql默认端口号可能不同，也可自定义。
+  
+- root是用户名（mysql默认的用户名） password替换成密码
+  
+    例：如果密码是`ABCDEF` ，直接替换即可 -> "mysql://root:ABCDEF@localhost:3306/mysql"
+    
+  - 若运行成功，则打印 “Yay!”
+  
+- postgreSQL
+  
+    我在pc上安装的postgreSQL版本为`postgresql-12.3-1-windows-x64` 
+  
+  windows上的安装教程：https://www.runoob.com/postgresql/windows-install-postgresql.html
+  
+  ```
+  //cargo.toml中crate postgres的版本
+  [dependencies]
+  postgres = "0.15.2"
+  ```
+  
+  ```rust
+  extern crate postgres;
+  
+  use postgres::{Connection, TlsMode};
+  
+  struct Person {
+      id: i32,
+      name: String,
+      data: Option<Vec<u8>>
+  }
+  
+  fn main() {
+      let conn = Connection::connect("postgresql://postgres:BB052511@localhost:5432", TlsMode::None)
+              .unwrap();
+  
+      conn.execute("CREATE TABLE person (
+                      id              SERIAL PRIMARY KEY,
+                      name            VARCHAR NOT NULL,
+                      data            BYTEA
+                    )", &[]).unwrap();
+      let me = Person {
+          id: 0,
+          name: "Steven".to_owned(),
+          data: None
+      };
+      conn.execute("INSERT INTO person (name, data) VALUES ($1, $2)",
+                   &[&me.name, &me.data]).unwrap();
+  
+      for row in &conn.query("SELECT id, name, data FROM person", &[]).unwrap() {
+          let person = Person {
+              id: row.get(0),
+              name: row.get(1),
+              data: row.get(2)
+          };
+          println!("Found person {}", person.name);
+      }
+  }
+  ```
+  
+  ```rust
+      let conn = Connection::connect("postgresql://postgres[:password]@localhost:5432", TlsMode::None)
+  ```
+  
+  - 端口号
+  
+    我pc上的postgreSQL端口号是5432，但安装不同版本的postgreSQL默认端口号可能不同（eg. 5433），也可自定义。
+  
+  - postgresql是用户名（postgreSQLl默认的用户名） password替换成密码
+  
+    例：如果密码是`ABCDEF` ，去掉`[]`替换即可 -> "postgresql://postgres:ABCDEF@localhost:5432"
+  
+  - 若运行成功，则打印“Found person Steven”
+  
+- cargo run时可能出现的问题
+
+  ```
+  //数据库未启动 或 端口号错误
+  thread 'main' panicked at 'called `Result::unwrap()` on an `Err` value: Error(Io(Os { code: 10061, kind: ConnectionRefused, message: "由于目标计算机积极拒绝，无法连接。" }))', src\main.rs:12:16
+  ```
+
+  出现错误时有note提示如下：
+
+  ​	note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  设置方法：
+
+  在cmd中执行 set RUST_BACKTRACE=1
+
+  在powershell中执行 $Env:RUST_BACKTRACE=1
+
+  设置之后，若程序错误运行，则会打印类似如下信息：
+
+  ```
+     1: std::sys_common::backtrace::_print_fmt
+               at /rustc/b8cedc00407a4c56a3bda1ed605c6fc166655447\/src\libstd\sys_common\backtrace.rs:77
+     2: std::sys_common::backtrace::_print::{{impl}}::fmt
+               at /rustc/b8cedc00407a4c56a3bda1ed605c6fc166655447\/src\libstd\sys_common\backtrace.rs:59
+     3: core::fmt::write
+               at /rustc/b8cedc00407a4c56a3bda1ed605c6fc166655447\/src\libcore\fmt\mod.rs:105
+  ```
+
+  （我看不太懂，所以感觉没什么用）
