@@ -1307,7 +1307,7 @@ Returns `true` if the path exists on disk and is pointing at a directory.
   }
   
   fn main() {
-      let conn = Connection::connect("postgresql://postgres:BB052511@localhost:5432", TlsMode::None)
+      let conn = Connection::connect("postgresql://postgres:password@localhost:5432", TlsMode::None)
               .unwrap();
   
       conn.execute("CREATE TABLE person (
