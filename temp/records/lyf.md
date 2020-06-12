@@ -1156,6 +1156,57 @@ Returns `true` if the path exists on disk and is pointing at a regular file.
 
 Returns `true` if the path exists on disk and is pointing at a directory.
 
+#### mysql (version:17.0.0)
+
+**Struct Pool**
+
+- `pub fn prepare<T: AsRef<str>>(&self, query: T) -> MyResult<Stmt<'static>>`[[src\]](https://docs.rs/mysql/17.0.0/src/mysql/conn/pool.rs.html#242-245)[[−\]](javascript:void(0))
+
+  Will prepare statement. See [`Conn::prepare`](https://docs.rs/mysql/17.0.0/mysql/struct.Conn.html#method.prepare).
+
+  It will try to find connection which has this statement cached.
+
+- `pub fn prep_exec<A, T>(  &self,  query: A,  params: T) -> MyResult<QueryResult<'static>>where  A: AsRef<str>,  T: Into<Params>, `[[src\]](https://docs.rs/mysql/17.0.0/src/mysql/conn/pool.rs.html#251-269)[[−\]](javascript:void(0))
+
+  Shortcut for `pool.get_conn()?.prep_exec(..)`. See [`Conn::prep_exec`](https://docs.rs/mysql/17.0.0/mysql/struct.Conn.html#method.prep_exec).
+
+  It will try to find connection which has this statement cached.
+
+**Struct Conn**
+
+- `pub fn prepare<T: AsRef<str>>(&mut self, query: T) -> MyResult<Stmt>`[[src\]](https://docs.rs/mysql/17.0.0/src/mysql/conn/mod.rs.html#948-955)[[−\]](javascript:void(0))
+
+  Implements binary protocol of mysql server.
+
+  Prepares mysql statement on `Conn`. [`Stmt`](https://docs.rs/mysql/17.0.0/mysql/struct.Stmt.html) will borrow `Conn` until the end of its scope.
+
+  This call will take statement from cache if has been prepared on this connection.
+
+- `pub fn prep_exec<A, T>(&mut self, query: A, params: T) -> MyResult<QueryResult>where  A: AsRef<str>,  T: Into<Params>, `[[src\]](https://docs.rs/mysql/17.0.0/src/mysql/conn/mod.rs.html#961-967)[[−\]](javascript:void(0))
+
+  Prepares and executes statement in one call. See ['Conn::prepare'](https://docs.rs/mysql/17.0.0/mysql/struct.Conn.html#method.prepare)
+
+str -> stmt -> prepare -> execuate
+
+#### 其他
+
+**python中的字符串前缀 r,b,u**
+
+1. r'字符串'
+       r应该是raw的缩写，表示不需要加工，仅仅包裹一串字符串。例如：r'\n'，不表示换行，仅仅表示反斜杠'\'和小写字母'n'组成的字符串。不需要加工、转义等进行翻译。
+
+2. b'字符串'
+       b表示bytes的意思，即要求程序加字符串加载为bytes类型，bytes类型的数据常用于网络的数据封装。
+
+    在 Python3 中，bytes 和 str 的互相转换方式是
+    
+    str.encode('utf-8')
+    
+    bytes.decode('utf-8')
+
+3. u'字符串' 
+       u便是Unicode，u前缀的字符串表示以Unicode编码，一般将包含中文的字符串加上u前缀，以避免错误。    
+
 # IV 改写的问题
 
 ### Decoder 部分
@@ -1216,6 +1267,7 @@ Returns `true` if the path exists on disk and is pointing at a directory.
           amount int not null,
           account_name text
       )", ()).unwrap();
+      //r""是raw的缩写，表示不需要加工，仅仅包裹一串字符串。
   
       let payments = vec![
           Payment { customer_id: 1, amount: 2, account_name: None },
@@ -1232,6 +1284,7 @@ Returns `true` if the path exists on disk and is pointing at a directory.
                                          (customer_id, amount, account_name)
                                      VALUES
                                          (:customer_id, :amount, :account_name)").into_iter() {
+     //外层for循环只循环一次
           for p in payments.iter() {
               // `execute` takes ownership of `params` so we pass account name by reference.
               // Unwrap each result just to make sure no errors happened.
@@ -1267,9 +1320,10 @@ Returns `true` if the path exists on disk and is pointing at a directory.
       assert_eq!(payments, selected_payments);
       println!("Yay!");
   }
+  ```
 ```
   
-  ```
+```
       let pool = my::Pool::new("mysql://root:password@localhost:3306/mysql").unwrap();
 ```
   
@@ -1289,7 +1343,7 @@ Returns `true` if the path exists on disk and is pointing at a directory.
   
   windows上的安装教程：https://www.runoob.com/postgresql/windows-install-postgresql.html
   
-  ```
+```
   //cargo.toml中crate postgres的版本
   [dependencies]
   postgres = "0.15.2"
@@ -1333,11 +1387,11 @@ Returns `true` if the path exists on disk and is pointing at a directory.
       }
   }
   ```
-  
+
   ```rust
       let conn = Connection::connect("postgresql://postgres[:password]@localhost:5432", TlsMode::None)
   ```
-  
+
   - 端口号
   
     我pc上的postgreSQL端口号是5432，但安装不同版本的postgreSQL默认端口号可能不同（eg. 5433），也可自定义。
@@ -1376,4 +1430,4 @@ Returns `true` if the path exists on disk and is pointing at a directory.
                at /rustc/b8cedc00407a4c56a3bda1ed605c6fc166655447\/src\libcore\fmt\mod.rs:105
   ```
 
-  （我看不太懂，所以感觉没什么用）
+  （我看不太懂，感觉没什么用）
