@@ -302,3 +302,115 @@ Result 是一个函数返回的类型，它可以是 Err，也可以是 Ok。如
 ![image-20200610202236422](C:\Users\sym\AppData\Roaming\Typora\typora-user-images\image-20200610202236422.png)
 
 ![image-20200610202108808](C:\Users\sym\AppData\Roaming\Typora\typora-user-images\image-20200610202108808.png)
+
+
+
+安装 MySQL 遇到的问题
+
+大部分在 lyf.md 中有，补充两条
+
+.err 文档中有 Do you already have another mysqld server running on port: 3306 ?
+
+https://blog.csdn.net/weixin_43250455/article/details/88372731
+
+登陆之后 ERROR 1820 (HY000): You must reset your password using ALTER USER statement before executing this statement.
+
+https://blog.csdn.net/muziljx/article/details/81541896
+
+
+
+基本 MYSQL 使用
+
+mysql -u root -p
+
+USE <新数据库>
+
+SHOW TABLES;
+
+DESC <表>
+
+SELECT * FROM DFS.FILE;
+
+
+
+使用的实例程序
+
+```
+#[macro_use]
+extern crate mysql;
+// ...
+
+use mysql as my;
+
+#[derive(Debug, PartialEq, Eq)]
+struct Payment {
+    customer_id: i32,
+    amount: i32,
+    account_name: Option<String>,
+}
+
+
+fn main() {
+    // See docs on the `OptsBuilder`'s methods for the list of options available via URL.
+    let pool = my::Pool::new("mysql://root:mysql@localhost:3306/mysql").unwrap();
+
+    // Let's create payment table.
+    // Unwrap just to make sure no error happened.
+    pool.prep_exec(r"CREATE TABLE payment (
+                         customer_id int not null,
+                         amount int not null,
+                         account_name text
+                     )", ()).unwrap();
+
+    let payments = vec![
+        Payment { customer_id: 1, amount: 2, account_name: None },
+        Payment { customer_id: 3, amount: 4, account_name: Some("foo".into()) },
+        Payment { customer_id: 5, amount: 6, account_name: None },
+        Payment { customer_id: 7, amount: 8, account_name: None },
+        Payment { customer_id: 9, amount: 10, account_name: Some("bar".into()) },
+    ];
+
+    // Let's insert payments to the database
+    // We will use into_iter() because we do not need to map Stmt to anything else.
+    // Also we assume that no error happened in `prepare`.
+    for mut stmt in pool.prepare(r"INSERT INTO payment
+                                       (customer_id, amount, account_name)
+                                   VALUES
+                                       (:customer_id, :amount, :account_name)").into_iter() {
+        for p in payments.iter() {
+            // `execute` takes ownership of `params` so we pass account name by reference.
+            // Unwrap each result just to make sure no errors happened.
+            stmt.execute(params!{
+                "customer_id" => p.customer_id,
+                "amount" => p.amount,
+                "account_name" => &p.account_name,
+            }).unwrap();
+        }
+    }
+
+    // Let's select payments from database
+    let selected_payments: Vec<Payment> =
+    pool.prep_exec("SELECT customer_id, amount, account_name from payment", ())
+    .map(|result| { // In this closure we will map `QueryResult` to `Vec<Payment>`
+        // `QueryResult` is iterator over `MyResult<row, err>` so first call to `map`
+        // will map each `MyResult` to contained `row` (no proper error handling)
+        // and second call to `map` will map each `row` to `Payment`
+        result.map(|x| x.unwrap()).map(|row| {
+            //  Note that from_row will panic if you don't follow your schema
+            let (customer_id, amount, account_name) = my::from_row(row);
+            Payment {
+                customer_id: customer_id,
+                amount: amount,
+                account_name: account_name,
+            }
+        }).collect() // Collect payments so now `QueryResult` is mapped to `Vec<Payment>`
+    }).unwrap(); // Unwrap `Vec<Payment>`
+
+    // Now make sure that `payments` equals to `selected_payments`.
+    // Mysql gives no guaranties on order of returned rows without `ORDER BY`
+    // so assume we are lukky.
+    assert_eq!(payments, selected_payments);
+    println!("Yay!");
+}
+```
+
