@@ -31,8 +31,11 @@
 
 这个文件定义了 recv_file 和 send_file 两个函数。
 
+recv_file 调用时需要在 TcpStream 的文件内容之前有一个 big endian 的 64 位文件大小参数。
+
 * 错误处理待完善
 * 根据调用情况， DataInputStream DataOutputStream 对应都视为 TcpStream
+* 将参数类型改为了 &TcpStream，否则如果使用 TcpStream，函数调用完毕返回时不能返还所有权。
 * 目前接收文件是1024字节一次，分多次接收。发送文件是一次性发送，无法发送 4096 字节以上的文件。
 * 还没有找到得到文件大小的方法，即 f.length() 的对应实现。
 * 涉及到 client\src\fileDetector\FileUploader, client\src\connect\FragmentManager 中的调用，对应函数传参还没有更改。
@@ -62,4 +65,104 @@
           //clientsocket.setSoTimeout(60000);
   ```
 
-  
+
+
+
+## 代码测试
+
+### FileTransporter.rs
+
+目前只是简单测试基本功能，没有对网络延迟、文件过大等可能情况测试。采用了将待测试内容复制到 main.rs 中的方法。如果调用与 main.rs 在同一目录下的文件，只要 `pub mod 文件名;` 即可引入。调用时以 `文件名::函数()` 格式调用。
+
+测试文件服务端（提供 TCPListener，监听接收连接，提供连接线程执行的函数，调用待测试的函数）
+
+其中 test1.txt 是在 crate 根目录下的文件。
+
+```
+use std::io::prelude::*;
+use std::fs::File;
+use std::net::TcpStream;
+use std::net::TcpListener;
+use std::thread;
+
+fn main() {
+    let listener = TcpListener::bind("127.0.0.1:8000").unwrap();
+    println!("test1");
+    for stream in listener.incoming() {
+        match stream {
+            Ok(stream) => {
+                thread::spawn(move|| {
+                    handle_client1(stream)	// or handle_client2(stream)
+                });
+            }
+            Err(e) => { return }
+        }
+    }
+    println!("test end!");
+}
+
+fn handle_client1(stream: TcpStream) {
+    let mut f1 = File::open("test1.txt").unwrap();
+    println!("test2");
+    send_file(f1, stream);
+}
+```
+
+测试文件客户端（与对应地址连接）
+
+我没有找到 windows cmd 上与 nc 对应的命令，查到有 netsh ，但使用看起来很复杂，于是没有再仔细学习，采用了再运行一个程序的方式来连接。
+
+测试 send_file 函数：
+
+```
+use std::io::prelude::*;
+use std::net::TcpStream;
+
+fn main(){
+    let mut stream = TcpStream::connect("127.0.0.1:8000").unwrap();
+
+    let t = stream.read(&mut [0; 128]).unwrap(); 
+    println!("read bytes: {}", t);
+} 
+```
+
+运行客户端程序的命令行窗口可以输出读到的字节数。
+
+测试 recv_file 函数，其中 18 为手动计算的文件大小。
+
+```
+use std::io::prelude::*;
+use std::net::TcpStream;
+use std::thread;
+
+fn main(){
+    let mut stream = TcpStream::connect("127.0.0.1:8000").unwrap();
+    //let mut res = String::new();
+    let i: i64 = 18;
+    let t1 = stream.write(&i.to_be_bytes()).unwrap(); 
+    let t2 = stream.write(b"send to test2.txt\n").unwrap(); 
+    stream.flush();
+    println!("write bytes: {}", t1 + t2);
+    std::thread::sleep_ms(2000);
+}  
+```
+
+运行后打开 test2.txt 可以看到 "send to test2.txt\n" 的内容。
+
+
+
+测试 send_file 函数时，为了尝试输出读到的内容，我将 read 函数改为 read_to_string ，并输出相应 String 变量，输出变为：
+
+```
+read bytes: 4104
+read content: "\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{12}this is test1.txt\n\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}...
+```
+
+猜测 4104 字节是 read_to_string 方法读数据量的上限。目前还不清楚 read 方法和 read_to_string 方法实现的根本区别。
+
+使用 Ctrl + C 退出服务端程序时会报 error：（个人觉得这应该不算一个错误）
+
+```
+error: process didn't exit successfully: `target\debug\OSHtest.exe` (exit code: 0xc000013a, STATUS_CONTROL_C_EXIT)
+```
+
