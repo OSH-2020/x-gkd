@@ -289,11 +289,11 @@ Express 框架核心特性：
 
 
     First Name: <input type="text" name="first_name"> <br>
-
+    
     Last Name: <input type="text" name="last_name">
-
+    
     <input type="submit" value="Submit">
-
+    
     </form>
 
 
@@ -1040,9 +1040,99 @@ Rocket遇到的问题与思考
 
 以及bug调试
 
-
-
-
-
 二维数组
 
+
+
+### 前端搭建构思
+
+* 利用Tomcat Web服务程序搭建动态网站（采用MVC设计模式，控制器从视图读取数据，控制用户输入，向模型发送数据管理复杂的应用程序，可以在一个时间内专门关注一个方面）
+* 响应前端请求，调用服务器端Java程序访问数据库和进行文件操作，返回动态数据
+* BOOTSTRAP主题 打造优美交互界面
+* Jqery + AJAX异步C/S通讯+JSON实现文件目录层次的交互式刷新，响应用户网页操作
+
+
+
+文件结构：
+
+* index.html:让网页端用户进行注册和登录(即根界面)
+
+* index_ajax.js:让网页具有和用户和服务器交互的动态能力。 即为注册和登录的button提供js动作，调用异步的 ajax 将表单信息提交给服务器（没有用submit提交，因为这样会导致页面刷新，不符合预期，使用ajax实现页面部分刷新）并调用下面两个 java 程序之一进行服务（参见对应文件）
+
+  eg：form 格式的 var 来进行 data 的传送，采用 post 方法，在回
+
+  调函数中更改网页 html，输出服务器反馈信息 
+
+* 网页主界面:
+
+  是用户登录后的主界面，在这个界面用户可以看到我们项目的介绍图片，标题，介绍，最重要的是可以访问系统的文件目录，可以进入某个文件夹或者返回上层目录，还可以进行文件的下载上传重命名等访问和管理
+
+  * majorPage.jsp：界面主要的html代码。采用 jsp 在服务器端**动态**生成 html 代码，因为第一次打开该网页就会展示文件系统根目录文件夹信息，这些信息是动态的。因此我动态的查询数据库并返回 html 代码。
+
+    但注意到因为是jsp，所以可以插入java代码动态执行(即每次打开该页面都要查询数据库得到动态数据)
+
+  * majorPage_ajax.js: 包含了主界面全部的用户交互的代码（原代码有不少注释），即对按钮进行相应(下载及进度条显示(定时刷新)，进入子目录，返回上一级目录等)
+
+* 文件目录展示交互模块
+
+  * GetFileList.java------根据输入：查询的全路径；输出该路径下的全部列表项的 html 代码。 该类使用了数据库访问包： import database.*;
+  * majorPage_ajax.js------包含该模块主要代码
+
+* 文件下载模块:该模块提供了用户选中单个文件并进行下载的全套服务。 用户选中单个文件，点击下载，服务器开始收集碎片，实时反馈进度，网页进度条实时更新，进度 100%后可单击进度条下载该文件
+
+  当用户点击下载后，遍历列表，对于每一个勾选项进行下载操作。 
+
+  下载操作就是： 
+
+  获取要下载文件全路径和名称； 
+
+  利用 ajax 调用动态方法 FileDownloader!downloadRegister，请求服务器收集碎片； 
+
+  问该文件任务添加进度条； 
+
+  定时通过 ajax 调用动态方法 FileDownloader!progressCheck 检测收集进度，并刷新进度条。
+
+  如果进度到达 100%，利用 ajax 调用动态方法 FileDownloader!decodeFile 进行碎片
+
+  远程拼接，为进度条添加下载属性，链接到生成的要下载的文件。
+
+  * FileDownloader.java
+
+    * downloadRegister方法:将一条下载请求插入数据库，让服务器将知道要从各个客户端收集该指定的碎片，调用了database包（利用ａｊａｘ　远程调用　downloadRegister(String path, String name); action形式)
+
+    * progressCheck：服务器查询特定本地临时碎片数目，计算出碎片收集进度并且返回给网页。 该函数调用了本地文件访问接口。 
+
+    * decodeFile() :预下载完成后，即判定系统中碎片已经足够时调用
+
+      服务器调用 erasurecode 开源解码程序，将特定文件复原，等待用户通过 http 请求下载。 
+
+  * majorPage_ajax.js
+
+* userManagement包（对之前完成的database和纠删码的包有大量调用）
+
+  注意到包里的类都extends了ActionSupport,使其成为了tomcat的可调用程序。所以ajax调用如GetFileList.action可以直接执行GetFileList类的excute函数，该函数可以返回字符串如html(返回不是return，而是对该类实现set和get方法即可，这样在ajax代码里可以通过var obj来调用)
+
+  * UserLogin.java：接受来自网页的登录请求，查询数据库进行身份核实和反馈核实结果。
+
+    通过继承 extends ActionSupport，使得该 java 成为 tomcat 的可调用程序。 只要帮 class 内部的变量提供了设置（set）和返回（get）函数，该变量就会自动被返回到 js，通过 obj.X 的格式访问该变量，X 为其在类中的名字
+
+    我们从 js 接收用户名，根据用户名查询服务器客户端，获得正确密码，再和用户提交的密码对比，一致则登陆成功，跳转到主界面，否则登陆失败，返回失败信息到网页
+
+    在struts中配置，使得返回json对象而非跳转的html
+
+  * UserReg.java：接收来自网页的用户注册请求，将请求插入数据库等待管理员审核（管理员审核?），基本同UserLogin.java
+
+  * GetFileList.java
+
+  * FileDownloader.java
+
+    
+
+  
+
+需要考虑实现的部分：（动态数据的返回？）
+
+1. 前端登录注册模块
+2. 文件目录层次的交互式刷新，响应用户对文件目录的操作
+3. 下载操作的实现
+4. 界面优化
