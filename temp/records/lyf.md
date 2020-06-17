@@ -1188,6 +1188,14 @@ Returns `true` if the path exists on disk and is pointing at a directory.
 
 str -> stmt -> prepare -> execuate
 
+**Struct Vec**
+
+- `pub fn resize(&mut self, new_len: usize, value: T)`1.5.0[[src\]](https://doc.rust-lang.org/src/alloc/vec.rs.html#1555-1563)[[−\]](javascript:void(0))
+
+  Resizes the `Vec` in-place so that `len` is equal to `new_len`.
+
+  If `new_len` is greater than `len`, the `Vec` is extended by the difference, with each additional slot filled with `value`. If `new_len` is less than `len`, the `Vec` is simply truncated.
+
 #### 其他
 
 **python中的字符串前缀 r,b,u**
@@ -1199,9 +1207,9 @@ str -> stmt -> prepare -> execuate
        b表示bytes的意思，即要求程序加字符串加载为bytes类型，bytes类型的数据常用于网络的数据封装。
 
     在 Python3 中，bytes 和 str 的互相转换方式是
-    
+   
     str.encode('utf-8')
-    
+   
     bytes.decode('utf-8')
 
 3. u'字符串' 
@@ -1209,7 +1217,7 @@ str -> stmt -> prepare -> execuate
 
 # IV 改写的问题
 
-### Decoder 部分
+### Encoder 部分
 
 - File shardFile = new File(shardsFolder, Integer.toString(fid * 100 + i));
 
@@ -1218,6 +1226,28 @@ str -> stmt -> prepare -> execuate
 - long java.io.File.length()
 
   所述 **java.io.File.length（）** 返回此抽象路径名定义的文件的长度。如果此路径名定义目录，则未指定返回值。
+
+```java
+File outputFile = new File(shardsFolder, Integer.toString(fid * 100 + i));
+OutputStream out = new FileOutputStream(outputFile);
+out.write(shards[i]);
+out.close();
+```
+
+```rust
+let path:Path = *shardsFolder.join(Path::new(&(fid * 100 +i).to_string())).as_path();
+//还有些问题
+```
+
+- **struct Path** ->`pub fn join<P: AsRef<Path>>(&self, path: P) -> PathBuf`[[src\]](https://doc.rust-lang.org/src/std/path.rs.html#2178-2180)[[−\]](javascript:void(0))   
+
+  Creates an owned [`PathBuf`](https://doc.rust-lang.org/std/path/struct.PathBuf.html) with `path` adjoined to `self`.
+
+  See [`PathBuf::push`](https://doc.rust-lang.org/std/path/struct.PathBuf.html#method.push) for more details on what it means to adjoin a path.
+
+- **struct PathBuf** -> `pub fn as_path(&self) -> &Path`[[src\]](https://doc.rust-lang.org/src/std/path.rs.html#1150-1152)[[−\]](javascript:void(0))
+
+  Coerces to a [`Path`](https://doc.rust-lang.org/std/path/struct.Path.html) slice.
 
 # V 进度记录
 
@@ -1431,3 +1461,12 @@ str -> stmt -> prepare -> execuate
   ```
 
   （我看不太懂，感觉没什么用）
+  
+### Encoder Decoder
+
+解决了二维数组的问题，用Vec<Vec<u8>>解决，但外层“数组索引”编译报错
+
+还有一直存在的Path的使用问题
+
+  
+
