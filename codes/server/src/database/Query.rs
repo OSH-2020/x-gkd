@@ -45,10 +45,10 @@ impl Query {
         }).unwrap();
         return FileItem {
             id: selected_files[0].id,
-            name: &selected_files[0].name,
-            path: &selected_files[0].path,
-            attribute: &selected_files[0].attribute,
-            time: &selected_files[0].time,
+            name: selected_files[0].name.clone(),
+            path: selected_files[0].path.clone(),
+            attribute: selected_files[0].attribute.clone(),
+            time: selected_files[0].time.clone(),
             noa: selected_files[0].noa,
             is_folder: selected_files[0].is_folder,
         }
@@ -74,10 +74,10 @@ impl Query {
         }).unwrap();
         return FileItem {
             id: selected_files[0].id,
-            name: &selected_files[0].name,
-            path: &selected_files[0].path,
-            attribute: &selected_files[0].attribute,
-            time: &selected_files[0].time,
+            name: selected_files[0].name.clone(),
+            path: selected_files[0].path.clone(),
+            attribute: selected_files[0].attribute.clone(),
+            time: selected_files[0].time.clone(),
             noa: selected_files[0].noa,
             is_folder: selected_files[0].is_folder,
         }
@@ -162,8 +162,8 @@ impl Query {
         }).unwrap();
         return DeviceItem {
             id: selected_devices[0].id,
-            ip: &selected_devices[0].ip,
-            port: selected_devices[0].port,
+            ip: selected_devices[0].ip.clone(),
+            port: selected_devices[0].port.clone(),
             is_online: selected_devices[0].is_online,
             rs: selected_devices[0].rs,
         }
@@ -297,7 +297,7 @@ impl Query {
                 }
             }).collect()
         }).unwrap();
-        selected_user[0].passwd
+        selected_user[0].passwd.clone()
     }
 
     pub fn queryUserID(&self, name: Option<String>) -> i32 {
