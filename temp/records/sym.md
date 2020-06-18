@@ -414,3 +414,15 @@ fn main() {
 }
 ```
 
+改写Query过程中：
+
+getInt(index)，getString(index) 表明返回第 index 列的数据
+
+rs.next() 下一行，最开始指针指第一行的上一行，所以必须先next才能开始读取。
+
+count(*)对行的数目进行计算，包含NULL
+count(column)对特定的列的值具有的行数进行计算，不包含NULL值。
+
+include!("FileItem.rs");	使用宏来 include，可以不在同一目录，写清目录就可
+
+rust 不支持函数重载，所以有些函数修改了名字，在后面加上 _id 等

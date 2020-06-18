@@ -1,95 +1,319 @@
-//pub mod FileAttrs;
-//pub mod DeviceItem;
-//pub mod FileItem;
-//pub mod FileUploader;
-//pub mod RequestItem;
-//pub mod Query;
 #[macro_use]
 extern crate mysql;
-// ...
-
+use std::*;
+include!("FileItem.rs");
+include!("RequestItem.rs");
+include!("DeviceItem.rs");
 use mysql as my;
 
-#[derive(Debug, PartialEq, Eq)]
-struct FileItem {
+struct UserItem {
     id: i32,
     name: Option<String>,
-    path: Option<String>,
-    attribute: Option<String>,
-    time: Option<String>,
-    noa: i32,
-    is_folder: bool,
+    passwd: Option<String>,
 }
 
+struct FragmentItem {
+    id: i32,
+    path: Option<String>,
+}
 
+struct Query{
+    pool:mysql::Pool
+}
 fn main() {
-    // See docs on the `OptsBuilder`'s methods for the list of options available via URL.
-    let pool = my::Pool::new("mysql://root:mysql@localhost:3306/mysql").unwrap();
+    println!("Hello, world!");
+}
 
-    // Let's create payment table.
-    // Unwrap just to make sure no error happened.
-    pool.prep_exec(r"CREATE TABLE FILE(
-                    id int NOT NULL AUTO_INCREMENT,   
-                    name char(20) NOT NULL DEFAULT '',   
-                    path char(60) NOT NULL DEFAULT '',   
-                    attribute char(10) NOT NULL DEFAULT '',   
-                    time char(10) NOT NULL DEFAULT '',   
-                    noa int NOT NULL DEFAULT 1,   
-                    is_folder boolean NOT NULL DEFAULT false,   
-                    PRIMARY KEY (`id`) 
-                    )", ()).unwrap();
-
-    let files = vec![
-        FileItem { id: 1, name: Some("a".into()), path: Some("root".into()), 
-            attribute: Some("rw".into()), time: Some("c".into()), noa: 1, is_folder: false },
-        FileItem { id: 2, name: Some("b".into()), path: Some("root".into()), 
-            attribute: Some("ro".into()), time: Some("c".into()), noa: 2, is_folder: false },
-    ];
-
-    // Let's insert payments to the database
-    // We will use into_iter() because we do not need to map Stmt to anything else.
-    // Also we assume that no error happened in `prepare`.
-    for mut stmt in pool.prepare(r"INSERT INTO FILE
-                                       (id, name, path, attribute, time, noa, is_folder)
-                                   VALUES
-                                       (:id, :name, :path, :attribute, :time, :noa, :is_folder)").into_iter() {
-        for p in files.iter() {
-            // `execute` takes ownership of `params` so we pass account name by reference.
-            // Unwrap each result just to make sure no errors happened.
-            stmt.execute(params!{
-                "id" => p.id,
-                "name" => &p.name,
-                "path" => &p.path,
-                "attribute" => &p.attribute,
-                "time" => &p.time,
-                "noa" => p.noa,
-                "is_folder" => p.is_folder,
-            }).unwrap();
+impl Query {
+    pub fn queryFile_Bypathname(&self, path: Option<String>, name: Option<String>) -> FileItem{
+        let selected_files: Vec<FileItem> =
+        self.pool.prep_exec("SELECT * FROM file WHERE NAME = :name AND PATH = :path", 
+                params!{"name" => name, "path" => path})
+        .map(|result| { 
+            result.map(|x| x.unwrap()).map(|row| {
+                let (id, name, path, attribute, time, noa, is_folder) = my::from_row(row);
+                FileItem {
+                    id: id,
+                    name: name,
+                    path: path,
+                    attribute: attribute,
+                    time: time,
+                    noa: noa,
+                    is_folder: is_folder,
+                }
+            }).collect()
+        }).unwrap();
+        return FileItem {
+            id: selected_files[0].id,
+            name: &selected_files[0].name,
+            path: &selected_files[0].path,
+            attribute: &selected_files[0].attribute,
+            time: &selected_files[0].time,
+            noa: selected_files[0].noa,
+            is_folder: selected_files[0].is_folder,
         }
     }
 
-    // Let's select payments from database
-    /*let selected_payments: Vec<Payment> =
-    pool.prep_exec("SELECT customer_id, amount, account_name from payment", ())
-    .map(|result| { // In this closure we will map `QueryResult` to `Vec<Payment>`
-        // `QueryResult` is iterator over `MyResult<row, err>` so first call to `map`
-        // will map each `MyResult` to contained `row` (no proper error handling)
-        // and second call to `map` will map each `row` to `Payment`
-        result.map(|x| x.unwrap()).map(|row| {
-            //  Note that from_row will panic if you don't follow your schema
-            let (customer_id, amount, account_name) = my::from_row(row);
-            Payment {
-                customer_id: customer_id,
-                amount: amount,
-                account_name: account_name,
-            }
-        }).collect() // Collect payments so now `QueryResult` is mapped to `Vec<Payment>`
-    }).unwrap(); // Unwrap `Vec<Payment>`
+    pub fn queryFile_Byid(&self, id: i32) -> FileItem{
+        let selected_files: Vec<FileItem> =
+        self.pool.prep_exec("SELECT * FROM file WHERE ID = :id", 
+                params!{"id" => id})
+        .map(|result| { 
+            result.map(|x| x.unwrap()).map(|row| {
+                let (id, name, path, attribute, time, noa, is_folder) = my::from_row(row);
+                FileItem {
+                    id: id,
+                    name: name,
+                    path: path,
+                    attribute: attribute,
+                    time: time,
+                    noa: noa,
+                    is_folder: is_folder,
+                }
+            }).collect()
+        }).unwrap();
+        return FileItem {
+            id: selected_files[0].id,
+            name: &selected_files[0].name,
+            path: &selected_files[0].path,
+            attribute: &selected_files[0].attribute,
+            time: &selected_files[0].time,
+            noa: selected_files[0].noa,
+            is_folder: selected_files[0].is_folder,
+        }
+    }
 
-    // Now make sure that `payments` equals to `selected_payments`.
-    // Mysql gives no guaranties on order of returned rows without `ORDER BY`
-    // so assume we are lukky.
-    assert_eq!(payments, selected_payments);
-    println!("Yay!");*/
+    pub fn queryFile_Bypath(&self, path: Option<String>) -> Vec<FileItem>{
+        let selected_files: Vec<FileItem> =
+        self.pool.prep_exec("SELECT * FROM file WHERE PATH = :path", 
+                params!{"path" => path})
+        .map(|result| { 
+            result.map(|x| x.unwrap()).map(|row| {
+                let (id, name, path, attribute, time, noa, is_folder) = my::from_row(row);
+                FileItem {
+                    id: id,
+                    name: name,
+                    path: path,
+                    attribute: attribute,
+                    time: time,
+                    noa: noa,
+                    is_folder: is_folder,
+                }
+            }).collect()
+        }).unwrap();
+        selected_files
+    }
+
+    pub fn queryFragmentNumbers(&self, fileId: i32) -> i32{
+        let selected_fragments: Vec<FragmentItem> =
+        self.pool.prep_exec("SELECT * FROM fragment WHERE ID>=:id_1 AND ID<:id_2", 
+                params!{"id_1" => fileId*100, "id_2" => (fileId+1)*100})
+        .map(|result| { 
+            result.map(|x| x.unwrap()).map(|row| {
+                let (id, path) = my::from_row(row);
+                FragmentItem {
+                    id: id,
+                    path: path,
+                }
+            }).collect()
+        }).unwrap();
+        let mut i: i32 = 0;
+        for _f in selected_fragments {
+            i = i+1;
+        }
+        i
+    }
+    //no FragmentItem
+
+    pub fn queryOnlineDevice(&self) -> Vec<DeviceItem> {
+        let selected_devices: Vec<DeviceItem> =
+        self.pool.prep_exec("SELECT * FROM DEVICE WHERE IS_ONLINE=true ORDER BY RS DESC", 
+                ())
+        .map(|result| { 
+            result.map(|x| x.unwrap()).map(|row| {
+                let (id, ip, port, is_online, rs) = my::from_row(row);
+                DeviceItem {
+                    id: id,
+                    ip: ip,
+                    port: port,
+                    is_online: is_online,
+                    rs: rs,
+                }
+            }).collect()
+        }).unwrap();
+        selected_devices
+    }
+
+    pub fn queryDevice(&self, id: i32) -> DeviceItem {
+        let selected_devices: Vec<DeviceItem> =
+        self.pool.prep_exec("SELECT * FROM DEVICE WHERE WHERE ID=:id", 
+                params!{"id" => id})
+        .map(|result| { 
+            result.map(|x| x.unwrap()).map(|row| {
+                let (id, ip, port, is_online, rs) = my::from_row(row);
+                DeviceItem {
+                    id: id,
+                    ip: ip,
+                    port: port,
+                    is_online: is_online,
+                    rs: rs,
+                }
+            }).collect()
+        }).unwrap();
+        return DeviceItem {
+            id: selected_devices[0].id,
+            ip: &selected_devices[0].ip,
+            port: selected_devices[0].port,
+            is_online: selected_devices[0].is_online,
+            rs: selected_devices[0].rs,
+        }
+    }
+
+    pub fn queryRequest_Byid(&self, id: i32) -> RequestItem {
+        let selected_requests: Vec<RequestItem> =
+        self.pool.prep_exec("SELECT * FROM REQUEST WHERE WHERE ID=:id", 
+                params!{"id" => id})
+        .map(|result| { 
+            result.map(|x| x.unwrap()).map(|row| {
+                let (id, type_, fragmentId, deviceId) = my::from_row(row);
+                RequestItem {
+                    id: id,
+                    type_: type_,
+                    fragmentId: fragmentId,
+                    deviceId: deviceId,
+                }
+            }).collect()
+        }).unwrap();
+        return RequestItem {
+            id: selected_requests[0].id,
+            type_: selected_requests[0].type_,
+            fragmentId: selected_requests[0].fragmentId,
+            deviceId: selected_requests[0].deviceId,
+        }
+    }
+
+    pub fn queryFirstRequest_Byid(&self, id: i32) -> RequestItem {
+        let selected_requests: Vec<RequestItem> =
+        self.pool.prep_exec("SELECT * FROM REQUEST WHERE WHERE DEVICEID=:id LIMIT 1", 
+                params!{"id" => id})
+        .map(|result| { 
+            result.map(|x| x.unwrap()).map(|row| {
+                let (id, type_, fragmentId, deviceId) = my::from_row(row);
+                RequestItem {
+                    id: id,
+                    type_: type_,
+                    fragmentId: fragmentId,
+                    deviceId: deviceId,
+                }
+            }).collect()
+        }).unwrap();
+        return RequestItem {
+            id: selected_requests[0].id,
+            type_: selected_requests[0].type_,
+            fragmentId: selected_requests[0].fragmentId,
+            deviceId: selected_requests[0].deviceId,
+        }
+    }
+
+    pub fn queryRequest_Bydeviceid(&self, deviceId: i32) -> RequestItem {
+        let selected_requests: Vec<RequestItem> =
+        self.pool.prep_exec("SELECT * FROM REQUEST WHERE WHERE DEVICEID=:id", 
+                params!{"id" => deviceId})
+        .map(|result| { 
+            result.map(|x| x.unwrap()).map(|row| {
+                let (id, type_, fragmentId, deviceId) = my::from_row(row);
+                RequestItem {
+                    id: id,
+                    type_: type_,
+                    fragmentId: fragmentId,
+                    deviceId: deviceId,
+                }
+            }).collect()
+        }).unwrap();
+        return RequestItem {
+            id: selected_requests[0].id,
+            type_: selected_requests[0].type_,
+            fragmentId: selected_requests[0].fragmentId,
+            deviceId: selected_requests[0].deviceId,
+        }
+    }
+
+    pub fn queryRequestNumbers_Byid(&self, deviceId: i32) -> i32 {
+        let selected_requests: Vec<RequestItem> =
+        self.pool.prep_exec("SELECT * FROM REQUEST WHERE WHERE DEVICEID=:id", 
+                params!{"id" => deviceId})
+        .map(|result| { 
+            result.map(|x| x.unwrap()).map(|row| {
+                let (id, type_, fragmentId, deviceId) = my::from_row(row);
+                RequestItem {
+                    id: id,
+                    type_: type_,
+                    fragmentId: fragmentId,
+                    deviceId: deviceId,
+                }
+            }).collect()
+        }).unwrap();
+        let mut i: i32 = 0;
+        for _r in selected_requests {
+            i = i+1;
+        }
+        i
+    }
+
+    pub fn queryRequestNumbers_Byidtype(&self, fileId: i32, type_: i32) -> i32 {
+        let selected_requests: Vec<RequestItem> =
+        self.pool.prep_exec("SELECT * FROM REQUEST WHERE WHERE FRAGMENTID>=:fid
+                AND FRAGMENTID<:fid2 AND TYPE_=:type_",
+                params!{"fid" => fileId*100, "fid2" => (fileId+1)*100, "type_" => type_})
+        .map(|result| { 
+            result.map(|x| x.unwrap()).map(|row| {
+                let (id, type_, fragmentId, deviceId) = my::from_row(row);
+                RequestItem {
+                    id: id,
+                    type_: type_,
+                    fragmentId: fragmentId,
+                    deviceId: deviceId,
+                }
+            }).collect()
+        }).unwrap();
+        let mut i: i32 = 0;
+        for _r in selected_requests {
+            i = i+1;
+        }
+        i
+    }
+
+    pub fn queryUserPasswd(&self, name: Option<String>) -> Option<String> {
+        let selected_user: Vec<UserItem> =
+        self.pool.prep_exec("SELECT * FROM USER WHERE NAME=:name",
+                params!{"name" => &name})
+        .map(|result| { 
+            result.map(|x| x.unwrap()).map(|row| {
+                let (id, name, passwd) = my::from_row(row);
+                UserItem {
+                    id: id,
+                    name: name,
+                    passwd: passwd,
+                }
+            }).collect()
+        }).unwrap();
+        selected_user[0].passwd
+    }
+
+    pub fn queryUserID(&self, name: Option<String>) -> i32 {
+        let selected_user: Vec<UserItem> =
+        self.pool.prep_exec("SELECT * FROM USER WHERE NAME=:name",
+                params!{"name" => &name})
+        .map(|result| { 
+            result.map(|x| x.unwrap()).map(|row| {
+                let (id, name, passwd) = my::from_row(row);
+                UserItem {
+                    id: id,
+                    name: name,
+                    passwd: passwd,
+                }
+            }).collect()
+        }).unwrap();
+        selected_user[0].id
+    }
 }
-
