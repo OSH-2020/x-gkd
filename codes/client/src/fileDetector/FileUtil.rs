@@ -7,12 +7,11 @@ use std::collections::LinkedList;
 use std::vec::Vec;
 //use std::convert::From::from;
 
-fn main() {
 
     /**
      * 文件工具类
      */
-    struct FileUtil{
+    pub struct FileUtil{
     }
     
     impl FileUtil{
@@ -33,7 +32,7 @@ fn main() {
     
         /*先用 struct std::path::Path 写，没找到如何从 
         struct::fs::File 得到对应 path 的方法*/ 
-        pub fn clearFolder(&self,folder:&Path) {
+        pub fn clearFolder(&self,folder:PathBuf) {
             //原代码中folder是 FILE类型
             if folder.is_file() {
                 fs::remove_file(&folder);
@@ -45,7 +44,7 @@ fn main() {
                             let pathbuf = entry.path();
                             let path:&Path = pathbuf.as_path();
                             if path.is_dir() {
-                                self.clearFolder(path);
+                                self.clearFolder(path.to_path_buf());
                             } else {
                                 fs::remove_file(path);
                             }
@@ -68,10 +67,10 @@ fn main() {
          * @return 所有的文件
          */
     
-         fn getAllFiles(&self,folder:&Path) -> LinkedList<File>{
+         pub fn getAllFiles(&self,folder:PathBuf) -> LinkedList<PathBuf>{
              /*!原代码中folder是 FILE类型*/
             
-            let mut files:LinkedList<File> = LinkedList::new();
+            let mut files:LinkedList<PathBuf> = LinkedList::new();
             let mut queue: LinkedList<PathBuf> = LinkedList::new();          
 
             queue.push_back(folder.to_path_buf());
@@ -88,7 +87,7 @@ fn main() {
                             if pathbuf.is_dir(){
                                 queue.push_back(pathbuf);
                             } else {
-                                files.push_back(File::open(pathbuf).unwrap());
+                                files.push_back(pathbuf);
                             }
                         }
                     
@@ -100,4 +99,3 @@ fn main() {
     
         }
     }
-}

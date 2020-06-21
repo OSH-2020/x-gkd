@@ -4,11 +4,14 @@ use std::fs;
 
 use std::path::PathBuf;
 use std::{thread, time};
+use std::convert::TryInto;
+use std::collections::linked_list::LinkedList;
 
 use super::FileUtil::FileUtil;
 use crate::client::client::SynItem::SynItem;
 use super::FileUploader::FileUploader;
 use super::FileAttrs;
+use crate::client::com;
 
 const BYTES_IN_SHARDS:u32 = 500000;
 const interval:u32 = 60000;
@@ -43,12 +46,14 @@ pub struct FolderScanner{
 
 impl FolderScanner{
      /* 参数syn是client.synItem类型，最后整合时记得改一下*/
-     pub fn new(f:Vec<PathBuf>,addr:Vec<String>,syn:SynItem){
-         FolderScanner{fold:f,address:addr,synItem:syn,detecting:true}
+     pub fn new(f:Vec<PathBuf>,addr:Vec<String>,syn:SynItem) -> FolderScanner {
+         FolderScanner{folder:f,address:addr,synItem:syn,detecting:true,tmpFragmentFolder:PathBuf::new()}
      }
      pub fn init(&self,tmp:PathBuf){
          self.tmpFragmentFolder = tmp;
      }
+
+     //@Override 未实现
      pub fn run(&self){
          let fUploader:FileUploader;
          if !fUploader.checkFolders(self.address){
@@ -57,9 +62,9 @@ impl FolderScanner{
              return;
          }
          while self.detecting{
-             //!try catch
+             //未处理catch InterruptedException
             self.scanFiles();
-            let interval_mills = time::Duration::from_millis(interval);
+            let interval_mills = time::Duration::from_millis(interval.into());
             thread::sleep(interval_mills);
          }
 
@@ -67,13 +72,12 @@ impl FolderScanner{
 
      // 扫描文件夹，如果有文件加入则处理该文件
      fn scanFiles(&self){
-        let mut i:i32 = 0;
+        //let mut i:i32 = 0;
         let FileUtil:FileUtil;
         for i in 0..self.folder.len() {
-            let files:Vec<PathBuf> = FileUtil.getAllFiles(self.folder[i]);
-            //let files:LinkedList<File> = FileUtil.getAllFiles(self.folder[i]);
+            let files:LinkedList<PathBuf> = FileUtil.getAllFiles(self.folder[i]);
             for file in files{
-                if !self.handleFile(file.as_path(),i.try_into().unwrap()){
+                if !self.handleFile(file.as_path().to_path_buf(),i.try_into().unwrap()){
                     return;
                 }
             }
@@ -88,17 +92,15 @@ impl FolderScanner{
      }
 
      pub fn handleFile(&self,file:PathBuf,i:i32) -> bool{
-         let fileName:String = file.file_name();
-         let filePath:String = file.to_str() + '/';
-         /*let mut s1 = "Hello,".to_string();
-let s2 = "world".to_string();
-s1 += &s2;*/
-         let mut attribute:String = "";
-         let metadata = fs::metadata(&file);
-         if metadata.permissions.readonly() == true {
-             attribute = attribute + 'r';
+         let fileName:String = file.file_name().unwrap().to_str().unwrap().to_string();
+         let filePath:String = self.address[i as usize] + "/";
+         
+         let mut attribute:String = "".to_string();
+         let metadata = file.metadata().unwrap();
+         if metadata.permissions().readonly() == true {
+             attribute = attribute + "r";
          } else {
-             attribute = attribute + '-';
+             attribute = attribute + "-";
          }
          /* fs::metadata.permissions只在
             全平台实现了readonly(),但writeonly()没实现，
@@ -108,7 +110,7 @@ s1 += &s2;*/
             } else {
                 attribute = attribute + '-';
             }*/
-        let mut noa:i32 = (metadata.len() / BYTES_IN_SHARDS) + 1;   //metadata.len()返回值类型为u64
+        let mut noa:i32 = (metadata.len().try_into().unwrap() / BYTES_IN_SHARDS) + 1;   //metadata.len()返回值类型为u64
         noa = noa * 2;
         
         let fileAttrs = FileAttrs::init(fileName,filePath,attribute,noa);
@@ -124,10 +126,15 @@ s1 += &s2;*/
             println!("ERR: server already has this file, skip it");
             return true;
         }
-        /*NOTE: trycatch */
-        let mut j:i32 = 0;
+        /*NOTE: trycatch 有关erasure code，调用路径可能还需要改*/
+        if !com::Encoder.encode(file,self.tmpFragmentFolder,id) {
+            println!("ERR: can not split file");
+            self.synItem.setStatus(2);
+            return false;
+        }
+        
         for j in 0.. noa {
-            if(!fUploader.pushFragment(id,j,noa)){
+            if !fUploader.pushFragment(id,j,noa) {
                 println!("ERR: can not upload fragments");
                 self.synItem.setStatus(2);
                 return false;

@@ -1507,3 +1507,9 @@ let path:Path = *shardsFolder.join(Path::new(&(fid * 100 +i).to_string())).as_pa
       - FolderScanner.rs
   - server
 
+讨论结果：
+
+直接cargo run即可，做成二进制可执行文件
+
+client、server各有main，做成两个包这样，然后直接cargo run
+
