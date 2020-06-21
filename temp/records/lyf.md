@@ -1196,6 +1196,23 @@ str -> stmt -> prepare -> execuate
 
   If `new_len` is greater than `len`, the `Vec` is extended by the difference, with each additional slot filled with `value`. If `new_len` is less than `len`, the `Vec` is simply truncated.
 
+**std::thread::sleep**
+
+对应 `Thread.sleep(interval);`
+
+```rust
+use std::{thread, time};
+
+let ten_millis = time::Duration::from_millis(10);
+let now = time::Instant::now();
+
+thread::sleep(ten_millis);
+
+assert!(now.elapsed() >= ten_millis);
+```
+
+
+
 #### 其他
 
 **python中的字符串前缀 r,b,u**
@@ -1468,5 +1485,25 @@ let path:Path = *shardsFolder.join(Path::new(&(fid * 100 +i).to_string())).as_pa
 
 还有一直存在的Path的使用问题
 
-  
+  ### Rust 代码结构构建
+
+- crate根
+  - client
+    - client
+      - client.rs	//main函数在这里
+      - SynItem.rs
+    - com
+      - Encoder.rs
+      - Decoder.rs
+      - 纠删码的crate
+    - connect
+      - FileTransporter.rs
+      - FragmentManager.rs
+      - ServerConnect.rs
+    - fileDetector
+      - FileAttrs.rs	mod
+      - FileUploader.rs  
+      - FileUtil.rs
+      - FolderScanner.rs
+  - server
 

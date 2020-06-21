@@ -1,10 +1,17 @@
-use std::thread;
 use std::path::Path;
 use std::fs::metadata;
 use std::fs;
 
+use std::path::PathBuf;
+use std::{thread, time};
+
+use super::FileUtil::FileUtil;
+use crate::client::client::SynItem::SynItem;
+use super::FileUploader::FileUploader;
+use super::FileAttrs;
+
 const BYTES_IN_SHARDS:u32 = 500000;
-fn main() {
+const interval:u32 = 60000;
 
 /* NOTE:
    两个try catch 语句未实现
@@ -18,27 +25,28 @@ fn main() {
  * 所有新加入的文件处理完毕之后，将文件夹清空，继续检测
  */
 
- struct FolderScanner{
 
-     folder:Vec<Path>,
+pub struct FolderScanner{
+
+     folder:Vec<PathBuf>,
      address:Vec<String>,
-     synItem:clent.SynItem,
+     synItem:SynItem,
 
-     tmpFragmentFolder:Path,
+     tmpFragmentFolder:PathBuf,
 
      // 每次检测的时间间隔
-     interval:u32 = 60000,
+     //interval:u32 = 60000,
 
      // 是否继续检测的标识，如果为 false 则检测线程停止
-     detecting:boolean = true,
+     detecting:bool
  }
 
- impl FolderScanner{
+impl FolderScanner{
      /* 参数syn是client.synItem类型，最后整合时记得改一下*/
-     pub fn new(f:Vec<Path>,addr:Vec<String>,syn:client.synItem){
-         FolderScanner{fold:f,address:addr,synItem:syn}
+     pub fn new(f:Vec<PathBuf>,addr:Vec<String>,syn:SynItem){
+         FolderScanner{fold:f,address:addr,synItem:syn,detecting:true}
      }
-     pub fn init(&self,tmp:Path){
+     pub fn init(&self,tmp:PathBuf){
          self.tmpFragmentFolder = tmp;
      }
      pub fn run(&self){
@@ -50,6 +58,9 @@ fn main() {
          }
          while self.detecting{
              //!try catch
+            self.scanFiles();
+            let interval_mills = time::Duration::from_millis(interval);
+            thread::sleep(interval_mills);
          }
 
      }
@@ -57,10 +68,12 @@ fn main() {
      // 扫描文件夹，如果有文件加入则处理该文件
      fn scanFiles(&self){
         let mut i:i32 = 0;
-        for i in 0..self.folder.len {
-            let files:Vec<Path> = FileUtil.getAllFiles(self.folder[i]);
+        let FileUtil:FileUtil;
+        for i in 0..self.folder.len() {
+            let files:Vec<PathBuf> = FileUtil.getAllFiles(self.folder[i]);
+            //let files:LinkedList<File> = FileUtil.getAllFiles(self.folder[i]);
             for file in files{
-                if !self.handleFile(file,i){
+                if !self.handleFile(file.as_path(),i.try_into().unwrap()){
                     return;
                 }
             }
@@ -74,7 +87,7 @@ fn main() {
          self.detecting = false;
      }
 
-     pub fn handleFile(&self,file:Path,i:i32) -> bool{
+     pub fn handleFile(&self,file:PathBuf,i:i32) -> bool{
          let fileName:String = file.file_name();
          let filePath:String = file.to_str() + '/';
          /*let mut s1 = "Hello,".to_string();
@@ -98,14 +111,14 @@ s1 += &s2;*/
         let mut noa:i32 = (metadata.len() / BYTES_IN_SHARDS) + 1;   //metadata.len()返回值类型为u64
         noa = noa * 2;
         
-        let fileAttrs = FileAttrs::new(fileName,filePath,attribute,noa);
+        let fileAttrs = FileAttrs::init(fileName,filePath,attribute,noa);
         
         let fUploader:FileUploader;
 
         let id:i32 = fUploader.registerFile(fileAttrs);
         if id == -2 {
             println!("ERR: can not get file id");
-            synItem.setStatus(2);
+            self.synItem.setStatus(2);
             return false;
         } else if id == -1 {
             println!("ERR: server already has this file, skip it");
@@ -116,15 +129,16 @@ s1 += &s2;*/
         for j in 0.. noa {
             if(!fUploader.pushFragment(id,j,noa)){
                 println!("ERR: can not upload fragments");
-                synItem.setStatus(2);
+                self.synItem.setStatus(2);
                 return false;
             }
         }
 
+        let FileUtil:FileUtil;
         // 处理完毕，清空块文件夹
         FileUtil.clearFolder(self.tmpFragmentFolder);
         
         return true;
      }
  }
-}
+
