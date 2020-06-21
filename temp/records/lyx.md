@@ -9,21 +9,69 @@
 
 
 
+
+
 ### Rust总结:
 
 * 多线程
 
-  thread::spawn,thread::sleep;JoinHandle的join方法
+  * thread::spawn+闭包：创建新线程及其运行代码
 
-  move:移动数据到新线程
+    thread::sleep(Duration::from_millis(1))：让线程停止运行一段时间
 
-  通道 ，send，recv，try_recv
+    JoinHandle的join方法来让主线程等待线程运行结束
 
-  互斥器(Mutex)
+    move:移动数据到新线程（通过在闭包之前增加 move 关键字，我们强制闭包获取其使用的值的所有权）
 
-  std::sync::Condvar::wait和std::sync::Condvar::notify_one，std::sync::Condvar::notify_all
+  ```rust
+  let handle = thread::spawn(move || { 
+      println!("Here's a vector: {:?}", v); 
+  });
+  ```
 
-  原子类型std::sync::atomic
+  * 通道 ，send，recv（阻塞直到接收到数据），try_recv(立即返回)： 三个函数均返回 Result<T, E>；。 send 函数获取其参数的所有权并移动这个值归接收者所有
+
+    注意发送和接收端有一端关闭，则三个方法均会返回错误
+
+    let (tx, rx) = mpsc::channel(); 多生产者单消费者（即可以有多个发送端(tx)，但只能有一个接收端(rx)）
+
+    创建多个生产者:let tx1 = mpsc::Sender::clone(&tx); 
+
+  * 共享状态并发
+
+    互斥器(Mutex)：
+
+    ```rust
+    let handle = thread::spawn(move || { 
+    	let mut num = counter.lock().unwrap(); 
+        *num += 1; 
+    });//但这样会把所有权移到该线程而导致其他线程无法使用
+    ```
+
+    改进：考虑多所有权：Mutex<T> 封装进 Rc<T> 中并在将所有权 
+
+    移入线程之前克隆 Rc<T> :但这不安全，所以无法通过编译；所以考虑修改为原子引用计数Arc<T>
+
+    ```rust
+    let counter = Rc::new(Mutex::new(0));
+    
+    let counter = Rc::clone(&counter); 
+    let handle = thread::spawn(move || { let mut num = counter.lock().unwrap(); *num += 1; });
+    
+    let counter = Arc::new(Mutex::new(0));
+    let counter = Arc::clone(&counter); 
+    let handle = thread::spawn(move || { let mut num = counter.lock().unwrap(); *num += 1; });
+    ```
+
+    
+
+    std::sync::Condvar::wait和std::sync::Condvar::notify_one，std::sync::Condvar::notify_all
+
+    原子类型std::sync::atomic
+
+  * Send 标记 trait 表明类型的所有权可以在线程间传递,几乎所有的 Rust 类型都是 Send 的， 任何完全由 Send 的类型组成的类型也会自动被标记为 Send
+
+    Sync 标记 trait 表明一个实现了 Sync 的类型可以安全的在多个线程中拥有其值的引用，对于任意类型 T ，如果 &T （ T 的引用）是 Send 的话 T 就是 Sync 的，这意味着其引用就可以安全的发送到另一个线程，同理，基本类型是 Sync 的，完全由 Sync 的类型组成的类型也是 Sync 的
 
 * unwrap():调用 `option.unwrap()` 来获取 `option` 中包裹的值,出错则直接panic
 
@@ -109,7 +157,7 @@ callback：注册一个回调，该回调将在执行时将消息发送到组件
 
 java中File类的使用主要是遍历文件夹里内容啥的，std::fs里read_dir()这样的函数可以实现，所以直接把File类存成String即可
 
-
+模块client实现:main函数启动后，先读取配置文件，再直接调用几个类里实现的静态方法来把几个模块的示例的静态数据初始化，然后在begin函数中启动网络链接模块中的控制链接线程与文件夹监控线程，把syn示例传递给其他线程，然后进入wait状态，当有线程出错时会修改status参数并唤醒主线程，使得其发现参数的修改并终止所有线程
 
 
 
@@ -289,16 +337,177 @@ Express 框架核心特性：
 
 
     First Name: <input type="text" name="first_name"> <br>
-    
+
     Last Name: <input type="text" name="last_name">
-    
+
     <input type="submit" value="Submit">
-    
+
     </form>
 
 
 
+### HTTP教程
 
+HTTP协议（HyperText Transfer Protocol，超文本传输协议）；HTTP基于TCP/IP通信协议来传递数据（HTML 文件, 图片文件, 查询结果等）
+
+##### http简介
+
+* 工作原理:
+
+  * HTTP协议工作于客户端-服务端架构上。浏览器作为HTTP客户端通过URL向HTTP服务端即WEB服务器发送所有请求。
+
+    Web服务器有：Apache服务器，IIS服务器（Internet Information Services）等。
+
+    Web服务器根据接收到的请求后，向客户端发送响应信息。
+
+  ​       HTTP默认端口号为80，但是你也可以改为8080或者其他端口。
+
+  * 注意:
+    * HTTP是无连接：无连接的含义是限制每次连接只处理一个请求。服务器处理完客户的请求，并收到客户的应答后，即断开连接。采用这种方式可以节省传输时间。
+    * HTTP是媒体独立的：这意味着，只要客户端和服务器知道如何处理的数据内容，任何类型的数据都可以通过HTTP发送。客户端以及服务器指定使用适合的MIME-type内容类型。
+    * HTTP是无状态：HTTP协议是无状态协议。无状态是指协议对于事务处理没有记忆能力。缺少状态意味着如果后续处理需要前面的信息，则它必须重传，这样可能导致每次连接传送的数据量增大。另一方面，在服务器不需要先前信息时它的应答就较快。
+
+##### http消息结构
+
+HTTP是基于客户端/服务端（C/S）的架构模型，通过一个可靠的链接来交换信息，是一个无状态的请求/响应协议。
+
+一个HTTP"客户端"是一个应用程序（Web浏览器或其他任何客户端），通过连接到服务器达到向服务器发送一个或多个HTTP的请求的目的。
+
+一个HTTP"服务器"同样也是一个应用程序（通常是一个Web服务，如Apache Web服务器或IIS服务器等），通过接收客户端的请求并向客户端发送HTTP响应数据。
+
+HTTP使用统一资源标识符（Uniform Resource Identifiers, URI）来传输数据和建立连接。
+
+一旦建立连接后，数据消息就通过类似Internet邮件所使用的格式[RFC5322]和多用途Internet邮件扩展（MIME）[RFC2045]来传送。
+
+* 客户端请求消息
+
+  客户端发送一个HTTP请求到服务器的请求消息包括以下格式：请求行（request line）、请求头部（header）、空行和请求数据四个部分组成，
+
+  请求头包括：user-Agent:产生请求的浏览器类型
+
+  ​						Accept:客户端可识别的内容类型列表
+
+  ​						Host：主机地址
+
+  下图给出了请求报文的一般格式。
+
+  ![](D:\科大\大二下\操作系统\6月图片\http请求格式.JPG)
+
+  请求报文:前三行为请求行，其余部分称为request-header
+
+  请求行之后是请求首部。首部常见的部分有如下几个：
+
+  l Accept：请求的对象类型。如果是“/”表示任意类型，如果是指定的类型，则会变成“type/”。
+
+  l Accept-Language：使用的语言种类。
+
+  l Accept-Encording：页面编码种类。
+
+  l Accept-Charset：页面字符集。
+
+  l User-Agent：提供了客户端浏览器的类型和版本。
+
+  l Host：连接的目标主机，如果连接的服务器是非标准端口，在这里会出现使用的非标准端口。
+
+  l Connection：对于HTTP连接的处理，keep-alive表示保持连接，如果是在响应报文中发送页面完毕就会关闭连接，状态变为close。
+
+  ![](D:\科大\大二下\操作系统\6月图片\请求报文.JPG)
+
+* 服务器响应消息
+
+  HTTP响应也由四个部分组成，分别是：状态行、消息报头、空行和响应正文。
+
+  状态行给出了服务器的http版本，以及一个响应码（如404）。
+
+![](D:\科大\大二下\操作系统\6月图片\服务器响应.JPG)
+
+##### HTTP 请求方法
+
+| 序号 | 方法    | 描述                                                         |
+| :--- | :------ | :----------------------------------------------------------- |
+| 1    | GET     | 请求指定的页面信息，并返回实体主体。                         |
+| 2    | HEAD    | 类似于 GET 请求，只不过返回的响应中没有具体的内容，用于获取报头 |
+| 3    | POST    | 向指定资源提交数据进行处理请求（例如提交表单或者上传文件）。数据被包含在请求体中。POST 请求可能会导致新的资源的建立和/或已有资源的修改。 |
+| 4    | PUT     | 从客户端向服务器传送的数据取代指定的文档的内容。             |
+| 5    | DELETE  | 请求服务器删除指定的页面。                                   |
+| 6    | CONNECT | HTTP/1.1 协议中预留给能够将连接改为管道方式的代理服务器。    |
+| 7    | OPTIONS | 允许客户端查看服务器的性能。                                 |
+| 8    | TRACE   | 回显服务器收到的请求，主要用于测试或诊断。                   |
+| 9    | PATCH   | 是对 PUT 方法的补充，用来对已知资源进行局部更新 。           |
+
+##### http响应头信息
+
+HTTP请求头提供了关于请求，响应或者其他的发送实体的信息。比较重要的就是Content-Type,cookie
+
+| 应答头           | 说明                                                         |
+| :--------------- | :----------------------------------------------------------- |
+| Allow            | 服务器支持哪些请求方法（如GET、POST等）。                    |
+| Content-Encoding | 文档的编码（Encode）方法。只有在解码之后才可以得到Content-Type头指定的内容类型。利用gzip压缩文档能够显著地减少HTML文档的下载时间。Java的GZIPOutputStream可以很方便地进行gzip压缩，但只有Unix上的Netscape和Windows上的IE 4、IE 5才支持它。因此，Servlet应该通过查看Accept-Encoding头（即request.getHeader("Accept-Encoding")）检查浏览器是否支持gzip，为支持gzip的浏览器返回经gzip压缩的HTML页面，为其他浏览器返回普通页面。 |
+| Content-Length   | 表示内容长度。只有当浏览器使用持久HTTP连接时才需要这个数据。如果你想要利用持久连接的优势，可以把输出文档写入 ByteArrayOutputStream，完成后查看其大小，然后把该值放入Content-Length头，最后通过byteArrayStream.writeTo(response.getOutputStream()发送内容。 |
+| Content-Type     | 表示后面的文档属于什么MIME类型。Servlet默认为text/plain，但通常需要显式地指定为text/html。由于经常要设置Content-Type，因此HttpServletResponse提供了一个专用的方法setContentType。 |
+| Date             | 当前的GMT时间。你可以用setDateHeader来设置这个头以避免转换时间格式的麻烦。 |
+| Expires          | 应该在什么时候认为文档已经过期，从而不再缓存它？             |
+| Last-Modified    | 文档的最后改动时间。客户可以通过If-Modified-Since请求头提供一个日期，该请求将被视为一个条件GET，只有改动时间迟于指定时间的文档才会返回，否则返回一个304（Not Modified）状态。Last-Modified也可用setDateHeader方法来设置。 |
+| Location         | 表示客户应当到哪里去提取文档。Location通常不是直接设置的，而是通过HttpServletResponse的sendRedirect方法，该方法同时设置状态代码为302。 |
+| Refresh          | 表示浏览器应该在多少时间之后刷新文档，以秒计。除了刷新当前文档之外，你还可以通过setHeader("Refresh", "5; URL=http://host/path")让浏览器读取指定的页面。 注意这种功能通常是通过设置HTML页面HEAD区的＜META HTTP-EQUIV="Refresh" CONTENT="5;URL=http://host/path"＞实现，这是因为，自动刷新或重定向对于那些不能使用CGI或Servlet的HTML编写者十分重要。但是，对于Servlet来说，直接设置Refresh头更加方便。  注意Refresh的意义是"N秒之后刷新本页面或访问指定页面"，而不是"每隔N秒刷新本页面或访问指定页面"。因此，连续刷新要求每次都发送一个Refresh头，而发送204状态代码则可以阻止浏览器继续刷新，不管是使用Refresh头还是＜META HTTP-EQUIV="Refresh" ...＞。  注意Refresh头不属于HTTP 1.1正式规范的一部分，而是一个扩展，但Netscape和IE都支持它。 |
+| Server           | 服务器名字。Servlet一般不设置这个值，而是由Web服务器自己设置。 |
+| Set-Cookie       | 设置和页面关联的Cookie。Servlet不应使用response.setHeader("Set-Cookie", ...)，而是应使用HttpServletResponse提供的专用方法addCookie。参见下文有关Cookie设置的讨论。 |
+| WWW-Authenticate | 客户应该在Authorization头中提供什么类型的授权信息？在包含401（Unauthorized）状态行的应答中这个头是必需的。例如，response.setHeader("WWW-Authenticate", "BASIC realm=＼"executives＼"")。 注意Servlet一般不进行这方面的处理，而是让Web服务器的专门机制来控制受密码保护页面的访问（例如.htaccess）。 |
+
+##### HTTP状态码
+
+当浏览者访问一个网页时，浏览者的浏览器会向网页所在服务器发出请求。当浏览器接收并显示网页前，此网页所在的服务器会返回一个包含HTTP状态码的信息头（server header）用以响应浏览器的请求。
+
+HTTP状态码的英文为HTTP Status Code。
+
+下面是常见的HTTP状态码：
+
+- 200 - 请求成功
+- 301 - 资源（网页等）被永久转移到其它URL
+- 404 - 请求的资源（网页等）不存在
+- 500 - 内部服务器错误
+
+##### HTTP content-type
+
+Content-Type（内容类型），一般是指网页中存在的 Content-Type，用于定义网络文件的类型和网页的编码，决定浏览器将以什么形式、什么编码读取这个文件，
+
+Content-Type 标头告诉客户端实际返回的内容的内容类型。
+
+常见的媒体格式类型如下：
+
+- text/html ： HTML格式
+- text/plain ：纯文本格式
+- text/xml ： XML格式
+- image/gif ：gif图片格式
+- image/jpeg ：jpg图片格式
+- image/png：png图片格式
+
+以application开头的媒体格式类型：
+
+- application/xhtml+xml ：XHTML格式
+- application/xml： XML数据格式
+- application/atom+xml ：Atom XML聚合格式
+- application/json： JSON数据格式
+- application/pdf：pdf格式
+- application/msword ： Word文档格式
+- application/octet-stream ： 二进制流数据（如常见的文件下载）
+- application/x-www-form-urlencoded ： <form encType="">中默认的encType，form表单数据被编码为key/value格式发送到服务器（表单默认的提交数据的格式）
+
+另外一种常见的媒体格式是上传文件之时使用的：
+
+- multipart/form-data ： 需要在表单中进行文件上传时，就需要使用该格式
+
+
+
+##### Cookie
+
+cookie是一种类似缓存的机制，它保存在一个本地的文本文件中，其主要作用是在发送请求时将cookie放在请求首部中发送给服务器，服务器收到cookie后查找自己已有的cookie信息，确定客户端的身份，然后返回相应的页面，cookie的方便之处在于可以保持一种已登录的状态，例如：我们注册一个论坛，每次访问都需要进行填写用户名和密码然后登录。而使用了cookie后，如果cookie没有到达过期时间，那么我们只需在第一次登录时填写信息然后登录，以后的访问就可以省略这一步骤。
+
+在HTTP协议中，cookie的交互过程是这样的：首先是三次握手建立TCP连接，然后客户端发出一个http request，这个request中不包含任何cookie信息。
+
+当服务器收到这个报文后，针对request method作出响应动作，在响应报文的实体部分，加入了set-cookie段，set-cookie段中给出了cookie的id，过期时间以及参数path，path是表示在哪个虚拟目录路径下的页面可以读取使用该cookie，将这些信息发回给客户端后，客户端在以后的http request中就会将自己的cookie段用这些信息填充。
+
+如果用户在连接中通过了服务器相应的认证程序，服务器会添加一个cdb_auth到set-cookie中，这个段表示了客户端的认证信息，而客户端以后在访问过程中也会将cdb_auth信息写入自己的cookie字段。服务器每次收到http request后读取cookie，然后根据cookie的信息返回不同的页面。例如，没有通过认证的客户端在request中不会有cdb_auth，因此服务器读取cookie后，不会将通过认证的客户端的页面返回给该客户端。
 
 ### Rocket
 
@@ -1013,6 +1222,36 @@ Express 框架核心特性：
           }
       ```
 
+* Pastebin项目:
+
+  * 开始构建:即创建工程，添加dependency啥的
+
+  * index: get "/" :返回字符串，即根网址显示操作说明；Rocket will take the string and return it as the body of a fully formed HTTP response with `Content-Type: text/plain`
+
+  * uploading:
+
+    * 创建unique IDs:结构体`pub struct PasteID<'a>(Cow<'a, str>);`并实现了trait:`fmt::Display`和`FromParam<'a>`
+
+    * Upload Route：
+
+      1. 创建`PasteId`您选择的新长度。
+      2. 在`upload/`给定的内部构造一个文件名`PasteId`。
+      3. 将传输`Data`到具有构造文件名的文件。
+      4. 根据构造URL `PasteId`。
+      5. 将URL返回给客户端。
+
+    * Retrieving Pastes:给定一个`<id>`，将返回相应的粘贴（如果存在）(即在浏览器端访问`GET /<id>` route，则会返回相应的文件内容)
+
+      需要对访问的url的id做判断，看其所指的文件是否valid（即允许访问)
+
+      To prevent the attack, we need to *validate* `id` before we use it. Since the `id` is a dynamic parameter, we can use Rocket's [FromParam](https://api.rocket.rs/v0.4/rocket/request/trait.FromParam.html) trait to implement the validation and ensure that the `id` is a valid `PasteId` before using it
+
+      FromParam理解参见https://api.rocket.rs/v0.4/rocket/request/trait.FromParam.html的开头和Forwarding段落的阅读
+
+
+
+
+
 问题: 请求怎么发? 加cookie或数据，或各种header啥的还不太会，得查查资料(或许postman可以，但还不太会用)
 
 
@@ -1040,7 +1279,7 @@ Rocket遇到的问题与思考
 
 以及bug调试
 
-二维数组
+
 
 
 
@@ -1050,6 +1289,7 @@ Rocket遇到的问题与思考
 * 响应前端请求，调用服务器端Java程序访问数据库和进行文件操作，返回动态数据
 * BOOTSTRAP主题 打造优美交互界面
 * Jqery + AJAX异步C/S通讯+JSON实现文件目录层次的交互式刷新，响应用户网页操作
+* 基本思路: 前端html -> 通过按钮点击，进行ajax响应，传递数据到java函数进行操作，再传回来，最后相应更新浏览器页面
 
 
 
@@ -1136,3 +1376,4 @@ Rocket遇到的问题与思考
 2. 文件目录层次的交互式刷新，响应用户对文件目录的操作
 3. 下载操作的实现
 4. 界面优化
+
