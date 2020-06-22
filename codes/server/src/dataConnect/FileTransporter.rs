@@ -2,7 +2,7 @@ use std::io::prelude::*;
 use std::fs::File;
 use std::net::TcpStream;
 
-pub fn recv_file(mut f: File, mut soc_in: TcpStream)->bool{
+pub fn recv_file(mut f: File, mut soc_in: &TcpStream)->bool{
     //原java文件中socout这个参数并没有用到，此处删去
     //手动实现读取一个long类型的数据
     let mut buffer = [0; 8];
@@ -30,7 +30,7 @@ pub fn recv_file(mut f: File, mut soc_in: TcpStream)->bool{
     return true
 }//TODO:err handle
 
-pub fn send_file(mut f: File, mut soc_out: TcpStream)->bool{
+pub fn send_file(mut f: File, mut soc_out: &TcpStream)->bool{
     let mut send_bytes = [0; 4096];
 
     let mut length = f.read(&mut send_bytes[..]);
