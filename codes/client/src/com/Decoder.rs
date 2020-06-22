@@ -4,10 +4,14 @@ extern crate reed_solomon_erasure;
 use reed_solomon_erasure::galois_8::ReedSolomon;
 use std::path;
 use std::path::Path;
+use std::path::PathBuf;
 use std::fs::File;
 use std::fs;
 use std::convert::TryInto;
 
+fn main() {
+    println!("Hello, world!");
+}
 
 const BYTES_IN_INT:i32 = 4;
 struct Decoder{
@@ -15,7 +19,7 @@ struct Decoder{
 }
 
 impl Decoder{
-    pub fn decode(shardsFolder:&Path,fileFolder:&Path,fid:i32,noa:i32) -> bool{
+    pub fn decode(shardsFolder:PathBuf,fileFolder:PathBuf,fid:i32,noa:i32) -> bool{
         /*！  未处理throw IOException  */ 
 
         let totalShards:i32 = noa;

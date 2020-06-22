@@ -113,7 +113,7 @@ impl FolderScanner{
         let mut noa:i32 = (metadata.len().try_into().unwrap() / BYTES_IN_SHARDS) + 1;   //metadata.len()返回值类型为u64
         noa = noa * 2;
         
-        let fileAttrs = FileAttrs::init(fileName,filePath,attribute,noa);
+        let fileAttrs = FileAttrs::FileAttrs::init(fileName,filePath,attribute,noa);
         
         let fUploader:FileUploader;
 
@@ -127,7 +127,7 @@ impl FolderScanner{
             return true;
         }
         /*NOTE: trycatch 有关erasure code，调用路径可能还需要改*/
-        if !com::Encoder.encode(file,self.tmpFragmentFolder,id) {
+        if !com::Encoder::Encoder::encode(file,self.tmpFragmentFolder,id) {
             println!("ERR: can not split file");
             self.synItem.setStatus(2);
             return false;
