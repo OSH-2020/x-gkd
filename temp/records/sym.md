@@ -428,3 +428,33 @@ use std::*;
 include!("FileItem.rs");	使用宏来 include，可以不在同一目录，写清目录就可
 
 rust 不支持函数重载，所以有些函数修改了名字，在后面加上 _Byid 等
+
+
+
+改写FileUploader过程中：
+
+int = Integer.parseInt(String) 表示把 String 的数字提取出来变成int
+
+可以使用rust中的
+
+```
+let my_string = "27".to_string(); // `parse()` works with `&str` and `String`!
+
+let my_int = my_string.parse::<i32>().unwrap();
+```
+
+Q：
+
+match &self.to_server{
+
+​      None => println!("Error! server not connected..."),
+
+​      Some (socket) => {
+
+​        //self.socket = socket.clone();
+
+​      }
+
+​    }
+
+self.socket.write_fmt(format_args!("{} false\n", fa));
