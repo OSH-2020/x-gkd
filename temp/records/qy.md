@@ -1,8 +1,10 @@
-* 一些调用其他模块中内容的变量，可能涉及到漏设置 mut 属性！！
+* 一些调用其他模块中内容的变量，可能涉及到漏设置 mut 属性！！调用其他模块中的方法，还没有校队接口
 
 ### ServerConnecter.rs
 
-目前为1.0版。这个文件定义了 ServerConnect 结构体，以及 new, init, run, stopConnect 四个方法。这个文件可以通过编译，但还有一些 warning 没有解决。
+目前为1.0版。这个文件定义了 ServerConnect 结构体，以及 new, init, run, stopConnect 四个方法。这个文件可以通过编译，但没有解决大部分的 warning。
+
+run 方法中，while self.connecting 循环最后为线程 sleep 3秒，每次循环开始都尝试连接 server ，并输出连接是否成功的信息。
 
 * 关于 crate 结构如何组织的问题还没有解决。目前先按照原来项目的目录存放文件。有新的方案之后可能会需要在代码中增加几行。
 
@@ -14,16 +16,6 @@
 
 * 使用 Bufreader 对 TcpStream 进行按行读的操作。为了同时使用 BufReader 读和使用原有的 TcpStream 写，在创建 BufReader 对象前调用了 socket.try_clone() ，对于这个函数的一些细节还不是很清楚。 
 
-* 没有查到原 ServerConnecter.java 中的 client.Client.getRS() 的作用及其对应方法，原文件第 68 行的调用没有对应实现。
-
-* 有涉及其他文件中定义的结构体的情况，方法接口可能不一致。目前写为：
-
-  ~~~rust
-  let f_manager = FragmentManager::new(request_id, fragment_id, ftype);
-  f_manager.submit();
-  ~~~
-
-  注：type 是 Rust 关键字，因此此处变量命名为 ftype 。
 
 
 
@@ -34,10 +26,17 @@
 recv_file 调用时需要在 TcpStream 的文件内容之前有一个 big endian 的 64 位文件大小参数。
 
 * 错误处理待完善
+
 * 根据调用情况， DataInputStream DataOutputStream 对应都视为 TcpStream
+
 * 将参数类型改为了 &TcpStream，否则如果使用 TcpStream，函数调用完毕返回时不能返还所有权。
+
 * 目前接收文件是1024字节一次，分多次接收。发送文件是一次性发送，无法发送 4096 字节以上的文件。
+
 * 还没有找到得到文件大小的方法，即 f.length() 的对应实现。
+
+  path.metadata() 方法似乎可以完成这个功能，但不知道如何 file 转 path 或 pathbuf 。
+
 * 涉及到 client\src\fileDetector\FileUploader, client\src\connect\FragmentManager 中的调用，对应函数传参还没有更改。
 
 
@@ -78,7 +77,7 @@ recv_file 调用时需要在 TcpStream 的文件内容之前有一个 big endian
 
 其中 test1.txt 是在 crate 根目录下的文件。
 
-```
+```rust
 use std::io::prelude::*;
 use std::fs::File;
 use std::net::TcpStream;
@@ -114,7 +113,7 @@ fn handle_client1(stream: TcpStream) {
 
 测试 send_file 函数：
 
-```
+```rust
 use std::io::prelude::*;
 use std::net::TcpStream;
 
@@ -130,14 +129,13 @@ fn main(){
 
 测试 recv_file 函数，其中 18 为手动计算的文件大小。
 
-```
+```rust
 use std::io::prelude::*;
 use std::net::TcpStream;
 use std::thread;
 
 fn main(){
     let mut stream = TcpStream::connect("127.0.0.1:8000").unwrap();
-    //let mut res = String::new();
     let i: i64 = 18;
     let t1 = stream.write(&i.to_be_bytes()).unwrap(); 
     let t2 = stream.write(b"send to test2.txt\n").unwrap(); 
@@ -164,5 +162,40 @@ read content: "\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{12}this is test1.txt\n\u{0}
 
 ```
 error: process didn't exit successfully: `target\debug\OSHtest.exe` (exit code: 0xc000013a, STATUS_CONTROL_C_EXIT)
+```
+
+### ServerConnect.rs
+
+目前可以跑，但 run 方法从 readline 函数调用之后的循环内的内容似乎都没能执行，并且从那个地方直接跳入下一次循环。thread::sleep 函数从未执行，移动到 read_line 之前也不能成功执行，因此终端上会不停输出 "Connect to server successfully(control)!"
+
+read_line 的问题也可能是因为我对 TCP 通信方式理解有问题，测试文件不合理。
+
+测试文件服务端：（main 函数部分与 FileTransporter.rs 测试文件相同）
+
+```rust
+fn handle_client(stream: TcpStream) {
+    let mut cserver = ServerConnect::ServerConnecter::new(1);
+    let s = String::from("127.0.0.1");
+    let i:u16 = 8000;
+    cserver.init(s, i);
+    cserver.run();
+}
+```
+
+测试文件客户端：
+
+```rust
+use std::io::prelude::*;
+use std::net::TcpStream;
+use std::thread;
+
+fn main(){
+    let mut stream = TcpStream::connect("127.0.0.1:8000").unwrap();
+    let t1 = stream.write(b"0 0 1\n").unwrap(); 
+    let t2 = stream.write(b"0 0 1\n").unwrap(); 
+    stream.flush();
+    println!("write bytes: {}", t1 + t2);
+    std::thread::sleep_ms(2000);
+} 
 ```
 
