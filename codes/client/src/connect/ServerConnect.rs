@@ -3,7 +3,7 @@ use std::string::String;
 use std::io::BufReader;
 use std::io::prelude::*;
 use std::{thread, time};
-
+use std::sync::{Arc, Mutex, Condvar};
 //#[derive(Debug)]
 struct ServerConnecter{
     server_ip:String,
@@ -31,7 +31,7 @@ impl ServerConnecter{
         self.control_port = c_port;
     }
 
-    pub fn run(&mut self){
+    pub fn run(&mut self,status:Arc<Mutex<i32>,Condvar>){
 
         let mut status = true;
 
@@ -102,6 +102,13 @@ impl ServerConnecter{
         }
         if self.connecting {
             //syn.setStatus(1);
+
+            let &(ref lock, ref cvar) = &*status;
+            let mut status_cur = lock.lock().unwrap();
+            *status_cur = 1;
+            cvar.notify_all();
+            println!("notify main thread");
+
             println!("ERR: connect to server has been interrupted!");
         }
     }
