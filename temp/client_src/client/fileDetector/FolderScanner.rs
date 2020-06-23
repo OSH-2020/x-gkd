@@ -144,11 +144,11 @@ impl FolderScanner{
         if !com::Encoder::Encoder::encode(file,self.tmpFragmentFolder,id) {
             println!("ERR: can not split file");
             //self.synItem.setStatus(2);
-            let &(ref lock, ref cvar) = &*status;
-            let mut status_cur = lock.lock().unwrap();
-            *status_cur = 2;
-            cvar.notify_all();
-            println!("notify main thread");
+             let &(ref lock, ref cvar) = &*status;
+             let mut status_cur = lock.lock().unwrap();
+             *status_cur = 2;
+             cvar.notify_all();
+             println!("notify main thread");
 
             return false;
         }
