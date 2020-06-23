@@ -1,3 +1,4 @@
+/*
 pub struct SynItem{
     pub status: i32,
 }
@@ -22,3 +23,4 @@ impl SynItem{
         }
     }
 }
+*/

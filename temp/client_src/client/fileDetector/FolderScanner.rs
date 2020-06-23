@@ -13,6 +13,8 @@ use super::FileUploader::FileUploader;
 use super::FileAttrs;
 use crate::client::com;
 
+use std::sync::{Arc, Mutex, Condvar};
+
 const BYTES_IN_SHARDS:u32 = 500000;
 const interval:u32 = 60000;
 
@@ -54,11 +56,17 @@ impl FolderScanner{
      }
 
      //@Override 未实现
-     pub fn run(&self){
+     pub fn run(&self,status:Arc<Mutex<i32>,Condvar>){
          let fUploader:FileUploader;
          if !fUploader.checkFolders(self.address){
              println!("ERR: can not register folder");
-             self.synItem.setStatus(2);
+             //self.synItem.setStatus(2);
+             let &(ref lock, ref cvar) = &*status;
+             let mut status_cur = lock.lock().unwrap();
+             *status_cur = 2;
+             cvar.notify_all();
+             println!("notify main thread");
+
              return;
          }
          while self.detecting{
@@ -120,7 +128,13 @@ impl FolderScanner{
         let id:i32 = fUploader.registerFile(fileAttrs);
         if id == -2 {
             println!("ERR: can not get file id");
-            self.synItem.setStatus(2);
+            //self.synItem.setStatus(2);
+            let &(ref lock, ref cvar) = &*status;
+            let mut status_cur = lock.lock().unwrap();
+            *status_cur = 2;
+            cvar.notify_all();
+            println!("notify main thread");
+
             return false;
         } else if id == -1 {
             println!("ERR: server already has this file, skip it");
@@ -129,14 +143,26 @@ impl FolderScanner{
         /*NOTE: trycatch 有关erasure code，调用路径可能还需要改*/
         if !com::Encoder::Encoder::encode(file,self.tmpFragmentFolder,id) {
             println!("ERR: can not split file");
-            self.synItem.setStatus(2);
+            //self.synItem.setStatus(2);
+            let &(ref lock, ref cvar) = &*status;
+            let mut status_cur = lock.lock().unwrap();
+            *status_cur = 2;
+            cvar.notify_all();
+            println!("notify main thread");
+
             return false;
         }
         
         for j in 0.. noa {
             if !fUploader.pushFragment(id,j,noa) {
                 println!("ERR: can not upload fragments");
-                self.synItem.setStatus(2);
+                //self.synItem.setStatus(2);
+                let &(ref lock, ref cvar) = &*status;
+                let mut status_cur = lock.lock().unwrap();
+                *status_cur = 2;
+                cvar.notify_all();
+                println!("notify main thread");
+
                 return false;
             }
         }
