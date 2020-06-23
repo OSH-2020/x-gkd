@@ -1266,6 +1266,66 @@ let path:Path = *shardsFolder.join(Path::new(&(fid * 100 +i).to_string())).as_pa
 
   Coerces to a [`Path`](https://doc.rust-lang.org/std/path/struct.Path.html) slice.
 
+### 注意事项
+
+- FileUtil
+
+  由于没有函数重载，故函数名加了 _str
+
+  ```java
+  //java   
+  public static void clearFolder(String folderPath) {
+          clearFolder(new File(folderPath));
+      }
+  ```
+
+  ```rust
+  //rust
+  pub fn clearFolder_str(&self,folderPath:String) {
+               self.clearFolder(folderPath.try_into().unwrap());
+           }
+  ```
+
+- FolderScanner
+
+  ```java
+  //java
+  if (file.canRead()) {
+  			attribute = attribute + 'r';
+  		} else {
+  			attribute = attribute + '-';
+  		}
+  		if (file.canWrite()) {	//这部分没法实现
+  			attribute = attribute + 'w';
+  		} else {
+  			attribute = attribute + '-';
+  		}
+  ```
+
+  ```rust
+  //rust
+  let metadata = file.metadata().unwrap();
+           if metadata.permissions().readonly() == true {
+               attribute = attribute + "r";
+           } else {
+               attribute = attribute + "-";
+           }
+  ```
+
+  file、path、pathbuf 获取文件权限都要用到
+
+  `pub fn permissions(&self) -> Permissions`[[src\]](https://doc.rust-lang.org/src/std/fs.rs.html#1070-1072)[[−\]](javascript:void(0))
+
+  Returns the permissions of the file this metadata is for.
+
+  而struct std::fs::Permissions
+
+  > Representation of the various permissions on a file.
+
+  > This module only currently provides one bit of information, [`readonly`](https://doc.rust-lang.org/std/fs/struct.Permissions.html#method.readonly), which is exposed on all currently supported platforms. Unix-specific functionality, such as mode bits, is available through the [`PermissionsExt`](https://doc.rust-lang.org/std/os/unix/fs/trait.PermissionsExt.html) trait.
+  
+  目前在windows上只实现了查看文件权限是否为只读
+
 # V 进度记录
 
 ### SQL示例程序
@@ -1481,9 +1541,13 @@ let path:Path = *shardsFolder.join(Path::new(&(fid * 100 +i).to_string())).as_pa
   
 ### Encoder Decoder
 
-解决了二维数组的问题，用Vec<Vec<u8>>解决，但外层“数组索引”编译报错
+- 解决了二维数组的问题，用Vec<Vec<u8>>解决，但外层“数组索引”编译报错
 
-还有一直存在的Path的使用问题
+解决：使用 as 强制类型
+
+- 还有一直存在的Path的使用问题
+
+解决：统一将原java使用File的地方全部替换成了PathBuf
 
   ### Rust 代码结构构建
 
@@ -1512,4 +1576,6 @@ let path:Path = *shardsFolder.join(Path::new(&(fid * 100 +i).to_string())).as_pa
 直接cargo run即可，做成二进制可执行文件
 
 client、server各有main，做成两个包这样，然后直接cargo run
+
+目前Bug较多，跑不通
 

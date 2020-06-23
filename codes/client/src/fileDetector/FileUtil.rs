@@ -5,8 +5,8 @@ use std::path::Path;
 use std::path::PathBuf;
 use std::collections::LinkedList;
 use std::vec::Vec;
+use std::convert::TryInto;
 //use std::convert::From::from;
-
 
     /**
      * 文件工具类
@@ -26,9 +26,11 @@ use std::vec::Vec;
         public static void clearFolder(String folderPath) {
             clearFolder(new File(folderPath));
         }*/
-        // fn clearFolder_str(&self,folderPath:String) {
-        //     self.clearFolder(&(*std::convert::From::from(folderPath)));
-        // }
+
+        //!因为无法重载，故函数名加上了_str
+        pub fn clearFolder_str(&self,folderPath:String) {
+             self.clearFolder(folderPath.try_into().unwrap());
+         }
     
         /*先用 struct std::path::Path 写，没找到如何从 
         struct::fs::File 得到对应 path 的方法*/ 
@@ -49,10 +51,6 @@ use std::vec::Vec;
                                 fs::remove_file(path);
                             }
                         }
-                    
-                    // let path = match entry{
-                    //     Ok(_) => entry.path()
-                    // };
                     
                     }
                 }
