@@ -56,7 +56,7 @@ impl FolderScanner{
      }
 
      //@Override 未实现
-     pub fn run(&self,status:Arc<Mutex<i32>,Condvar>){
+     pub fn run(&self,status:Arc<(Mutex<i32>,Condvar)>){
          let fUploader:FileUploader;
          if !fUploader.checkFolders(self.address){
              println!("ERR: can not register folder");
@@ -71,7 +71,7 @@ impl FolderScanner{
          }
          while self.detecting{
              //未处理catch InterruptedException
-            self.scanFiles();
+            self.scanFiles(status);
             let interval_mills = time::Duration::from_millis(interval.into());
             thread::sleep(interval_mills);
          }
@@ -79,13 +79,13 @@ impl FolderScanner{
      }
 
      // 扫描文件夹，如果有文件加入则处理该文件
-     fn scanFiles(&self){
+     fn scanFiles(&self,status:Arc<(Mutex<i32>,Condvar)>){
         //let mut i:i32 = 0;
         let FileUtil:FileUtil;
         for i in 0..self.folder.len() {
             let files:LinkedList<PathBuf> = FileUtil.getAllFiles(self.folder[i]);
             for file in files{
-                if !self.handleFile(file.as_path().to_path_buf(),i.try_into().unwrap()){
+                if !self.handleFile(file.as_path().to_path_buf(),i.try_into().unwrap(),status){
                     return;
                 }
             }
@@ -99,7 +99,7 @@ impl FolderScanner{
          self.detecting = false;
      }
 
-     pub fn handleFile(&self,file:PathBuf,i:i32) -> bool{
+     pub fn handleFile(&self,file:PathBuf,i:i32,status:Arc<(Mutex<i32>,Condvar)>) -> bool{
          let fileName:String = file.file_name().unwrap().to_str().unwrap().to_string();
          let filePath:String = self.address[i as usize] + "/";
          

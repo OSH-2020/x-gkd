@@ -31,7 +31,7 @@ impl ServerConnecter{
         self.control_port = c_port;
     }
 
-    pub fn run(&mut self,status:Arc<Mutex<i32>,Condvar>){
+    pub fn run(&mut self,status1:Arc<(Mutex<i32>,Condvar)>){
 
         let mut status = true;
 
@@ -103,7 +103,7 @@ impl ServerConnecter{
         if self.connecting {
             //syn.setStatus(1);
 
-            let &(ref lock, ref cvar) = &*status;
+            let &(ref lock, ref cvar) = &*status1;
             let mut status_cur = lock.lock().unwrap();
             *status_cur = 1;
             cvar.notify_all();
