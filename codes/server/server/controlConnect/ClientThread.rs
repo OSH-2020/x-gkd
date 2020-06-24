@@ -36,7 +36,7 @@ impl ClientThread{
                     let rs: i32 = s[2].parse().unwrap();
                     let ip = client_addr.ip();
 
-                    let query = database::Query::new();
+                    let query = super::super::database::Query::new();
                     let mut deviceitem = query.queryDevice(id);
 
                     self.client_id = id;
