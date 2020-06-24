@@ -37,8 +37,6 @@ recv_file 调用时需要在 TcpStream 的文件内容之前有一个 big endian
 
   path.metadata() 方法似乎可以完成这个功能，但不知道如何 file 转 path 或 pathbuf 。
 
-* 涉及到 client\src\fileDetector\FileUploader, client\src\connect\FragmentManager 中的调用，对应函数传参还没有更改。
-
 
 
 ### dataConnect/ServerThread.rs
@@ -51,10 +49,12 @@ recv_file 调用时需要在 TcpStream 的文件内容之前有一个 big endian
 
 ### dataConnect/ClientThread.rs
 
-* 调用 FileTransporter.rs 中的函数，目前对于流式输入输出的实现还有待修改。
-* 调用 query.rs 和 DeviceItem.rs 中内容，还不知道具体组织形式和调用方法，因此本文档这部分内容未通过编译。这一问题在 controlConnect/ClientThread.rs 中也存在。
+run 方法接收一行命令，然后根据命令类型 1-6 ，调用对应的其他方法进行处理。
 
+本结构体的方法只接收一次命令，没有类似 while status 的循环。
 
+* 对原文件中结构体的修改：删去 inFromClient 和 outToClient 两个字段，通过 Client_socket: TcpStream 直接完成这两个字段的功能。由于 Rust Vec\<String\> 使用不便，将字符串数组 String[] command 改为 sentence: String，使用时需要 let command:Vec<&str> = self.sentence[..].split(' ').collect(); 。
+* query 结构体如何新建还未解决，query.closeConnection() 方法似乎还未实现
 
 ### controlConnect/ClientThread.rs
 
@@ -166,7 +166,7 @@ error: process didn't exit successfully: `target\debug\OSHtest.exe` (exit code: 
 
 ### ServerConnect.rs
 
-目前可以跑，但 run 方法从 readline 函数调用之后的循环内的内容似乎都没能执行，并且从那个地方直接跳入下一次循环。thread::sleep 函数从未执行，移动到 read_line 之前也不能成功执行，因此终端上会不停输出 "Connect to server successfully(control)!"
+目前可以跑，但 run 方法从 readline 函数调用之后的循环内的内容似乎都没能执行，并且从那个地方直接跳入下一次循环（根据测试，是直接将函数从头开始执行）。thread::sleep 函数从未执行，移动到 read_line 之前也不能成功执行，因此终端上会不停输出 "Connect to server successfully(control)!"
 
 read_line 的问题也可能是因为我对 TCP 通信方式理解有问题，测试文件不合理。
 

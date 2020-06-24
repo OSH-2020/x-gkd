@@ -117,12 +117,38 @@
   web-sys = "0.3"
   ```
 
+
+
+
+### Compling Rust to WebAssembly
+
+* #[wasm_bindgen] extern 代码块引入外部的 java 函数，供 Rust 代码调用
+
+  ```
+  #[wasm_bindgen]
+  extern {
+  	pub fn alert(s: &str);
+  }
+  ```
+
+* #[wasm_bindgen] pub 将 Rust 函数暴露给 java
+
+  ```
+  #[wasm_bindgen]
+  pub fn greet(name: &str) {
+  	alert(&format!("Hello, {}!", name));
+  }
+  ```
+
   
+
+
 
 ### 一些想法
 
 * 网页前端部分需要与 WebAssembly 交互的地方可能比较少，或许在 html 文件中加入 `<script src="./bootstrap.js"></script>` 一行，或在其他更高层的代码文件中调用 WebAssembly 内容就足够。
 * 可能考虑只纠删码编解码计算部分使用 WebAssembly ……但传入传出的参数需要再详细考虑，因为 WebAssembly 数据复制和 serializing and deserializing 开销可能较大。
+* 将 WebAssembly 部分作为一个 lib crate ，在其他文件中调用这个库完成计算。
 
 
 
@@ -133,3 +159,5 @@
 [Multithreading Rust and wasm](https://rustwasm.github.io/2018/10/24/multithreading-rust-and-wasm.html)
 
 [Travis CI 教程](http://www.ruanyifeng.com/blog/2017/12/travis_ci_tutorial.html)
+
+[Compling Rust to WebAssembly](https://developer.mozilla.org/en-US/docs/WebAssembly/Rust_to_wasm)
