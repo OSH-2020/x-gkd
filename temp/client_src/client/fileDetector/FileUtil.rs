@@ -27,7 +27,7 @@ use std::convert::TryInto;
             clearFolder(new File(folderPath));
         }*/
 
-        //!因为无法重载，故函数名加上了_str
+        // note:因为无法重载，故函数名加上了_str
         pub fn clearFolder_str(&self,folderPath:String) {
              self.clearFolder(folderPath.try_into().unwrap());
          }

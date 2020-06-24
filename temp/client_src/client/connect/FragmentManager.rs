@@ -1,4 +1,5 @@
-mod FileTransporter;
+//mod FileTransporter;
+use super::FileTransporter;
 
 //use std::net::{TcpStream, Ipv4Addr, Shutdown};
 use std::net::TcpStream;
@@ -16,7 +17,7 @@ use std::option::Option;
 
 
 
-struct FragmentManager{
+pub struct FragmentManager{
     fragmentFolder : String,
     serverIP : String,
     serverPort : i32,

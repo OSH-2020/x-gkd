@@ -6,7 +6,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
 use std::path::PathBuf;
-fn main() {
+pub fn main() {
     let mut clientId:i32 = 0;
     let mut uploadFolders:Vec<PathBuf> = Vec::new();
     let mut uploadAddrs:Vec<String> = Vec::new();
@@ -59,22 +59,22 @@ fn main() {
         j-=1;
     }
 
-    crate::client::connect::ServerConnecter::init(&serverIp,&controlPort);
+    crate::client::connect::ServerConnecter::ServerConnecter::init(&serverIp,&controlPort);
     let mut file1 = PathBuf::from(&fragmentFolder);
     if !file1.exists() || file1.is_dir(){
         println!("file1 wrong");
         return;
     }
 
-    crate::client::connect::FragmentManager::init(&file1, &serverIp, &dataPort);
+    crate::client::connect::FragmentManager::FragmentManager::init(&file1, &serverIp, &dataPort);
     let mut file2 = PathBuf::from(&tmpFragmentFolder);
     if !file2.exists() || file2.is_dir(){
         println!("file2 wrong");
         return;
     }
 
-    fileDetector::FolderScanner::init(&file2);
-    fileDetector::FileUploader::init(&file2,&serverIp,&dataPort);
+    crate::client::fileDetector::FolderScanner::FolderScanner::init(&file2);
+    crate::client::fileDetector::FileUploader::FileUploader::init(&file2,&serverIp,&dataPort);
     
 
     //线程创建
@@ -85,13 +85,13 @@ fn main() {
     //let clientid = self.clientId.clone();
 
     let handle1 = thread::spawn(move || { 
-        let ServerConnecter = crate::client::connect::ServerConnecter::new(clientId);
+        let ServerConnecter = crate::client::connect::ServerConnecter::ServerConnecter::new(clientId);
         ServerConnecter.run(connect_status);
      });//let mut num = counter.lock().unwrap(); *num += 1;
     
 
     let handle2 = thread::spawn(move || {
-    let folderScanner = crate::client::fileDetector::FolderScanner::new(uploadFolders,uploadAddrs);
+    let folderScanner = crate::client::fileDetector::FolderScanner::FolderScanner::new(uploadFolders,uploadAddrs);
     folderScanner.run(fileDetector_status);
     });
 

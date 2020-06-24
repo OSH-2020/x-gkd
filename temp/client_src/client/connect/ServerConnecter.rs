@@ -5,7 +5,7 @@ use std::io::prelude::*;
 use std::{thread, time};
 use std::sync::{Arc, Mutex, Condvar};
 //#[derive(Debug)]
-struct ServerConnecter{
+pub struct ServerConnecter{
     server_ip:String,
     control_port:u16,
     client_id:i32,
@@ -78,7 +78,7 @@ impl ServerConnecter{
                             let fragment_id:u32 = input_vec[1].parse().unwrap();
                             let ftype:u32 = input_vec[2].parse().unwrap();
                             //以下两行用到其他文件中定义的结构体
-                            let f_manager = FragmentManager::new(request_id, fragment_id, ftype);
+                            let f_manager = super::FragmentManager::FragmentManager::new(request_id, fragment_id, ftype);
                             f_manager.submit();
                             unread_request = unread_request - 1;
                         }

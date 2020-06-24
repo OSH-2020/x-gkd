@@ -1,4 +1,4 @@
-struct FileAttrs {
+pub struct FileAttrs {
     name: String,
     path: String,
     attr: String,
