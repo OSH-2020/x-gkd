@@ -20,13 +20,15 @@ struct FragmentItem {
 struct Query{
     pool:mysql::Pool
 }
-fn main() {
-    println!("Hello, world!");
-}
 
 impl Query {
+    pub fn Query(&mut self) {
+        let pool = my::Pool::new("mysql://root:mysql@localhost:3306/mysql").unwrap();
+        self.pool = pool;
+    }
+
     pub fn queryFile_Bypathname(&self, path: Option<String>, name: Option<String>) -> FileItem{
-        let selected_files: Vec<FileItem> =
+        let selected: Result<Vec<FileItem>, mysql::Error> =
         self.pool.prep_exec("SELECT * FROM file WHERE NAME = :name AND PATH = :path", 
                 params!{"name" => name, "path" => path})
         .map(|result| { 
@@ -42,20 +44,35 @@ impl Query {
                     is_folder: is_folder,
                 }
             }).collect()
-        }).unwrap();
-        return FileItem {
-            id: selected_files[0].id,
-            name: selected_files[0].name.clone(),
-            path: selected_files[0].path.clone(),
-            attribute: selected_files[0].attribute.clone(),
-            time: selected_files[0].time.clone(),
-            noa: selected_files[0].noa,
-            is_folder: selected_files[0].is_folder,
+        });
+        match &selected {
+            Err(e) => {
+                return FileItem {
+                    id: -1, 
+                    name: "".to_string(), 
+                    path: "".to_string(), 
+                    attribute: "".to_string(),
+                    time: "".to_string(),
+                    noa: 0,
+                    is_folder: false,
+                }
+            }
+            Ok(selected_files) => {
+                return FileItem {
+                    id: selected_files[0].id,
+                    name: selected_files[0].name.clone(),
+                    path: selected_files[0].path.clone(),
+                    attribute: selected_files[0].attribute.clone(),
+                    time: selected_files[0].time.clone(),
+                    noa: selected_files[0].noa,
+                    is_folder: selected_files[0].is_folder,
+                }
+            }
         }
     }
 
-    pub fn queryFile_Byid(&self, id: i32) -> FileItem{
-        let selected_files: Vec<FileItem> =
+    pub fn queryFile_Byid(&self, id: i32) -> FileItem {
+        let selected: Result<Vec<FileItem>, mysql::Error> =
         self.pool.prep_exec("SELECT * FROM file WHERE ID = :id", 
                 params!{"id" => id})
         .map(|result| { 
@@ -71,20 +88,35 @@ impl Query {
                     is_folder: is_folder,
                 }
             }).collect()
-        }).unwrap();
-        return FileItem {
-            id: selected_files[0].id,
-            name: selected_files[0].name.clone(),
-            path: selected_files[0].path.clone(),
-            attribute: selected_files[0].attribute.clone(),
-            time: selected_files[0].time.clone(),
-            noa: selected_files[0].noa,
-            is_folder: selected_files[0].is_folder,
+        });
+        match &selected {
+            Err(e) => {
+                return FileItem {
+                    id: -1, 
+                    name: "".to_string(), 
+                    path: "".to_string(), 
+                    attribute: "".to_string(),
+                    time: "".to_string(),
+                    noa: 0,
+                    is_folder: false,
+                }
+            }
+            Ok(selected_files) => {
+                return FileItem {
+                    id: selected_files[0].id,
+                    name: selected_files[0].name.clone(),
+                    path: selected_files[0].path.clone(),
+                    attribute: selected_files[0].attribute.clone(),
+                    time: selected_files[0].time.clone(),
+                    noa: selected_files[0].noa,
+                    is_folder: selected_files[0].is_folder,
+                }
+            }
         }
     }
 
     pub fn queryFile_Bypath(&self, path: Option<String>) -> Vec<FileItem>{
-        let selected_files: Vec<FileItem> =
+        let selected_files: Result<Vec<FileItem>, mysql::Error> =
         self.pool.prep_exec("SELECT * FROM file WHERE PATH = :path", 
                 params!{"path" => path})
         .map(|result| { 
@@ -100,12 +132,24 @@ impl Query {
                     is_folder: is_folder,
                 }
             }).collect()
-        }).unwrap();
-        selected_files
+        });
+        if let Err(e) = selected_files {
+            let file = FileItem {
+                id: -1, 
+                name: "".to_string(), 
+                path: "".to_string(), 
+                attribute: "".to_string(),
+                time: "".to_string(),
+                noa: 0,
+                is_folder: false,
+            };
+            return vec![file];
+        }
+        selected_files.unwrap()
     }
 
     pub fn queryFragmentNumbers(&self, fileId: i32) -> i32{
-        let selected_fragments: Vec<FragmentItem> =
+        let selected_fragments: Result<Vec<FragmentItem>, mysql::Error> =
         self.pool.prep_exec("SELECT * FROM fragment WHERE ID>=:id_1 AND ID<:id_2", 
                 params!{"id_1" => fileId*100, "id_2" => (fileId+1)*100})
         .map(|result| { 
@@ -116,9 +160,12 @@ impl Query {
                     path: path,
                 }
             }).collect()
-        }).unwrap();
+        });
+        if let Err(e) = selected_fragments {
+            return -1;
+        }
         let mut i: i32 = 0;
-        for _f in selected_fragments {
+        for _f in selected_fragments.unwrap() {
             i = i+1;
         }
         i
@@ -126,7 +173,7 @@ impl Query {
     //no FragmentItem
 
     pub fn queryOnlineDevice(&self) -> Vec<DeviceItem> {
-        let selected_devices: Vec<DeviceItem> =
+        let selected_devices: Result<Vec<DeviceItem>, mysql::Error> =
         self.pool.prep_exec("SELECT * FROM DEVICE WHERE IS_ONLINE=true ORDER BY RS DESC", 
                 ())
         .map(|result| { 
@@ -140,12 +187,22 @@ impl Query {
                     rs: rs,
                 }
             }).collect()
-        }).unwrap();
-        selected_devices
+        });
+        if let Err(e) = selected_devices {
+            let file = DeviceItem {
+                id: -1,
+                ip: "".to_string(),
+                port: 0,
+                is_online: false,
+                rs: 0,
+            };
+            return vec![file];
+        }
+        selected_devices.unwrap()
     }
 
     pub fn queryDevice(&self, id: i32) -> DeviceItem {
-        let selected_devices: Vec<DeviceItem> =
+        let selected_devices: Result<Vec<DeviceItem>, mysql::Error> =
         self.pool.prep_exec("SELECT * FROM DEVICE WHERE WHERE ID=:id", 
                 params!{"id" => id})
         .map(|result| { 
@@ -159,18 +216,28 @@ impl Query {
                     rs: rs,
                 }
             }).collect()
-        }).unwrap();
+        });
+        if let Err(e) = selected_devices {
+            return DeviceItem {
+                id: -1,
+                ip: "".to_string(),
+                port: 0,
+                is_online: false,
+                rs: 0,
+            };
+        }
+        let devices = selected_devices.unwrap();
         return DeviceItem {
-            id: selected_devices[0].id,
-            ip: selected_devices[0].ip.clone(),
-            port: selected_devices[0].port.clone(),
-            is_online: selected_devices[0].is_online,
-            rs: selected_devices[0].rs,
+            id: devices[0].id,
+            ip: devices[0].ip.clone(),
+            port: devices[0].port.clone(),
+            is_online: devices[0].is_online,
+            rs: devices[0].rs,
         }
     }
 
     pub fn queryRequest_Byid(&self, id: i32) -> RequestItem {
-        let selected_requests: Vec<RequestItem> =
+        let selected_requests: Result<Vec<RequestItem>, mysql::Error> =
         self.pool.prep_exec("SELECT * FROM REQUEST WHERE WHERE ID=:id", 
                 params!{"id" => id})
         .map(|result| { 
@@ -183,17 +250,26 @@ impl Query {
                     deviceId: deviceId,
                 }
             }).collect()
-        }).unwrap();
+        });
+        if let Err(e) = selected_requests {
+            return RequestItem {
+                id: -1,
+                type_: 0,
+                fragmentId: 0,
+                deviceId: 0,
+            };
+        }
+        let requests = selected_requests.unwrap();
         return RequestItem {
-            id: selected_requests[0].id,
-            type_: selected_requests[0].type_,
-            fragmentId: selected_requests[0].fragmentId,
-            deviceId: selected_requests[0].deviceId,
+            id: requests[0].id,
+            type_: requests[0].type_,
+            fragmentId: requests[0].fragmentId,
+            deviceId: requests[0].deviceId,
         }
     }
 
     pub fn queryFirstRequest_Byid(&self, id: i32) -> RequestItem {
-        let selected_requests: Vec<RequestItem> =
+        let selected_requests: Result<Vec<RequestItem>, mysql::Error> =
         self.pool.prep_exec("SELECT * FROM REQUEST WHERE WHERE DEVICEID=:id LIMIT 1", 
                 params!{"id" => id})
         .map(|result| { 
@@ -206,17 +282,26 @@ impl Query {
                     deviceId: deviceId,
                 }
             }).collect()
-        }).unwrap();
+        });
+        if let Err(e) = selected_requests {
+            return RequestItem {
+                id: -1,
+                type_: 0,
+                fragmentId: 0,
+                deviceId: 0,
+            };
+        }
+        let requests = selected_requests.unwrap();
         return RequestItem {
-            id: selected_requests[0].id,
-            type_: selected_requests[0].type_,
-            fragmentId: selected_requests[0].fragmentId,
-            deviceId: selected_requests[0].deviceId,
+            id: requests[0].id,
+            type_: requests[0].type_,
+            fragmentId: requests[0].fragmentId,
+            deviceId: requests[0].deviceId,
         }
     }
 
     pub fn queryRequest_Bydeviceid(&self, deviceId: i32) -> RequestItem {
-        let selected_requests: Vec<RequestItem> =
+        let selected_requests: Result<Vec<RequestItem>, mysql::Error> =
         self.pool.prep_exec("SELECT * FROM REQUEST WHERE WHERE DEVICEID=:id", 
                 params!{"id" => deviceId})
         .map(|result| { 
@@ -229,17 +314,26 @@ impl Query {
                     deviceId: deviceId,
                 }
             }).collect()
-        }).unwrap();
+        });
+        if let Err(e) = selected_requests {
+            return RequestItem {
+                id: -1,
+                type_: 0,
+                fragmentId: 0,
+                deviceId: 0,
+            };
+        }
+        let requests = selected_requests.unwrap();
         return RequestItem {
-            id: selected_requests[0].id,
-            type_: selected_requests[0].type_,
-            fragmentId: selected_requests[0].fragmentId,
-            deviceId: selected_requests[0].deviceId,
+            id: requests[0].id,
+            type_: requests[0].type_,
+            fragmentId: requests[0].fragmentId,
+            deviceId: requests[0].deviceId,
         }
     }
 
     pub fn queryRequestNumbers_Byid(&self, deviceId: i32) -> i32 {
-        let selected_requests: Vec<RequestItem> =
+        let selected_requests: Result<Vec<RequestItem>, mysql::Error> =
         self.pool.prep_exec("SELECT * FROM REQUEST WHERE WHERE DEVICEID=:id", 
                 params!{"id" => deviceId})
         .map(|result| { 
@@ -252,16 +346,19 @@ impl Query {
                     deviceId: deviceId,
                 }
             }).collect()
-        }).unwrap();
+        });
+        if let Err(e) = selected_requests {
+            return -1;
+        }
         let mut i: i32 = 0;
-        for _r in selected_requests {
+        for _r in selected_requests.unwrap() {
             i = i+1;
         }
         i
     }
 
     pub fn queryRequestNumbers_Byidtype(&self, fileId: i32, type_: i32) -> i32 {
-        let selected_requests: Vec<RequestItem> =
+        let selected_requests: Result<Vec<RequestItem>, mysql::Error> =
         self.pool.prep_exec("SELECT * FROM REQUEST WHERE WHERE FRAGMENTID>=:fid
                 AND FRAGMENTID<:fid2 AND TYPE_=:type_",
                 params!{"fid" => fileId*100, "fid2" => (fileId+1)*100, "type_" => type_})
@@ -275,16 +372,19 @@ impl Query {
                     deviceId: deviceId,
                 }
             }).collect()
-        }).unwrap();
+        });
+        if let Err(e) = selected_requests {
+            return -1;
+        }
         let mut i: i32 = 0;
-        for _r in selected_requests {
+        for _r in selected_requests.unwrap() {
             i = i+1;
         }
         i
     }
 
     pub fn queryUserPasswd(&self, name: Option<String>) -> Option<String> {
-        let selected_user: Vec<UserItem> =
+        let selected_user: Result<Vec<UserItem>, mysql::Error> =
         self.pool.prep_exec("SELECT * FROM USER WHERE NAME=:name",
                 params!{"name" => &name})
         .map(|result| { 
@@ -296,12 +396,15 @@ impl Query {
                     passwd: passwd,
                 }
             }).collect()
-        }).unwrap();
-        selected_user[0].passwd.clone()
+        });
+        if let Err(e) = selected_user {
+            return None;
+        }
+        selected_user.unwrap()[0].passwd.clone()
     }
 
     pub fn queryUserID(&self, name: Option<String>) -> i32 {
-        let selected_user: Vec<UserItem> =
+        let selected_user: Result<Vec<UserItem>, mysql::Error> =
         self.pool.prep_exec("SELECT * FROM USER WHERE NAME=:name",
                 params!{"name" => &name})
         .map(|result| { 
@@ -313,8 +416,11 @@ impl Query {
                     passwd: passwd,
                 }
             }).collect()
-        }).unwrap();
-        selected_user[0].id
+        });
+        if let Err(e) = selected_user {
+            return -1;
+        }
+        selected_user.unwrap()[0].id
     }
 }
 

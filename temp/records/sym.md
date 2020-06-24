@@ -429,6 +429,12 @@ include!("FileItem.rs");	使用宏来 include，可以不在同一目录，写�
 
 rust 不支持函数重载，所以有些函数修改了名字，在后面加上 _Byid 等
 
+和其他代码互联：
+
+错误处理：如果查询错误，返回的结构体中ip值为0
+
+还没有在pool中添加user和password
+
 
 
 改写FileUploader过程中：
@@ -443,18 +449,19 @@ let my_string = "27".to_string(); // `parse()` works with `&str` and `String`!
 let my_int = my_string.parse::<i32>().unwrap();
 ```
 
-Q：
-
 match &self.to_server{
 
 ​      None => println!("Error! server not connected..."),
 
 ​      Some (socket) => {
 
-​        //self.socket = socket.clone();
+​        //self.socket = socket.clone();	后面是&tcpstream，前面是tcpstream
 
 ​      }
 
-​    }
+​    }	solved try_clone().unwrap()
 
-self.socket.write_fmt(format_args!("{} false\n", fa));
+self.socket.write_fmt(format_args!("{} false\n", fa));	不能把PathBuf输出
+
+​	solved by fa.as_path().display()
+
