@@ -1,5 +1,5 @@
 #[macro_use(shards)]
-extern crate reed_solomon_erasure;
+//extern crate reed_solomon_erasure;
 
 use reed_solomon_erasure::galois_8::ReedSolomon;
 use std::fs::File;
@@ -13,7 +13,7 @@ use std::io::Read;
 const BYTES_IN_SHARDS:i32 = 500000;
 const BYTES_IN_INT :i32 = 4;
 
-struct Encoder{
+pub struct Encoder{
 }
 
 impl Encoder{

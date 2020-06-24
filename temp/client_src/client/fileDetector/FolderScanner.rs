@@ -8,7 +8,7 @@ use std::convert::TryInto;
 use std::collections::linked_list::LinkedList;
 
 use super::FileUtil::FileUtil;
-use crate::client::client::SynItem::SynItem;
+//use crate::client::client::SynItem::SynItem;
 use super::FileUploader::FileUploader;
 use super::FileAttrs;
 use crate::client::com;
@@ -35,7 +35,7 @@ pub struct FolderScanner{
 
      folder:Vec<PathBuf>,
      address:Vec<String>,
-     synItem:SynItem,
+     //synItem:SynItem,
 
      tmpFragmentFolder:PathBuf,
 
@@ -48,8 +48,8 @@ pub struct FolderScanner{
 
 impl FolderScanner{
      /* 参数syn是client.synItem类型，最后整合时记得改一下*/
-     pub fn new(f:Vec<PathBuf>,addr:Vec<String>,syn:SynItem) -> FolderScanner {
-         FolderScanner{folder:f,address:addr,synItem:syn,detecting:true,tmpFragmentFolder:PathBuf::new()}
+     pub fn new(f:Vec<PathBuf>,addr:Vec<String>,/*syn:SynItem*/) -> FolderScanner {
+         FolderScanner{folder:f,address:addr,/*synItem:syn,*/detecting:true,tmpFragmentFolder:PathBuf::new()}
      }
      pub fn init(&self,tmp:PathBuf){
          self.tmpFragmentFolder = tmp;

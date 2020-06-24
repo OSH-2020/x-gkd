@@ -4,7 +4,7 @@ use std::string::String;
 use std::io::prelude::*;
 use std::fs::read_to_string;
 
-struct FileUploader {
+pub struct FileUploader {
     serverIP: String,
     server_port: u16,
     tmpFragmentFolder: PathBuf,

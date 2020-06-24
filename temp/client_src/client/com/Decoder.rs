@@ -1,5 +1,5 @@
 
-extern crate reed_solomon_erasure;
+//extern crate reed_solomon_erasure;
 
 use reed_solomon_erasure::galois_8::ReedSolomon;
 use std::path;
@@ -9,12 +9,9 @@ use std::fs::File;
 use std::fs;
 use std::convert::TryInto;
 
-fn main() {
-    println!("Hello, world!");
-}
 
 const BYTES_IN_INT:i32 = 4;
-struct Decoder{
+pub struct Decoder{
 
 }
 
