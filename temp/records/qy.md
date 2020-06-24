@@ -31,11 +31,11 @@ recv_file 调用时需要在 TcpStream 的文件内容之前有一个 big endian
 
 * 将参数类型改为了 &TcpStream，否则如果使用 TcpStream，函数调用完毕返回时不能返还所有权。
 
-* 目前接收文件是1024字节一次，分多次接收。发送文件是一次性发送，无法发送 4096 字节以上的文件。
+* 发送和接收文件都是1024字节一次，分多次 read 或 write 完成。目前没有实现如何写入确定字节数的内容。
 
-* 还没有找到得到文件大小的方法，即 f.length() 的对应实现。
+* 调用 file::read() 时使用 unwrap() 处理错误
 
-  path.metadata() 方法似乎可以完成这个功能，但不知道如何 file 转 path 或 pathbuf 。
+  `This function does not provide any guarantees about whether it blocks waiting for data, but if an object needs to block for a read and cannot, it will typically signal this via an [Err] return value.`
 
 
 
@@ -125,7 +125,7 @@ fn main(){
 } 
 ```
 
-运行客户端程序的命令行窗口可以输出读到的字节数。
+运行客户端程序的命令行窗口可以输出读到的字节数，为末尾用 \0 填充的 1024 字节。（因为目前不知道如何用 write 写入确定的字节数）
 
 测试 recv_file 函数，其中 18 为手动计算的文件大小。
 

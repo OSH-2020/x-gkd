@@ -31,24 +31,28 @@ pub fn recv_file(mut f: File, mut soc_in: &TcpStream)->bool{
 }//TODO:err handle
 
 pub fn send_file(mut f: File, mut soc_out: &TcpStream)->bool{
-    let mut send_bytes = [0; 4096];
+    let mut send_bytes = [0; 1024];
 
-    let mut length = f.read(&mut send_bytes[..]);
-    let length = match length{
-        Ok(len) => len as i64,
-        Err(error) => {
-            println!("can't read file :{:?}", error);
-            return false},
-    };
-    //println!("read:{}", length);
-    let bytes = length.to_be_bytes();
-    soc_out.write(&bytes);//TODO:
+    let length = f.metadata().unwrap().len();
+
+    //soc_out.write(b(format!("{:08}", length)));
     soc_out.flush();
-    let n2 = soc_out.write(&mut send_bytes[..]);
-    let n2 = match n2{
-        Ok(n) => n as i32,
-        Err(error) => panic!("Problem write file: {:?}", error),
-    };
-    soc_out.flush();
+
+    loop {
+        let readlen = f.read(&mut send_bytes[..]);
+        let len: i32 = match readlen{
+            Err(e) => -1,
+            Ok(len) => len as i32,
+        };
+        if len == -1 {
+            return false;
+        }
+        if len == 0 {
+            break;
+        }
+        soc_out.write(&mut send_bytes[..]);
+        soc_out.flush();
+    }
+
     return true
 }
