@@ -1,4 +1,4 @@
-mod FileTransporter;
+//mod FileTransporter;
 
 //use std::net::{TcpStream, Ipv4Addr, Shutdown};
 use std::net::TcpStream;
@@ -16,7 +16,7 @@ use std::option::Option;
 
 
 
-struct FragmentManager{
+pub struct FragmentManager{
     fragmentFolder : String,
     serverIP : String,
     serverPort : i32,
@@ -122,7 +122,7 @@ impl FragmentManager {
                     return false;
                 }
                 let socket1 = socket.try_clone().expect("clone failed");//克隆端口
-                let mut status : bool = FileTransporter::send_file(f, socket1);
+                let mut status : bool = super::FileTransporter::send_file(f, socket1);
                 //let mut status = FileTransporter.sendFile 需要另一个函数FileTransporter
                 if status {
                     self.inFromServer.read_line(&mut sentense).unwrap();
@@ -149,7 +149,7 @@ impl FragmentManager {
             None => println!("Error"),
             Some(socket) => {
                 let socket1 = socket.try_clone().expect("clone failed");//克隆端口
-                if (FileTransporter::recv_file(f, socket1)){
+                if (super::FileTransporter::recv_file(f, socket1)){
                     socket.write_fmt(format_args!("{} {} {}\n", self.Type, self.requestID, self.fragmentID));
                     socket.flush();
                     return true;

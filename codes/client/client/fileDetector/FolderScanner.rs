@@ -30,7 +30,6 @@ const interval:u32 = 60000;
  * 所有新加入的文件处理完毕之后，将文件夹清空，继续检测
  */
 
-
 pub struct FolderScanner{
 
      folder:Vec<PathBuf>,

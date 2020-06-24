@@ -18,7 +18,7 @@ pub struct Encoder{
 
 impl Encoder{
     /*原参数的FILE 改为 Path，未实现 throw IOEception */
-    fn encode(inputFile_Path:PathBuf,shardsFolder:PathBuf,fid:i32) -> bool{
+    pub fn encode(inputFile_Path:PathBuf,shardsFolder:PathBuf,fid:i32) -> bool{
         if !inputFile_Path.exists() {
             //注：std::path::Path的exists()方法，由于权限错误而无法访问包含文件的目录，也将返回false。
             println!("Cannot read input file: {}" ,inputFile_Path.display());
