@@ -5,6 +5,11 @@ use std::net::TcpStream;
 use chrono::Local;
 use rand::Rng;
 use std::path::Path;
+use std::fs::File;
+
+use super::super::database::Query::Query;
+use super::super::database::FileItem::FileItem;
+use super::super::database::RequestItem::RequestItem;
 
 /*在crate root 中声明 "extern crate chrono;"
 cargo.toml中增加：
@@ -17,7 +22,7 @@ rand = "0.6.0"
 //一部分对null特别处理的代码中，假定变量的类型是Option<T>
 //需要参照其他对应文件
 
-struct ClientThread{
+pub struct ClientThread{
     client_socket:TcpStream,
     //in_from_server:String,
     //out_to_client:String,
@@ -31,8 +36,8 @@ impl ClientThread{
         ClientThread{
             client_socket:stream,
             sentence:String::new(),
-            download_folder_path:Path::new("/opt/tomcat/webapps/DFS/CloudDriveServer/downloadFragment/");
-            upload_folder_path:Path::new("/opt/tomcat/webapps/DFS/CloudDriveServer/uploadFragment/");
+            download_folder_path:Path::new("/opt/tomcat/webapps/DFS/CloudDriveServer/downloadFragment/"),
+            upload_folder_path:Path::new("/opt/tomcat/webapps/DFS/CloudDriveServer/uploadFragment/"),
         }
     }
 
@@ -76,7 +81,7 @@ impl ClientThread{
         let id:i32 = command[1].parse().unwrap();
         let fid:i32 = command[2].parse().unwrap();
 
-        let query = super::super::database::Query::new();
+        let query = Query::new();
         let request = query.queryRequest_Byid(id);
 
         if request.getFragmentId() != fid || request.getType() != 1{
@@ -106,7 +111,7 @@ impl ClientThread{
         let id:i32 = command[1].parse().unwrap();
         let fid:i32 = command[2].parse().unwrap();
         
-        let query = super::super::database::Query::new();
+        let query = Query::new();
         let request = query.queryRequest_Byid(id);
 
         if request.get_fragment_id() != fid || request.getType() != 2 {
@@ -116,14 +121,14 @@ impl ClientThread{
             let s = self.upload_folder_path.to_string() + fid.to_string();//upload_folder_path的形式还未确定
             let send_file = File::open(s);
             match send_file{
-                Err => {
+                Err(e) => {
                     status = false;
                     query.daleteRequest(request.getId());
                 },
                 Ok(file) =>{
                     status = super::FileTransporter::send_file(file, self.client_socket);
                     if status{
-                        let mut in_from_cilent = BufReader::new(client_socket);
+                        let mut in_from_cilent = BufReader::new(self.client_socket);
                         let sentence = String::new();
                         in_from_cilent.read_line(&mut sentence).unwrap();
                         match sentence{
@@ -148,7 +153,7 @@ impl ClientThread{
         let id:i32 = command[1].parse().unwrap();
         let fid:i32 = command[2].parse().unwrap();
 
-        let query = super::super::database::Query::new();
+        let query = Query::new();
         let request = query.queryRequest_Byid(id);
 
         if request.getFragmentId() != fid || request.getType() != 3 {
@@ -171,13 +176,13 @@ impl ClientThread{
         let noa:i32 = command[5].parse().unwrap();
         let isf:bool = command[6].parse().unwrap();
 
-        let query = super::super::database::Query::new();
+        let query = Query::new();
         let dt = Local::today();
         let mut date:String = dt.to_string();
         date.truncate(10);
         date.remove(7);
         date.remove(4);
-        let fileitem = super::super::database::fileitem::init_2(command[2][..], command[3][..],
+        let fileitem = FileItem::init_2(command[2][..], command[3][..],
         command[4][..], date, -1 * noa, isf);
 
         int fid = query.addFile(fileitem);
@@ -196,7 +201,7 @@ impl ClientThread{
         let fragment_num:i32 = command[2].parse().unwrap();
         let fragment_count:i32 = command[3].parse().unwrap();
 
-        let query = super::super::database::Query::new();
+        let query = Query::new();
         let file = query.queryFile_Byid(file_id);
 
         if (file.getNoa() != -1 * fragment_count || fragment_num >= fragment_count || fragment_num < 0){
@@ -241,7 +246,7 @@ impl ClientThread{
                 }
             }
         }
-        query.closeConnection();
+        //query.closeConnection();
         status
     }
 
@@ -249,12 +254,13 @@ impl ClientThread{
         let command:Vec<&str> = self.sentence[..].split(' ').collect();
         let num:i32 = command[2].parse().unwrap();
 
-        let query = super::super::database::Query::new();
+        let query = Query::new();
 
         let in_from_client = self.client_socket.try_clone().expect("clone failed...");
         let mut in_from_client = BufReader::new(in_from_client);
         let mut input = String::new();
-        let mut flag:bool = false;
+        let mut flag: bool = false;
+        let mut i = 0;
         for i in 0..num {
             in_from_client.read_line(&mut input).unwrap();
             let input_vec:Vec<&str> = input[..].split(' ').collect();
@@ -266,13 +272,13 @@ impl ClientThread{
                     date.truncate(10);
                     date.remove(7);
                     date.remove(4);
-                    let fileitem = fileitem::init_2(input[1][..], input[0][..],
-                    "rw", date, 0, true);
+                    let fileitem = FileItem::init_2(input[1][..], input[0][..],
+                        "rw", date, 0, true);
                     if query.addFile(file) < 0{
                         flag = true;
                     }
                 },
-                Some(file){
+                Some(file) => {
                     if !file.is_folder() {
                         flag = true;
                     }
@@ -292,12 +298,12 @@ impl ClientThread{
             self.client_socket.flush();
         }
 
-        query.closeConnection();
+        //query.closeConnection();
         true
     }
 
     pub fn confirm(id:&i32, num:&i32)->i32{
-        let query = super::super::database::Query::new();
+        let query = Query::new();
         let mut return_val:i32 = 0;
 
         let di = query.queryOnlineDevice();
@@ -310,7 +316,7 @@ impl ClientThread{
         if num <= size {
             let t = rand::thread_rng().gen_range(0, size);
             for i in 0..num{
-                let temp = super::super::database::RequestItem::init_2(2, id * 100 + i, di[(i + t) % size].getId())
+                let temp = RequestItem::init_2(2, id * 100 + i, di[(i + t) % size].getId());
                 query.addRequest(temp);
             }
         }
@@ -331,7 +337,7 @@ impl ClientThread{
             let mut k:i32 = 0;
             for i in 0..size {
                 for j in 0..n[i] as usize{
-                    let temp = database::RequestItem::init_2(2, id * 100 + i, di[i].getId());
+                    let temp = RequestItem::init_2(2, id * 100 + i, di[i].getId());
                     query.addRequest(temp);
                     k = k + 1;
                 }

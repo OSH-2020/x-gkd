@@ -17,14 +17,17 @@ struct FragmentItem {
     path: Option<String>,
 }
 
-struct Query{
-    pool:mysql::Pool
+pub struct Query{
+    pool: mysql::Pool
 }
 
 impl Query {
-    pub fn Query(&mut self) {
+    pub fn new() -> Query{
+        //需要大家在自己的电脑把 root:XXXX 改成自己的 mysql 密码
         let pool = my::Pool::new("mysql://root:mysql@localhost:3306/mysql").unwrap();
-        self.pool = pool;
+        Query {
+            pool: pool,
+        }
     }
 
     pub fn queryFile_Bypathname(&self, path: Option<String>, name: Option<String>) -> FileItem{

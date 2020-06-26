@@ -1,6 +1,8 @@
 use std::net::{TcpListener, TcpStream};
 use std::thread;
 
+use super::ClientThread::ClientThread;
+
 struct ServerThread {
     server:TcpListener,
 }

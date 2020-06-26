@@ -4,7 +4,9 @@ use std::io::BufReader;
 use std::io::BufRead;
 use std::io::prelude::*;
 
-struct ClientThread {
+use super::super::database::Query::Query;
+
+pub struct ClientThread {
     client_socket:TcpStream,
     client_id:i32,
 }
@@ -29,14 +31,14 @@ impl ClientThread{
                     if self.client_id != -1 && self.client_id != id{
                         self.client_socket.write(b"Error!\n");
                         self.client_socket.flush();
-                        return 0
+                        return 0;
                     }
                     let client_addr = self.client_socket.peer_addr().unwrap();
                     let port = client_addr.port();
                     let rs: i32 = s[2].parse().unwrap();
                     let ip = client_addr.ip();
 
-                    let query = super::super::database::Query::new();
+                    let query = Query::new();
                     let mut deviceitem = query.queryDevice(id);
 
                     self.client_id = id;
@@ -46,9 +48,9 @@ impl ClientThread{
                     deviceitem.setRs(rs);
                     query.alterDevice(deviceitem);
 
-                    self.client_socket..write_fmt(format_args!("received with {} unread request!\n", query.queryRequestNumbers(id)));
+                    self.client_socket.write_fmt(format_args!("received with {} unread request!\n", query.queryRequestNumbers(id)));
                     self.client_socket.flush();
-                    query.closeConnection();
+                    //query.closeConnection();
 			        return 1
                 }
                 else if c == '2'{
@@ -60,9 +62,9 @@ impl ClientThread{
                         self.client_socket.flush();
                         return 0
                     }
-                    let query = database::Query::new();
+                    let query = Query::new();
                     let request = query.queryFirstRequest(id);
-                    query.closeConnection();
+                    //query.closeConnection();
 
                     self.client_socket.write_fmt(format_args!("{} {} {}\n", request.getId(), request.getFragmentId(), request.getType()));
                     self.client_socket.flush();
