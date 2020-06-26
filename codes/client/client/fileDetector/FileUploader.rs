@@ -17,11 +17,12 @@ fn main() {
 }
 
 impl FileUploader {
-    pub fn init(f:PathBuf, ip: String, port:u16) -> Self{
+    pub fn init(f:&PathBuf, ip: &String, port:&u16) -> Self{
+        //note:(by lyf)参数改成了引用
         FileUploader {
-            serverIP: ip.clone(),
-            server_port: port,
-            tmpFragmentFolder: f,
+            serverIP: (*ip).to_string()/*.clone()*/,
+            server_port: *port,
+            tmpFragmentFolder: *f,
             connecting: false,
             to_server: None,
         }

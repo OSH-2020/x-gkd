@@ -30,6 +30,7 @@ const interval:u32 = 60000;
  * 所有新加入的文件处理完毕之后，将文件夹清空，继续检测
  */
 
+static mut static_tmp:PathBuf = PathBuf::new();
 pub struct FolderScanner{
 
      folder:Vec<PathBuf>,
@@ -48,10 +49,19 @@ pub struct FolderScanner{
 impl FolderScanner{
      /* 参数syn是client.synItem类型，最后整合时记得改一下*/
      pub fn new(f:Vec<PathBuf>,addr:Vec<String>,/*syn:SynItem*/) -> FolderScanner {
-         FolderScanner{folder:f,address:addr,/*synItem:syn,*/detecting:true,tmpFragmentFolder:PathBuf::new()}
+         FolderScanner{
+            folder:f,
+            address:addr,/*synItem:syn,*/
+            detecting:true,
+            //tmpFragmentFolder:PathBuf::new()
+            tmpFragmentFolder:static_tmp
+        }
      }
-     pub fn init(&self,tmp:PathBuf){
-         self.tmpFragmentFolder = tmp;
+     pub fn init(tmp:&PathBuf){
+         unsafe{
+             static_tmp = *tmp;
+         }
+         //self.tmpFragmentFolder = tmp;
      }
 
      //@Override 未实现
@@ -124,6 +134,7 @@ impl FolderScanner{
         
         let fUploader:FileUploader;
 
+        
         let id:i32 = fUploader.registerFile(fileAttrs);
         if id == -2 {
             println!("ERR: can not get file id");

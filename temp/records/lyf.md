@@ -1590,7 +1590,7 @@ client、server各有main，做成两个包这样，然后直接cargo run
 
 2. static
 
-   很多 init 方法是 static 类方法，改变的是static 类变量，但在改写过程中，都是当普通成员方法，成员变量来写。
+   很多 init 方法是 static 类方法，改变的是 static 类变量，但在改写过程中，都是当普通成员方法，成员变量来写。
 
 3. 参数带不带引用的问题
 

@@ -15,6 +15,10 @@ use std::path::PathBuf;
 use std::option::Option;
 
 
+//note:by lyf
+static mut sta_fragmentFolder:String = String::new();
+static mut sta_serverIP:String = String::new();
+static mut sta_serverPort:i32 = -1;
 
 pub struct FragmentManager{
     fragmentFolder : String,
@@ -32,9 +36,12 @@ pub struct FragmentManager{
 impl FragmentManager {
     pub fn new(rId : i32, fId : i32, t : i32, l : TcpStream)->FragmentManager{
         FragmentManager{
-            fragmentFolder : String :: new(),
+            /*fragmentFolder : String :: new(),
             serverIP : String :: new(),
-            serverPort : -1,
+            serverPort : -1,*/ //note:by lyf
+            fragmentFolder : sta_fragmentFolder,
+            serverIP : sta_serverIP,
+            serverPort : sta_serverPort,
             controlPort : 0,
             toServer : None,
             inFromServer: BufReader :: new(l),
@@ -84,10 +91,14 @@ impl FragmentManager {
         return status;
     }
 
-    pub fn init(&mut self, f : String, ip : String, port : i32) {
-        self.fragmentFolder = f;
+    pub fn init(/*&mut self,*/ f : &PathBuf/*String*/, ip : &String, port : &i32) {
+        //note:by lyf
+        /*self.fragmentFolder = f;
         self.serverIP = ip;
-        self.serverPort = port;
+        self.serverPort = port;*/
+        sta_fragmentFolder = (*f).to_str().unwrap().to_string();
+        sta_serverIP = *ip;
+        sta_serverPort = *port;
         /*match &mut self.toServer {
             None => println!("Error"),
             Some(socket) => {
@@ -122,7 +133,7 @@ impl FragmentManager {
                     return false;
                 }
                 let socket1 = socket.try_clone().expect("clone failed");//克隆端口
-                let mut status : bool = super::FileTransporter::send_file(f, socket1);
+                let mut status : bool = super::FileTransporter::send_file(f, &socket1);
                 //let mut status = FileTransporter.sendFile 需要另一个函数FileTransporter
                 if status {
                     self.inFromServer.read_line(&mut sentense).unwrap();
@@ -149,7 +160,7 @@ impl FragmentManager {
             None => println!("Error"),
             Some(socket) => {
                 let socket1 = socket.try_clone().expect("clone failed");//克隆端口
-                if (super::FileTransporter::recv_file(f, socket1)){
+                if (super::FileTransporter::recv_file(f, &socket1)){
                     socket.write_fmt(format_args!("{} {} {}\n", self.Type, self.requestID, self.fragmentID));
                     socket.flush();
                     return true;

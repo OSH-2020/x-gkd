@@ -59,7 +59,7 @@ pub fn main() {
         j-=1;
     }
 
-    crate::client::connect::ServerConnecter::ServerConnecter::init(&serverIp,&controlPort);
+    crate::client::connect::ServerConnecter::ServerConnecter::init(&serverIp,&(controlPort as u16));
     let mut file1 = PathBuf::from(&fragmentFolder);
     if !file1.exists() || file1.is_dir(){
         println!("file1 wrong");
@@ -74,7 +74,7 @@ pub fn main() {
     }
 
     crate::client::fileDetector::FolderScanner::FolderScanner::init(&file2);
-    crate::client::fileDetector::FileUploader::FileUploader::init(&file2,&serverIp,&dataPort);
+    crate::client::fileDetector::FileUploader::FileUploader::init(&file2,&serverIp,&(dataPort as u16)); //note:(by lyf) 类型转换
     
 
     //线程创建

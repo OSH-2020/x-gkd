@@ -14,21 +14,28 @@ pub struct ServerConnecter{
     to_server:Option<TcpStream>,
 }
 
+//note: by lyf
+static mut sta_server_ip:String = String::new();
+static mut sta_control_port:u16 = 0;
 impl ServerConnecter{
 
     pub fn new(c_id:i32)->ServerConnecter{//client.SynItem s
         ServerConnecter{
-            server_ip: String::new(),
-            control_port: 0,
+            /*server_ip: String::new(),
+            control_port: 0,*/ //note:by lyf
+            server_ip: sta_server_ip,
+            control_port: sta_control_port,
             client_id: c_id,
             connecting: false,
             to_server:None,
         }
     }
 
-    pub fn init(&mut self, s_ip:String, c_port:u16){
-        self.server_ip = s_ip.clone();
-        self.control_port = c_port;
+    pub fn init(/*&mut self,*/ s_ip:&String, c_port:&u16){
+        /*self.server_ip = (*s_ip).clone();
+        self.control_port = *c_port;*/ //note: by lyf
+        sta_server_ip = (*s_ip).clone();
+        sta_control_port = *c_port;
     }
 
     pub fn run(&mut self,status1:Arc<(Mutex<i32>,Condvar)>){
