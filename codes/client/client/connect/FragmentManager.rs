@@ -26,7 +26,7 @@ pub struct FragmentManager{
     serverPort : i32,
     controlPort : u16,
     toServer : Option<TcpStream>,
-    inFromServer : BufReader<TcpStream>,
+    //inFromServer : BufReader<TcpStream>,
     requestID : i32,
     fragmentID : i32,
     Type : i32,
@@ -34,7 +34,7 @@ pub struct FragmentManager{
 
 
 impl FragmentManager {
-    pub fn new(rId : i32, fId : i32, t : i32, l : TcpStream)->FragmentManager{
+    pub fn new(rId : i32, fId : i32, t : i32)->FragmentManager{
         FragmentManager{
             /*fragmentFolder : String :: new(),
             serverIP : String :: new(),
@@ -44,7 +44,7 @@ impl FragmentManager {
             serverPort : sta_serverPort,
             controlPort : 0,
             toServer : None,
-            inFromServer: BufReader :: new(l),
+            //inFromServer: BufReader :: new(l),
             requestID : rId,
             fragmentID : fId,
             Type : t//type为Rust关键字，改为大写开头
@@ -127,16 +127,19 @@ impl FragmentManager {
             Some(socket) => {
                 socket.write_fmt(format_args!("{} {} {}\n", self.Type, self.requestID, self.fragmentID));
                 socket.flush();
-                self.inFromServer.read_line(&mut sentense).unwrap();
+                let socket1 = socket.try_clone().expect("clone failed");//克隆端口
+                let socket2 = socket.try_clone().expect("clone failed");//克隆端口
+                let mut inFromServer = BufReader::new(socket1);
+                inFromServer.read_line(&mut sentense).unwrap();
                 let recv = String :: from("received!");
                 if !sentense.eq(&recv) {
                     return false;
                 }
-                let socket1 = socket.try_clone().expect("clone failed");//克隆端口
-                let mut status : bool = super::FileTransporter::send_file(f, &socket1);
+                
+                let mut status : bool = super::FileTransporter::send_file(f, &socket2);
                 //let mut status = FileTransporter.sendFile 需要另一个函数FileTransporter
                 if status {
-                    self.inFromServer.read_line(&mut sentense).unwrap();
+                    inFromServer.read_line(&mut sentense).unwrap();
                     if !sentense.eq(&recv) {
                         status = false;
                     }
@@ -188,8 +191,11 @@ impl FragmentManager {
                 socket.write_fmt(format_args!("{} {} {}\n", self.Type, self.requestID, self.fragmentID));
                 socket.flush();
                 //SuppressWarngings
+                let socket1 = socket.try_clone().expect("clone failed");//克隆端口
+                let mut inFromServer = BufReader::new(socket1);
+
                 let mut sentense = String ::new();
-                self.inFromServer.read_line(&mut sentense).unwrap();
+                inFromServer.read_line(&mut sentense).unwrap();
                 let recv = String :: from("received!");
                 if sentense.eq(&recv) {
                     return true;
