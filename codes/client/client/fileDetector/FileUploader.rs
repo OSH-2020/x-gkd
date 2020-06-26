@@ -4,6 +4,8 @@ use std::string::String;
 use std::io::prelude::*;
 use std::fs::read_to_string;
 
+use super::FileAttrs::FileAttrs;
+
 pub struct FileUploader {
     serverIP: String,
     server_port: u16,
@@ -75,13 +77,13 @@ impl FileUploader {
         
     }
 
-    pub fn registerFile(&mut self, fa: PathBuf) -> i32 {
+    pub fn registerFile(&mut self, fa: FileAttrs) -> i32 {
         match &mut self.to_server {
             None => 0,
             Some (socket) => {
                 if !self.connecting {return -2;}
                 socket.write_fmt(format_args!("4 0 "));
-                socket.write_fmt(format_args!("{} false\n", fa.as_path().display()));//other output
+                socket.write_fmt(format_args!("{} {} {} {} false\n", fa.name, fa.path, fa.attr, fa.noa));
                 socket.flush();
 
                 let mut sentence = String::new();
