@@ -1,6 +1,7 @@
 #[macro_use]
 extern crate mysql;
 use std::*;
+use std::convert::TryInto;
 include!("FileItem.rs");
 include!("RequestItem.rs");
 include!("DeviceItem.rs");
@@ -430,15 +431,15 @@ impl Query {
 impl Query{
     pub fn addFile(&self,file:FileItem) -> i32{
         let suc:i32 = -1;
-        if file.isFolder(){
+        if file.is_folder(){
             for mut stmt in self.pool.prepare(r"INSERT INTO DFS.FILE (NAME,PATH,ATTRIBUTE,TIME,NOA,ISFOLDER) 
                 VALUES (:name,:path,:attribute,:time,:noa,true);").into_iter() {
                 suc = stmt.execute(params!{
-                    "name" => file.getName(),
-                    "path" => file.getPath(),
-                    "attribute" => file.getAttribute(),
-                    "time" => file.getTime(),
-                    "noa" => file.getNoa()
+                    "name" => file.get_name(),
+                    "path" => file.get_path(),
+                    "attribute" => file.get_attribute(),
+                    "time" => file.get_time(),
+                    "noa" => file.get_noa()
                 }).unwrap().last_insert_id().try_into().unwrap();
             //此处未处理execute不成功时，返回-1的情况
             }
@@ -446,11 +447,11 @@ impl Query{
             for mut stmt in self.pool.prepare(r"INSERT INTO DFS.FILE (NAME,PATH,ATTRIBUTE,TIME,NOA,ISFOLDER) 
                 VALUES (:name,:path,:attribute,:time,:noa,false);").into_iter() {
                 suc = stmt.execute(params!{
-                    "name" => file.getName(),
-                    "path" => file.getPath(),
-                    "attribute" => file.getAttribute(),
-                    "time" => file.getTime(),
-                    "noa" => file.getNoa()
+                    "name" => file.get_name(),
+                    "path" => file.get_path(),
+                    "attribute" => file.get_attribute(),
+                    "time" => file.get_time(),
+                    "noa" => file.get_noa()
                 }).unwrap().last_insert_id().try_into().unwrap();
             //此处未处理execute不成功时，返回-1的情况
             }
@@ -472,16 +473,16 @@ impl Query{
 
     pub fn alterFile(&self,file:FileItem) -> i32{
         let suc:i32 = -1;
-        if file.isFolder(){
+        if file.is_folder(){
             for mut stmt in self.pool.prepare(r"UPDATE DFS.FILE SET NAME=:name,PATH=:path,ATTRIBUTE=:attribute,
             TIME=:time,NOA=:noa,ISFOLDER=true WHERE id=:id;").into_iter() {
                 stmt.execute(params!{
-                    "name" => file.getName(),
-                    "path" => file.getPath(),
-                    "attribute" => file.getAttribute(),
-                    "time" => file.getTime(),
-                    "noa" => file.getNoa(),
-                    "id" => file.getId() 
+                    "name" => file.get_name(),
+                    "path" => file.get_path(),
+                    "attribute" => file.get_attribute(),
+                    "time" => file.get_time(),
+                    "noa" => file.get_noa(),
+                    "id" => file.get_id() 
                 }).unwrap().last_insert_id().try_into().unwrap();
             //此处未处理execute不成功时，返回-1的情况
             }
@@ -489,12 +490,12 @@ impl Query{
             for mut stmt in self.pool.prepare(r"UPDATE DFS.FILE SET NAME=:name,PATH=:path,ATTRIBUTE=:attribute,
             TIME=:time,NOA=:noa,ISFOLDER=false WHERE id=:id;").into_iter() {
                 stmt.execute(params!{
-                    "name" => file.getName(),
-                    "path" => file.getPath(),
-                    "attribute" => file.getAttribute(),
-                    "time" => file.getTime(),
-                    "noa" => file.getNoa(),
-                    "id" => file.getId() 
+                    "name" => file.get_name(),
+                    "path" => file.get_path(),
+                    "attribute" => file.get_attribute(),
+                    "time" => file.get_time(),
+                    "noa" => file.get_noa(),
+                    "id" => file.get_id() 
                 }).unwrap().last_insert_id().try_into().unwrap();
             //此处未处理execute不成功时，返回-1的情况
             }
@@ -505,24 +506,24 @@ impl Query{
 
     pub fn alterDevice(&self,device:DeviceItem) -> i32{
         let suc:i32 = -1;
-        if device.isOnline(){
+        if device.is_online(){
             for mut stmt in self.pool.prepare(r"UPDATE DFS.DEVICE SET IP=:ip',PORT=:port,ISONLINE=true,
             RS=:rs WHERE id=:id;").into_iter() {
                 let res = stmt.execute(params!{
-                    "ip" => device.getIp(),
-                    "port" => device.getPort(),
-                    "rs" => device.getRs(),
-                    "id" => device.getId()
+                    "ip" => device.get_ip(),
+                    "port" => device.get_port(),
+                    "rs" => device.get_rs(),
+                    "id" => device.get_id()
                 });
             }
         } else {
             for mut stmt in self.pool.prepare(r"UPDATE DFS.DEVICE SET IP=:ip,PORT=:port,ISONLINE=false,
             RS=:rsWHERE id=:id;").into_iter() {
                 let res = stmt.execute(params!{
-                    "ip" => device.getIp(),
-                    "port" => device.getPort(),
-                    "rs" => device.getRs(),
-                    "id" => device.getId()
+                    "ip" => device.get_ip(),
+                    "port" => device.get_port(),
+                    "rs" => device.get_rs(),
+                    "id" => device.get_id()
                 });   
                 suc = match res{
                     Ok(_) => 1,
@@ -582,9 +583,9 @@ impl Query{
         for mut stmt in self.pool.prepare(r"INSERT INTO DFS.REQUEST (TYPE,FRAGMENTID,DEVICEID)
         VALUES (:type,:fragmentid,:deviceid)").into_iter() {
             suc = stmt.execute(params!{
-                "type" => request.getType(),
-                "fragmentid" => request.getFragementId(),
-                "deviceid" => request.getDeviceId()
+                "type" => request.get_type(),
+                "fragmentid" => request.get_fragment_id(),
+                "deviceid" => request.get_device_id()
             }).unwrap().last_insert_id().try_into().unwrap();
         //此处未处理execute不成功时，返回-1的情况
         }

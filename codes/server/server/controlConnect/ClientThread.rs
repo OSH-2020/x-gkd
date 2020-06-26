@@ -3,6 +3,7 @@ use std::thread;
 use std::io::BufReader;
 use std::io::BufRead;
 use std::io::prelude::*;
+use std::convert::TryInto;
 
 use super::super::database::Query::Query;
 
@@ -42,13 +43,13 @@ impl ClientThread{
                     let mut deviceitem = query.queryDevice(id);
 
                     self.client_id = id;
-                    deviceitem.setIp(ip);
-                    deviceitem.setPort(port);
-                    deviceitem.setIsOnline(true);
-                    deviceitem.setRs(rs);
+                    deviceitem.set_ip(ip.to_string());
+                    deviceitem.set_port(port.try_into().unwrap());
+                    deviceitem.set_is_online(true);
+                    deviceitem.set_rs(rs);
                     query.alterDevice(deviceitem);
 
-                    self.client_socket.write_fmt(format_args!("received with {} unread request!\n", query.queryRequestNumbers(id)));
+                    self.client_socket.write_fmt(format_args!("received with {} unread request!\n", query.queryRequestNumbers_Byid(id)));
                     self.client_socket.flush();
                     //query.closeConnection();
 			        return 1
@@ -63,10 +64,11 @@ impl ClientThread{
                         return 0
                     }
                     let query = Query::new();
-                    let request = query.queryFirstRequest(id);
+                    let request = query.queryFirstRequest_Byid(id);
                     //query.closeConnection();
 
-                    self.client_socket.write_fmt(format_args!("{} {} {}\n", request.getId(), request.getFragmentId(), request.getType()));
+                    self.client_socket.write_fmt(format_args!("{} {} {}\n", 
+                        request.get_id(), request.get_fragment_id(), request.get_type()));
                     self.client_socket.flush();
                     return 1
 

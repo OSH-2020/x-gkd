@@ -4,7 +4,7 @@ use std::io::prelude::*;
 use std::net::TcpStream;
 use chrono::Local;
 use rand::Rng;
-use std::path::Path;
+use std::path::PathBuf;
 use std::fs::File;
 
 use super::super::database::Query::Query;
@@ -23,21 +23,21 @@ rand = "0.6.0"
 //需要参照其他对应文件
 
 pub struct ClientThread{
-    client_socket:TcpStream,
+    client_socket: TcpStream,
     //in_from_server:String,
     //out_to_client:String,
-    sentence:String,
-    download_folder_path:Path,
-    upload_folder_path:Path,
+    sentence: String,
+    download_folder_path: PathBuf,
+    upload_folder_path: PathBuf,
 }
 
 impl ClientThread{
     pub fn new(stream:TcpStream)->ClientThread{
         ClientThread{
-            client_socket:stream,
-            sentence:String::new(),
-            download_folder_path:Path::new("/opt/tomcat/webapps/DFS/CloudDriveServer/downloadFragment/"),
-            upload_folder_path:Path::new("/opt/tomcat/webapps/DFS/CloudDriveServer/uploadFragment/"),
+            client_socket: stream,
+            sentence: String::new(),
+            download_folder_path: PathBuf::from("/opt/tomcat/webapps/DFS/CloudDriveServer/downloadFragment/"),
+            upload_folder_path: PathBuf::from("/opt/tomcat/webapps/DFS/CloudDriveServer/uploadFragment/"),
         }
     }
 
@@ -84,13 +84,13 @@ impl ClientThread{
         let query = Query::new();
         let request = query.queryRequest_Byid(id);
 
-        if request.getFragmentId() != fid || request.getType() != 1{
+        if request.get_fragment_id() != fid || request.get_type() != 1{
             self.client_socket.write(b"ERROR!\n");
             self.client_socket.flush();
             status = false;
         }
         else{
-            let s = self.download_folder_path.to_string() + fid.to_string();
+            let s = self.download_folder_path.into_os_string() + fid.to_string();
             let recv_file = File::create(s).unwrap();
             self.client_socket.write(b"received!\n");
             self.client_socket.flush();
@@ -135,7 +135,8 @@ impl ClientThread{
                             "received!" => {
                                 //sendFile.delete();
                                 query.deleteRequest(request.get_id());
-						        query.alterFragment(fid, Integer.toString(request.getDeviceId()));
+                                //query.alterFragment(fid, Integer.toString(request.getDeviceId()));
+                                query.alterFragment(fid, request.getDeviceId().to_string());
                             }
                         }
                     }
@@ -185,7 +186,7 @@ impl ClientThread{
         let fileitem = FileItem::init_2(command[2][..], command[3][..],
         command[4][..], date, -1 * noa, isf);
 
-        int fid = query.addFile(fileitem);
+        let fid = query.addFile(fileitem);
         
         self.client_socket.write_fmt(format_args!("FileId: {}\n", fid));
         self.client_socket.flush();
@@ -204,14 +205,14 @@ impl ClientThread{
         let query = Query::new();
         let file = query.queryFile_Byid(file_id);
 
-        if (file.getNoa() != -1 * fragment_count || fragment_num >= fragment_count || fragment_num < 0){
+        if file.getNoa() != -1 * fragment_count || fragment_num >= fragment_count || fragment_num < 0 {
             self.client_socket.write(b"ERROR!\n");
             self.client_socket.flush();
             status = false;
         }
         else{
             let temp = file_id * 100 + fragment_num;
-            let s:String = self.upload_folder_path.to_string() + temp.to_string();
+            let s:String = self.upload_folder_path.into_os_string() + temp.to_string();
             let recv_file = File::create(s).unwrap();
             self.client_socket.write(b"received!\n");
             self.client_socket.flush();
@@ -234,7 +235,7 @@ impl ClientThread{
                         for i in 0..fragment_count{
                             if query.deleteFragment(file_id * 100 + i) == 1 {
                                 let temp_2:i32 = file_id * 100 + i;
-                                let s:String = self.upload_folder_path.to_string() + temp_2.to_string();
+                                let s:String = self.upload_folder_path.into_os_string() + temp_2.to_string();
                                 let f = File::create(s).unwrap();
                             }
                         }
@@ -284,7 +285,7 @@ impl ClientThread{
                     }
                 },
             };
-            if (flag){
+            if flag {
                 break;
             }
         }
