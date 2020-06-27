@@ -18,15 +18,20 @@ pub struct FileUploader {
 
 static mut sta_serverIP:String = String::new();
 static mut sta_server_port:u16 = 0;
-lazy_static!{
-    static ref sta_tmpFragmentFolder:PathBuf = PathBuf::from("foo.txt");
-}
+// lazy_static!{
+//     static ref sta_tmpFragmentFolder:PathBuf = {
+//         let mut m=PathBuf::new();
+//         m
+//     }; //PathBuf::from("foo.txt");
+// }
+//static mut sta_tmpFragmentFolder:PathBuf = PathBuf::new();
+static mut sta_tmpFragmentFolder:String = String::new();
 fn main() {
     println!("hello");
 }
 
 impl FileUploader {
-    pub fn init(f:&PathBuf, ip: &String, port:&u16)/* -> Self*/{
+    pub fn init(f:/*&PathBuf*/&String, ip: &String, port:&u16)/* -> Self*/{
         //note:(by lyf)参数改成了引用
         //note:by lyf init改为对
         /*FileUploader {
@@ -39,7 +44,7 @@ impl FileUploader {
         unsafe{
         sta_serverIP = (*ip).clone().to_string();
         sta_server_port = *port;
-        sta_tmpFragmentFolder = (*f.clone()).to_path_buf();
+        sta_tmpFragmentFolder = (*f).clone().to_string();
         }
 
     }
@@ -48,7 +53,7 @@ impl FileUploader {
         FileUploader {
             serverIP: unsafe{sta_serverIP.clone()},
             server_port:unsafe{sta_server_port},
-            tmpFragmentFolder: unsafe{sta_tmpFragmentFolder.clone()},
+            tmpFragmentFolder: unsafe{PathBuf::from(sta_tmpFragmentFolder.clone())},
             connecting: false,
             to_server: None,
         }

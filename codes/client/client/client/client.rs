@@ -73,9 +73,11 @@ pub fn main() {
         return;
     }
 
-    crate::client::fileDetector::FolderScanner::FolderScanner::init(&file2);
-    crate::client::fileDetector::FileUploader::FileUploader::init(&file2,&serverIp,&(dataPort as u16)); //note:(by lyf) 类型转换
-    
+    //crate::client::fileDetector::FolderScanner::FolderScanner::init(&file2);
+    crate::client::fileDetector::FolderScanner::FolderScanner::init(&tmpFragmentFolder);
+    //crate::client::fileDetector::FileUploader::FileUploader::init(&file2,&serverIp,&(dataPort as u16)); //note:(by lyf) 类型转换
+    crate::client::fileDetector::FileUploader::FileUploader::init(&tmpFragmentFolder,&serverIp,&(dataPort as u16)); //note:(by lyf) 类型转换
+    //note:by lyf  由于全局变量pathbuf类型难以实现，故传String
 
     //线程创建
     let status = Arc::new((Mutex::new(0), Condvar::new()));

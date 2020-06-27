@@ -1594,7 +1594,26 @@ client、server各有main，做成两个包这样，然后直接cargo run
 
    static mut ，init函数中赋给全局变量，在new中由全局变量给成员变量赋值
 
-   目前还没遇到编译错误（即使没写unsafe）
+   ~~目前还没遇到编译错误（即使没写unsafe）~~
+
+   ![](C:\Users\12935\Pictures\Screenshots\批注 2020-06-27 125725.png)
+
+   尝试使用 lazy_static! 但在赋值是类型出问题 查了很多资料没解决
+
+   ```rust
+    lazy_static!{
+        static ref sta_tmpFragmentFolder:PathBuf = {
+            let mut m=PathBuf::new();
+            m
+        }; 
+    }
+   ```
+
+   ![](C:\Users\12935\Pictures\Screenshots\批注 2020-06-27 130022.png)
+
+   fileuploader和filescanner需要用到，实在不行想想别的办法
+
+   -> 改从client.rs传String，而不是PathBuf，全局变量设为String类型，在new时再由String转为PathBuf
 
 3. 参数带不带引用的问题
 
@@ -1602,6 +1621,11 @@ client、server各有main，做成两个包这样，然后直接cargo run
 
 **6.26**
 
-4. FragmentManager中的成员变量fragmentFolder为String类型，而原java中为File类型，故client调用时用的是PathBuf，怎么统一？
+4. FragmentManager中的成员变量fragmentFolder为String类型，而原java中为File类型，故client调用时用的是PathBuf，怎么统一? -> pqz解决
+5. FragmentMananger的new()类型为TcpStream的参数 -> pqz解决
 
-5. FragmentMananger的new()类型为TcpStream的参数
+**6.27**
+
+6. status的所有权问题 -> .clone()
+
+   ![](C:\Users\12935\Pictures\Screenshots\批注 2020-06-27 125816.png)

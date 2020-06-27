@@ -30,7 +30,7 @@ const interval:u32 = 60000;
  * 所有新加入的文件处理完毕之后，将文件夹清空，继续检测
  */
 
-static mut static_tmp:PathBuf = PathBuf::new();
+static mut static_tmp:String = String::new();
 pub struct FolderScanner{
 
      folder:Vec<PathBuf>,
@@ -54,12 +54,12 @@ impl FolderScanner{
             address:addr,/*synItem:syn,*/
             detecting:true,
             //tmpFragmentFolder:PathBuf::new()
-            tmpFragmentFolder:unsafe{ static_tmp.clone() }
+            tmpFragmentFolder:unsafe{ PathBuf::from(static_tmp.clone()) }
         }
      }
-     pub fn init(tmp:&PathBuf){
+     pub fn init(tmp:&String/*&PathBuf*/){
          unsafe{
-             static_tmp = (*tmp.clone()).to_path_buf();
+             static_tmp = (*tmp).clone().to_string();
          }
          //self.tmpFragmentFolder = tmp;
      }
@@ -80,7 +80,7 @@ impl FolderScanner{
          }
          while self.detecting{
              //未处理catch InterruptedException
-            self.scanFiles(status);
+            self.scanFiles(status.clone());
             let interval_mills = time::Duration::from_millis(interval.into());
             thread::sleep(interval_mills);
          }
@@ -94,7 +94,7 @@ impl FolderScanner{
         for i in 0..self.folder.len() {
             let files:LinkedList<PathBuf> = FileUtil::getAllFiles(&self.folder[i]);
             for file in files{
-                if !self.handleFile(file.as_path().to_path_buf(),i.try_into().unwrap(),status){
+                if !self.handleFile(file.as_path().to_path_buf(),i.try_into().unwrap(),status.clone()){
                     return;
                 }
             }
