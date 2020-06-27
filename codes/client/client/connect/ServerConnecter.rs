@@ -4,6 +4,7 @@ use std::io::BufReader;
 use std::io::prelude::*;
 use std::{thread, time};
 use std::sync::{Arc, Mutex, Condvar};
+use std::convert::TryInto;
 //#[derive(Debug)]
 pub struct ServerConnecter{
     server_ip:String,
@@ -23,8 +24,10 @@ impl ServerConnecter{
         ServerConnecter{
             /*server_ip: String::new(),
             control_port: 0,*/ //note:by lyf
-            server_ip: sta_server_ip,
-            control_port: sta_control_port,
+            
+            server_ip: unsafe{sta_server_ip.clone()},
+            control_port:unsafe{ sta_control_port},
+            
             client_id: c_id,
             connecting: false,
             to_server:None,
@@ -34,8 +37,10 @@ impl ServerConnecter{
     pub fn init(/*&mut self,*/ s_ip:&String, c_port:&u16){
         /*self.server_ip = (*s_ip).clone();
         self.control_port = *c_port;*/ //note: by lyf
+        unsafe{
         sta_server_ip = (*s_ip).clone();
         sta_control_port = *c_port;
+        }
     }
 
     pub fn run(&mut self,status1:Arc<(Mutex<i32>,Condvar)>){
@@ -85,7 +90,7 @@ impl ServerConnecter{
                             let fragment_id:u32 = input_vec[1].parse().unwrap();
                             let ftype:u32 = input_vec[2].parse().unwrap();
                             //以下两行用到其他文件中定义的结构体
-                            let f_manager = super::FragmentManager::FragmentManager::new(request_id, fragment_id, ftype);
+                            let mut f_manager = super::FragmentManager::FragmentManager::new(request_id.try_into().unwrap(), fragment_id.try_into().unwrap(), ftype.try_into().unwrap());
                             f_manager.submit();
                             unread_request = unread_request - 1;
                         }

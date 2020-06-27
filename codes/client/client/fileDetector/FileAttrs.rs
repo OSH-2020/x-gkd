@@ -1,8 +1,8 @@
 pub struct FileAttrs {
-    name: String,
-    path: String,
-    attr: String,
-    noa: i32,
+    pub name: String,
+    pub path: String,
+    pub attr: String,
+    pub noa: i32,
 }
 impl FileAttrs {
     pub fn init(name: String, path: String, attr: String, noa: i32) -> Self {

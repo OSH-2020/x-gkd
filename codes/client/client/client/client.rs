@@ -85,7 +85,7 @@ pub fn main() {
     //let clientid = self.clientId.clone();
 
     let handle1 = thread::spawn(move || { 
-        let ServerConnecter = crate::client::connect::ServerConnecter::ServerConnecter::new(clientId);
+        let mut ServerConnecter = crate::client::connect::ServerConnecter::ServerConnecter::new(clientId);
         ServerConnecter.run(connect_status);
      });//let mut num = counter.lock().unwrap(); *num += 1;
     

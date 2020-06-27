@@ -1583,7 +1583,7 @@ client、server各有main，做成两个包这样，然后直接cargo run
 
 **6/24**
 
-1. 锁机制的一些问题
+1. 锁机制的一些问题 -> lyx已解决
 ![](C:\Users\12935\Pictures\Screenshots\批注 2020-06-24 164353.png)
 
 ![](C:\Users\12935\Pictures\Screenshots\批注 2020-06-24 164412.png)
@@ -1592,5 +1592,16 @@ client、server各有main，做成两个包这样，然后直接cargo run
 
    很多 init 方法是 static 类方法，改变的是 static 类变量，但在改写过程中，都是当普通成员方法，成员变量来写。
 
+   static mut ，init函数中赋给全局变量，在new中由全局变量给成员变量赋值
+
+   目前还没遇到编译错误（即使没写unsafe）
+
 3. 参数带不带引用的问题
 
+   解决：出现此类问题，统一使用引用，在被调用函数处解引用*
+
+**6.26**
+
+4. FragmentManager中的成员变量fragmentFolder为String类型，而原java中为File类型，故client调用时用的是PathBuf，怎么统一？
+
+5. FragmentMananger的new()类型为TcpStream的参数

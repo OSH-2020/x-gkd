@@ -28,13 +28,20 @@ use std::convert::TryInto;
         }*/
 
         // note:因为无法重载，故函数名加上了_str
-        pub fn clearFolder_str(&self,folderPath:String) {
+        /*pub fn clearFolder_str(&self,folderPath:String) {
              self.clearFolder(folderPath.try_into().unwrap());
-         }
+         }*/
+         //note:by lyf string到pathbuf的类型转换尚未实现，但无人调用此方法
     
         /*先用 struct std::path::Path 写，没找到如何从 
         struct::fs::File 得到对应 path 的方法*/ 
-        pub fn clearFolder(&self,folder:PathBuf) {
+        pub fn new() -> FileUtil{
+            FileUtil{
+
+            }
+        }
+        pub fn clearFolder(&self,folder:&PathBuf) {
+            let folder:PathBuf = (*folder.clone()).to_path_buf();
             //原代码中folder是 FILE类型
             if folder.is_file() {
                 fs::remove_file(&folder);
@@ -46,7 +53,7 @@ use std::convert::TryInto;
                             let pathbuf = entry.path();
                             let path:&Path = pathbuf.as_path();
                             if path.is_dir() {
-                                self.clearFolder(path.to_path_buf());
+                                self.clearFolder(&path.to_path_buf());
                             } else {
                                 fs::remove_file(path);
                             }
@@ -65,9 +72,10 @@ use std::convert::TryInto;
          * @return 所有的文件
          */
     
-         pub fn getAllFiles(&self,folder:PathBuf) -> LinkedList<PathBuf>{
+         pub fn getAllFiles(folder:&PathBuf) -> LinkedList<PathBuf>{
              /*!原代码中folder是 FILE类型*/
             
+            let folder:PathBuf = (*folder.clone()).to_path_buf();
             let mut files:LinkedList<PathBuf> = LinkedList::new();
             let mut queue: LinkedList<PathBuf> = LinkedList::new();          
 

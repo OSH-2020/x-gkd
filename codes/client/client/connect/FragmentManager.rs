@@ -39,9 +39,10 @@ impl FragmentManager {
             /*fragmentFolder : String :: new(),
             serverIP : String :: new(),
             serverPort : -1,*/ //note:by lyf
-            fragmentFolder : sta_fragmentFolder,
-            serverIP : sta_serverIP,
-            serverPort : sta_serverPort,
+            fragmentFolder :unsafe{ sta_fragmentFolder.clone()},
+            serverIP : unsafe{sta_serverIP.clone()},
+            serverPort :unsafe{ sta_serverPort},
+
             controlPort : 0,
             toServer : None,
             //inFromServer: BufReader :: new(l),
@@ -96,9 +97,11 @@ impl FragmentManager {
         /*self.fragmentFolder = f;
         self.serverIP = ip;
         self.serverPort = port;*/
+        unsafe{
         sta_fragmentFolder = (*f).to_str().unwrap().to_string();
-        sta_serverIP = *ip;
+        sta_serverIP = (*ip).clone();
         sta_serverPort = *port;
+        }
         /*match &mut self.toServer {
             None => println!("Error"),
             Some(socket) => {

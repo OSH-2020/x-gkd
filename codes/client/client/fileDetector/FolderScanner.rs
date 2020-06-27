@@ -54,20 +54,20 @@ impl FolderScanner{
             address:addr,/*synItem:syn,*/
             detecting:true,
             //tmpFragmentFolder:PathBuf::new()
-            tmpFragmentFolder:static_tmp
+            tmpFragmentFolder:unsafe{ static_tmp.clone() }
         }
      }
      pub fn init(tmp:&PathBuf){
          unsafe{
-             static_tmp = *tmp;
+             static_tmp = (*tmp.clone()).to_path_buf();
          }
          //self.tmpFragmentFolder = tmp;
      }
 
      //@Override 未实现
      pub fn run(&self,status:Arc<(Mutex<i32>,Condvar)>){
-         let fUploader:FileUploader;
-         if !fUploader.checkFolders(self.address){
+         let fUploader:FileUploader = FileUploader::new();
+         if !fUploader.checkFolders(&self.address){
              println!("ERR: can not register folder");
              //self.synItem.setStatus(2);
              let &(ref lock, ref cvar) = &*status;
@@ -90,27 +90,27 @@ impl FolderScanner{
      // 扫描文件夹，如果有文件加入则处理该文件
      fn scanFiles(&self,status:Arc<(Mutex<i32>,Condvar)>){
         //let mut i:i32 = 0;
-        let FileUtil:FileUtil;
+        let FileUtil:FileUtil = FileUtil::new();
         for i in 0..self.folder.len() {
-            let files:LinkedList<PathBuf> = FileUtil.getAllFiles(self.folder[i]);
+            let files:LinkedList<PathBuf> = FileUtil::getAllFiles(&self.folder[i]);
             for file in files{
                 if !self.handleFile(file.as_path().to_path_buf(),i.try_into().unwrap(),status){
                     return;
                 }
             }
             // 处理完毕之后，清空文件夹
-			FileUtil.clearFolder(self.folder[i]);
+			FileUtil.clearFolder(&self.folder[i]);
         }
      }
 
      // 停止检测
-     pub fn stopDetecting(&self){
+     pub fn stopDetecting(&mut self){
          self.detecting = false;
      }
 
      pub fn handleFile(&self,file:PathBuf,i:i32,status:Arc<(Mutex<i32>,Condvar)>) -> bool{
          let fileName:String = file.file_name().unwrap().to_str().unwrap().to_string();
-         let filePath:String = self.address[i as usize] + "/";
+         let filePath:String = self.address[i as usize].clone() + "/";
          
          let mut attribute:String = "".to_string();
          let metadata = file.metadata().unwrap();
@@ -127,12 +127,12 @@ impl FolderScanner{
             } else {
                 attribute = attribute + '-';
             }*/
-        let mut noa:i32 = (metadata.len().try_into().unwrap() / BYTES_IN_SHARDS) + 1;   //metadata.len()返回值类型为u64
+        let mut noa:i32 = (((metadata.len() as u32) / BYTES_IN_SHARDS) + 1).try_into().unwrap();   //metadata.len()返回值类型为u64
         noa = noa * 2;
         
         let fileAttrs = FileAttrs::FileAttrs::init(fileName,filePath,attribute,noa);
         
-        let fUploader:FileUploader;
+        let mut fUploader:FileUploader = FileUploader::new();
 
         
         let id:i32 = fUploader.registerFile(fileAttrs);
@@ -151,7 +151,7 @@ impl FolderScanner{
             return true;
         }
         /*NOTE: trycatch 有关erasure code，调用路径可能还需要改*/
-        if !com::Encoder::Encoder::encode(file,self.tmpFragmentFolder,id) {
+        if !com::Encoder::Encoder::encode(file,self.tmpFragmentFolder.clone(),id) {
             println!("ERR: can not split file");
             //self.synItem.setStatus(2);
              let &(ref lock, ref cvar) = &*status;
@@ -177,9 +177,9 @@ impl FolderScanner{
             }
         }
 
-        let FileUtil:FileUtil;
+        let FileUtil:FileUtil = FileUtil::new();
         // 处理完毕，清空块文件夹
-        FileUtil.clearFolder(self.tmpFragmentFolder);
+        FileUtil.clearFolder(&self.tmpFragmentFolder);
         
         return true;
      }

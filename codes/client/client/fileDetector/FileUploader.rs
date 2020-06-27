@@ -1,3 +1,5 @@
+use lazy_static;
+
 use std::path::PathBuf;
 use std::net::TcpStream;
 use std::string::String;
@@ -14,23 +16,46 @@ pub struct FileUploader {
     connecting: bool,
 }
 
+static mut sta_serverIP:String = String::new();
+static mut sta_server_port:u16 = 0;
+lazy_static!{
+    static ref sta_tmpFragmentFolder:PathBuf = PathBuf::from("foo.txt");
+}
 fn main() {
     println!("hello");
 }
 
 impl FileUploader {
-    pub fn init(f:&PathBuf, ip: &String, port:&u16) -> Self{
+    pub fn init(f:&PathBuf, ip: &String, port:&u16)/* -> Self*/{
         //note:(by lyf)参数改成了引用
-        FileUploader {
+        //note:by lyf init改为对
+        /*FileUploader {
             serverIP: (*ip).to_string()/*.clone()*/,
             server_port: *port,
-            tmpFragmentFolder: *f,
+            tmpFragmentFolder: (*f.clone()).to_path_buf(),
+            connecting: false,
+            to_server: None,
+        }*/
+        unsafe{
+        sta_serverIP = (*ip).clone().to_string();
+        sta_server_port = *port;
+        sta_tmpFragmentFolder = (*f.clone()).to_path_buf();
+        }
+
+    }
+
+    pub fn new() -> FileUploader{
+        FileUploader {
+            serverIP: unsafe{sta_serverIP.clone()},
+            server_port:unsafe{sta_server_port},
+            tmpFragmentFolder: unsafe{sta_tmpFragmentFolder.clone()},
             connecting: false,
             to_server: None,
         }
     }
 
-    pub fn checkFolders(mut self, addr: Vec<String>) -> bool{
+    pub fn checkFolders(mut self, addr: &Vec<String>) -> bool{
+        let addr:Vec<String> = (*addr).clone().to_vec();
         match &mut self.to_server {
             None => false,
             Some (socket) => {
