@@ -8,8 +8,9 @@ use std::path::PathBuf;
 use std::fs::File;
 
 use super::super::database::Query::Query;
-use super::super::database::FileItem::FileItem;
-use super::super::database::RequestItem::RequestItem;
+use super::super::database::Query::FileItem;
+use super::super::database::Query::RequestItem;
+use super::FileTransporter;
 
 /*在crate root 中声明 "extern crate chrono;"
 cargo.toml中增加：
@@ -90,18 +91,18 @@ impl ClientThread{
             status = false;
         }
         else{
-            let s = self.download_folder_path.into_os_string() + fid.to_string();
+            let s = self.download_folder_path.into_os_string().into_string().unwrap() + &fid.to_string();
             let recv_file = File::create(s).unwrap();
             self.client_socket.write(b"received!\n");
             self.client_socket.flush();
-            status = recv_file(recv_file, &self.client_socket);
+            status = Filetransporter::recv_file(recv_file, &self.client_socket);
             if status {
                 self.client_socket.write(b"received!\n");
                 self.client_socket.flush();
-                query.deleteRequest(request.getId());
+                query.deleteRequest(request.get_id());
             }
         }
-        query.closeConnection();
+        //query.closeConnection();
         status
     }
 
@@ -114,29 +115,29 @@ impl ClientThread{
         let query = Query::new();
         let request = query.queryRequest_Byid(id);
 
-        if request.get_fragment_id() != fid || request.getType() != 2 {
+        if request.get_fragment_id() != fid || request.get_type() != 2 {
             status = false;
         }
         else{
-            let s = self.upload_folder_path.to_string() + fid.to_string();//upload_folder_path的形式还未确定
+            let s = self.upload_folder_path.into_os_string().into_string().unwrap() + &fid.to_string();//upload_folder_path的形式还未确定
             let send_file = File::open(s);
             match send_file{
                 Err(e) => {
                     status = false;
-                    query.daleteRequest(request.getId());
+                    query.deleteRequest(request.get_id());
                 },
                 Ok(file) =>{
-                    status = super::FileTransporter::send_file(file, self.client_socket);
+                    status = super::FileTransporter::send_file(file, &self.client_socket);
                     if status{
                         let mut in_from_cilent = BufReader::new(self.client_socket);
                         let sentence = String::new();
                         in_from_cilent.read_line(&mut sentence).unwrap();
                         match sentence{
-                            "received!" => {
+                            "received!".to_string() => {
                                 //sendFile.delete();
                                 query.deleteRequest(request.get_id());
                                 //query.alterFragment(fid, Integer.toString(request.getDeviceId()));
-                                query.alterFragment(fid, request.getDeviceId().to_string());
+                                query.alterFragment(fid, request.get_device_id().to_string());
                             }
                         }
                     }
@@ -144,7 +145,7 @@ impl ClientThread{
             };
             
         }
-        query.closeConnection();
+        //query.closeConnection();
         status
     }
 
@@ -157,17 +158,17 @@ impl ClientThread{
         let query = Query::new();
         let request = query.queryRequest_Byid(id);
 
-        if request.getFragmentId() != fid || request.getType() != 3 {
+        if request.get_fragment_id() != fid || request.get_type() != 3 {
             self.client_socket.write(b"ERROR!\n");
             self.client_socket.flush();
-            query.closeConnection();
+            //query.closeConnection();
             status = false;
         }
         else{
             self.client_socket.write(b"received!\n");
             self.client_socket.flush();
             query.deleteRequest(request.get_id());
-            query.closeConnection();
+            //query.closeConnection();
         }
         status
     }
@@ -183,15 +184,15 @@ impl ClientThread{
         date.truncate(10);
         date.remove(7);
         date.remove(4);
-        let fileitem = FileItem::init_2(command[2][..], command[3][..],
-        command[4][..], date, -1 * noa, isf);
+        let fileitem = FileItem::init_2(command[2][..].to_string(), command[3][..].to_string(),
+        command[4][..].to_string(), date, -1 * noa, isf);
 
         let fid = query.addFile(fileitem);
         
         self.client_socket.write_fmt(format_args!("FileId: {}\n", fid));
         self.client_socket.flush();
 
-        query.closeConnection();
+        //query.closeConnection();
         true
     }
 
@@ -205,27 +206,27 @@ impl ClientThread{
         let query = Query::new();
         let file = query.queryFile_Byid(file_id);
 
-        if file.getNoa() != -1 * fragment_count || fragment_num >= fragment_count || fragment_num < 0 {
+        if file.get_noa() != -1 * fragment_count || fragment_num >= fragment_count || fragment_num < 0 {
             self.client_socket.write(b"ERROR!\n");
             self.client_socket.flush();
             status = false;
         }
         else{
             let temp = file_id * 100 + fragment_num;
-            let s:String = self.upload_folder_path.into_os_string() + temp.to_string();
+            let s:String = self.upload_folder_path.into_os_string().into_string().unwrap() + &temp.to_string();
             let recv_file = File::create(s).unwrap();
             self.client_socket.write(b"received!\n");
             self.client_socket.flush();
 
-            status = super::FileTransporter::recv_file(recv_file, &self.client_socket);
+            status = FileTransporter::recv_file(recv_file, &self.client_socket);
             if status{
-                query.addFragment(temp, "-1");
+                query.addFragment(temp, "-1".to_string());
                 if fragment_num == fragment_count - 1 {
                     let count = query.queryFragmentNumbers(file_id);
-                    if count == fragment_count && self.confirm(file_id, fragment_count) == 1{
+                    if count == fragment_count && self.confirm(&file_id, &fragment_count) == 1{
                         self.client_socket.write(b"received!\n");
                         self.client_socket.flush();
-                        file.setNoa(fragment_count);
+                        file.set_noa(fragment_count);
                         query.alterFile(file);
                     }
                     else{
@@ -235,7 +236,8 @@ impl ClientThread{
                         for i in 0..fragment_count{
                             if query.deleteFragment(file_id * 100 + i) == 1 {
                                 let temp_2:i32 = file_id * 100 + i;
-                                let s:String = self.upload_folder_path.into_os_string() + temp_2.to_string();
+                                let s:String = self.upload_folder_path.into_os_string().into_string().unwrap() 
+                                    + &temp_2.to_string();
                                 let f = File::create(s).unwrap();
                             }
                         }
@@ -264,27 +266,25 @@ impl ClientThread{
         let mut i = 0;
         for i in 0..num {
             in_from_client.read_line(&mut input).unwrap();
+            let ipt = input.as_mut_vec();
             let input_vec:Vec<&str> = input[..].split(' ').collect();
-            let file = query.queryFile_Bypathname(input[0].to_string(), input[1].to_string());
-            match file{
-                None => {
-                    let dt = Local::today();
-                    let mut date:String = dt.to_string();
-                    date.truncate(10);
-                    date.remove(7);
-                    date.remove(4);
-                    let fileitem = FileItem::init_2(input[1][..], input[0][..],
-                        "rw", date, 0, true);
-                    if query.addFile(file) < 0{
-                        flag = true;
-                    }
-                },
-                Some(file) => {
-                    if !file.is_folder() {
-                        flag = true;
-                    }
-                },
-            };
+            let file = query.queryFile_Bypathname(Some(ipt[0].to_string()), Some(ipt[1].to_string()));
+            if  -1 == file.get_id() {
+                let dt = Local::today();
+                let mut date:String = dt.to_string();
+                date.truncate(10);
+                date.remove(7);
+                date.remove(4);
+                let fileitem = FileItem::init_2(ipt[1].to_string(), ipt[0].to_string(),
+                    "rw".to_string(), date, 0, true);
+                if query.addFile(file) < 0{
+                    flag = true;
+                }
+            } else {
+                if !file.is_folder() {
+                    flag = true;
+                }
+            }
             if flag {
                 break;
             }
@@ -303,7 +303,7 @@ impl ClientThread{
         true
     }
 
-    pub fn confirm(id:&i32, num:&i32)->i32{
+    pub fn confirm(&self, id:&i32, num:&i32)->i32{
         let query = Query::new();
         let mut return_val:i32 = 0;
 
@@ -313,21 +313,22 @@ impl ClientThread{
             return -1;
         }
 
-        let size = di.len();
-        if num <= size {
-            let t = rand::thread_rng().gen_range(0, size);
-            for i in 0..num{
-                let temp = RequestItem::init_2(2, id * 100 + i, di[(i + t) % size].getId());
+        let s = di.len();
+        if num <= &size {
+            let t: i32 = rand::thread_rng().gen_range(0, size).try_into().unwrap();
+            for i in 0..*num{
+                let n: i32 = i.try_into().unwrap();
+                let temp = RequestItem::init_2(2, id * 100 + n, di[(n + t) % size].get_id());
                 query.addRequest(temp);
             }
         }
         else{
             let mut n:Vec<i32> = Vec::new();
-            let temp = num / size;
+            let temp = num / (size as i32);
             for i in 0..size {
                 n.push(temp);
             }
-            let m = num % size;
+            let m = num % (size as i32);
 
             let mut t = rand::thread_rng().gen_range(0, size);
             for i in 0..m {
@@ -338,7 +339,7 @@ impl ClientThread{
             let mut k:i32 = 0;
             for i in 0..size {
                 for j in 0..n[i] as usize{
-                    let temp = RequestItem::init_2(2, id * 100 + i, di[i].getId());
+                    let temp = RequestItem::init_2(2, id * 100 + (i as i32), di[i].get_id());
                     query.addRequest(temp);
                     k = k + 1;
                 }

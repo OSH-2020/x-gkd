@@ -483,7 +483,7 @@ impl Query{
                     "time" => file.get_time(),
                     "noa" => file.get_noa(),
                     "id" => file.get_id() 
-                }).unwrap().last_insert_id().try_into().unwrap();
+                }).unwrap().last_insert_id() as i32;
             //此处未处理execute不成功时，返回-1的情况
             }
         } else {
@@ -496,7 +496,7 @@ impl Query{
                     "time" => file.get_time(),
                     "noa" => file.get_noa(),
                     "id" => file.get_id() 
-                }).unwrap().last_insert_id().try_into().unwrap();
+                }).unwrap().last_insert_id() as i32;
             //此处未处理execute不成功时，返回-1的情况
             }
         }

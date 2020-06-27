@@ -439,9 +439,9 @@ rust 不支持函数重载，所以有些函数修改了名字，在后面加上
 
 改写FileUploader过程中：
 
-int = Integer.parseInt(String) 表示把 String 的数字提取出来变成int
+1. int = Integer.parseInt(String) 表示把 String 的数字提取出来变成int
 
-可以使用rust中的
+   可以使用rust中的
 
 ```
 let my_string = "27".to_string(); // `parse()` works with `&str` and `String`!
@@ -449,19 +449,24 @@ let my_string = "27".to_string(); // `parse()` works with `&str` and `String`!
 let my_int = my_string.parse::<i32>().unwrap();
 ```
 
-match &self.to_server{
+2. match &self.to_server{
 
-​      None => println!("Error! server not connected..."),
+   ​      None => println!("Error! server not connected..."),
 
-​      Some (socket) => {
+   ​      Some (socket) => {
 
-​        //self.socket = socket.clone();	后面是&tcpstream，前面是tcpstream
+   ​        //self.socket = socket.clone();	后面是&tcpstream，前面是tcpstream
 
-​      }
+   ​      }
 
-​    }	solved try_clone().unwrap()
+   ​    }	solved try_clone().unwrap()
 
-self.socket.write_fmt(format_args!("{} false\n", fa));	不能把PathBuf输出
+3. self.socket.write_fmt(format_args!("{} false\n", fa));	不能把PathBuf输出
 
-​	solved by fa.as_path().display()
+   ​	solved by fa.as_path().display()
 
+4. 强制类型转换：
+
+   ​	try_into()
+
+   ​	xxx as i32	xxx as usize
