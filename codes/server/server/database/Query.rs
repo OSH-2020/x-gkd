@@ -1,5 +1,3 @@
-#[macro_use]
-extern crate mysql;
 use std::*;
 use std::convert::TryInto;
 include!("FileItem.rs");
@@ -429,8 +427,8 @@ impl Query {
 }
 
 impl Query{
-    pub fn addFile(&self,file:FileItem) -> i32{
-        let suc:i32 = -1;
+    pub fn addFile(&self, mut file:FileItem) -> i32{
+        let mut suc:i32 = -1;
         if file.is_folder(){
             for mut stmt in self.pool.prepare(r"INSERT INTO DFS.FILE (NAME,PATH,ATTRIBUTE,TIME,NOA,ISFOLDER) 
                 VALUES (:name,:path,:attribute,:time,:noa,true);").into_iter() {
@@ -460,7 +458,7 @@ impl Query{
     }
 
     pub fn deleteFile(&self,id:i32) -> i32{
-        let suc:i32 = -1;
+        let mut suc:i32 = -1;
         for mut stmt in self.pool.prepare(r"DELETE FROM DFS.FILE WHERE ID=:id").into_iter() {
             stmt.execute(params!{
                 "id" => id
@@ -471,8 +469,8 @@ impl Query{
         return suc;
     }
 
-    pub fn alterFile(&self,file:FileItem) -> i32{
-        let suc:i32 = -1;
+    pub fn alterFile(&self, mut file:FileItem) -> i32{
+        let mut suc:i32 = -1;
         if file.is_folder(){
             for mut stmt in self.pool.prepare(r"UPDATE DFS.FILE SET NAME=:name,PATH=:path,ATTRIBUTE=:attribute,
             TIME=:time,NOA=:noa,ISFOLDER=true WHERE id=:id;").into_iter() {
@@ -504,8 +502,8 @@ impl Query{
         return suc;
     }
 
-    pub fn alterDevice(&self,device:DeviceItem) -> i32{
-        let suc:i32 = -1;
+    pub fn alterDevice(&self, mut device:DeviceItem) -> i32{
+        let mut suc:i32 = -1;
         if device.is_online(){
             for mut stmt in self.pool.prepare(r"UPDATE DFS.DEVICE SET IP=:ip',PORT=:port,ISONLINE=true,
             RS=:rs WHERE id=:id;").into_iter() {
@@ -534,12 +532,12 @@ impl Query{
         return suc;
     }
 
-    pub fn addFragment(&self,id:i32,path:String) -> i32{
-        let suc:i32 = -1;
+    pub fn addFragment(&self,id:i32, path:String) -> i32{
+        let mut suc:i32 = -1;
         for mut stmt in self.pool.prepare(r"INSERT INTO DFS.FRAGMENT VALUES (:id,:path)").into_iter() {
             let res = stmt.execute(params!{
                 "id" => id,
-                "path" => path
+                "path" => path.clone()
             });
             suc = match res{
                 Ok(_) => 1,
@@ -550,7 +548,7 @@ impl Query{
     } 
 
     pub fn deleteFragment(&self,id:i32) -> i32{
-        let suc:i32 = -1;
+        let mut suc:i32 = -1;
         for mut stmt in self.pool.prepare(r"DELETE FROM DFS.FRAGMENT WHERE ID=:id").into_iter() {
             let res = stmt.execute(params!{
                 "id" => id
@@ -564,10 +562,10 @@ impl Query{
     }
 
     pub fn alterFragment(&self,id:i32,path:String) -> i32{
-        let suc:i32 = -1;
+        let mut suc:i32 = -1;
         for mut stmt in self.pool.prepare(r"UPDATE DFS.FRAGMENT SET PATH=:path WHERE id=:id;").into_iter() {
             let res = stmt.execute(params!{
-                "path" => path,
+                "path" => path.clone(),
                 "id" => id
             });
             suc = match res{
@@ -578,8 +576,8 @@ impl Query{
         return suc;
     }
 
-    pub fn addRequest(&self,request:RequestItem) -> i32{
-        let suc:i32 = -1;
+    pub fn addRequest(&self, mut request:RequestItem) -> i32{
+        let mut suc:i32 = -1;
         for mut stmt in self.pool.prepare(r"INSERT INTO DFS.REQUEST (TYPE,FRAGMENTID,DEVICEID)
         VALUES (:type,:fragmentid,:deviceid)").into_iter() {
             suc = stmt.execute(params!{
@@ -594,7 +592,7 @@ impl Query{
     }
 
     pub fn deleteRequest(&self,id:i32) -> i32{
-        let suc:i32 = -1;
+        let mut suc:i32 = -1;
         for mut stmt in self.pool.prepare(r"DELETE FROM DFS.REQUEST WHERE ID=:id").into_iter() {
             let res = stmt.execute(params!{
                 "id" => id
@@ -608,11 +606,11 @@ impl Query{
     }
     pub fn addUser(&self,name:String,passwd:String)-> i32{
         //suc为INSERT的用户在mysql中的id
-        let suc:i32 = -1;
+        let mut suc:i32 = -1;
         for mut stmt in self.pool.prepare(r"INSERT INTO DFS.USER (NAME,PASSWD) VALUES (:name, :passwd)").into_iter() {
             suc = stmt.execute(params!{
-                "name" => name,
-                "passwd" => passwd
+                "name" => name.clone(),
+                "passwd" => passwd.clone()
             }).unwrap().last_insert_id().try_into().unwrap();
             //此处未处理execute不成功的情况
         }
@@ -621,11 +619,11 @@ impl Query{
     }
 
     pub fn alterUser(&self,id:i32,name:String,passwd:String) -> i32{
-        let suc:i32 = -1;
+        let mut suc:i32 = -1;
         for mut stmt in self.pool.prepare(r"UPDATE INTO DFS.USER SET NAEME=:name,PASSWD=passwd WHERE id=:id").into_iter() {
             let res = stmt.execute(params!{
-                "name" => name,
-                "passwd" => passwd,
+                "name" => name.clone(),
+                "passwd" => passwd.clone(),
                 "id" => id
             });
             suc = match res{
@@ -637,7 +635,7 @@ impl Query{
     }
 
     pub fn deleteUser(&self,id:i32) -> i32{
-        let suc:i32 = -1;
+        let mut suc:i32 = -1;
         for mut stmt in self.pool.prepare(r"DELETE FROM DFS.USER WHERE ID=:id").into_iter() {
             let res = stmt.execute(params!{
                 "id" => id

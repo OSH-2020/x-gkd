@@ -1,6 +1,4 @@
-进度：client FileUploader还有一些bug
-
-​			server Query
+进度：debug server
 
 
 
@@ -461,12 +459,69 @@ let my_int = my_string.parse::<i32>().unwrap();
 
    ​    }	solved try_clone().unwrap()
 
-3. self.socket.write_fmt(format_args!("{} false\n", fa));	不能把PathBuf输出
+
+
+改写 server：
+
+架构：
+
+main.rs
+
+server.rs
+
+server
+
+- controlConnect.rs
+- database.rs
+- dataConnect.rs
+- controlConnect
+  - ClientThread.rs
+  - ServerThread.rs
+- database
+  - DeviceItem.rs
+  - FileItem.rs
+  - RequestItem.rs
+  - Query.rs
+- dataConnect
+  - ServerThread.rs
+  - ClientThread.rs
+  - FileTransporter.rs
+
+
+
+1. self.socket.write_fmt(format_args!("{} false\n", fa));	不能把PathBuf输出
 
    ​	solved by fa.as_path().display()
 
-4. 强制类型转换：
+2. 强制类型转换：
 
    ​	try_into()
 
    ​	xxx as i32	xxx as usize
+
+3. an `extern crate` loading macros must be at the crate root
+
+   ​	#[macro_use]
+
+   ​	extern crate mysql;
+
+   ​	外部依赖库放在 main.rs 中
+
+4. immutable
+
+   let request = query.queryFirstRequest_Byid(id);
+      |                         ------- help: consider changing this to be mutable: `mut request`
+   ...
+   71 |                         request.get_id(), request.get_fragment_id(), request.get_type()));
+      |                                                                      ^^^^^^^ cannot borrow as mutable
+
+   
+
+   pub fn alterFile(&self,file:FileItem) -> i32{
+       |                            ---- help: consider changing this to be mutable: `mut file`
+   ...
+   478 |                     "name" => file.get_name(),
+       |                               ^^^^ cannot borrow as mutable
+
+5. java 里的字符串加法，使用了 rust String 中的 push_str 代替
+

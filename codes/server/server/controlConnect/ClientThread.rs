@@ -64,7 +64,7 @@ impl ClientThread{
                         return 0
                     }
                     let query = Query::new();
-                    let request = query.queryFirstRequest_Byid(id);
+                    let mut request = query.queryFirstRequest_Byid(id);
                     //query.closeConnection();
 
                     self.client_socket.write_fmt(format_args!("{} {} {}\n", 

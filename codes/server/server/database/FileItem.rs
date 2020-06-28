@@ -35,11 +35,11 @@ impl FileItem {
             }
         }
 
-    pub fn get_id(&mut self) -> i32 {
+    pub fn get_id(&self) -> i32 {
         self.id
     }
 
-    pub fn get_name(&mut self) -> String {
+    pub fn get_name(&self) -> String {
         let chars: Vec<char> = self.name.chars().collect();
         let mut string = String::new();
         for c in chars {
@@ -65,7 +65,7 @@ impl FileItem {
         self.path = path;
     }
 
-    pub fn get_attribute(&mut self) -> String {
+    pub fn get_attribute(&self) -> String {
         let chars: Vec<char> = self.attribute.chars().collect();
         let mut string = String::new();
         for c in chars {
@@ -74,11 +74,11 @@ impl FileItem {
         string
     }
 
-    pub fn set_atrribute(&mut self, attribute: String) {
+    pub fn set_attribute(&mut self, attribute: String) {
         self.attribute = attribute;
     }
 
-    pub fn get_time(&mut self) -> String {
+    pub fn get_time(&self) -> String {
         let chars: Vec<char> = self.time.chars().collect();
         let mut string = String::new();
         for c in chars {
@@ -91,7 +91,7 @@ impl FileItem {
         self.time = time;
     }
 
-    pub fn get_noa(&mut self) -> i32{
+    pub fn get_noa(&self) -> i32{
         self.noa
     }
 
