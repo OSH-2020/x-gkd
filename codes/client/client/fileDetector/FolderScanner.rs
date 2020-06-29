@@ -1,7 +1,3 @@
-use std::path::Path;
-use std::fs::metadata;
-use std::fs;
-
 use std::path::PathBuf;
 use std::{thread, time};
 use std::convert::TryInto;

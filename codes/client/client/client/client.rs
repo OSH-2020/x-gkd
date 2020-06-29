@@ -16,59 +16,76 @@ pub fn main() {
     //read setup.ini 
     let mut controlPort:i32 = 0;
         
-    let setUpFile = String::from("setup.ini");
+    let setUpFile = String::from("E:\\STUDY\\Rust project\\client_test\\target\\debug\\setup.ini");
     let file = File::open(setUpFile).unwrap();
+    println!("open setup.ini successfully!\n");
+
     let mut fin = BufReader::new(file);
     let mut line = String::new();
 
     fin.read_line(&mut line).unwrap(); 
     let mut serverIp = String::from(&line);
+    println!("serverIp:{}\n",serverIp);
+    //serverIP未去掉\n
 
+    line.clear();
     fin.read_line(&mut line).unwrap(); 
-    let mut controlPort = line.parse::<i32>().unwrap();
+    println!("line:{}\n",line);
+
+    let mut controlPort = line.trim().parse::<i32>().unwrap();
+    println!("controlPort:{}\n",controlPort);
     
+    line.clear();
     fin.read_line(&mut line).unwrap(); 
-    let mut dataPort = line.parse::<i32>().unwrap();
+    let mut dataPort = line.trim().parse::<i32>().unwrap();
 
+    line.clear();
     fin.read_line(&mut line).unwrap(); 
-    clientId = line.parse::<i32>().unwrap();
+    clientId = line.trim().parse::<i32>().unwrap();
 
     //空行
     fin.read_line(&mut line).unwrap(); 
     
+    line.clear();
     fin.read_line(&mut line).unwrap(); 
-    let mut fragmentFolder = String::from(&line);
+    let mut fragmentFolder = String::from(line.trim());
+    
 
+    line.clear();
     fin.read_line(&mut line).unwrap(); 
-    let mut tmpFragmentFolder = String::from(&line);
+    let mut tmpFragmentFolder = String::from(line.trim());
 
+    line.clear();
     fin.read_line(&mut line).unwrap(); 
-    let i = line.parse::<i32>().unwrap(); //需监控的上传文件夹数量
+    println!("line:{}\n",line);
+    let i = line.trim().parse::<i32>().unwrap(); //需监控的上传文件夹数量
 
     //self.uploadFolders = Vec::new();
     //self.uploadAddrs = Vec::new();
     let mut j = i;
     while j>0 {
+        line.clear();
         fin.read_line(&mut line).unwrap(); 
-        let uploadFolder = PathBuf::from(&line);
+        let uploadFolder = PathBuf::from(line.trim());
         uploadFolders.push(uploadFolder);
 
+        line.clear();
         fin.read_line(&mut line).unwrap(); 
-        let uploadAddr = String::from(&line);
+        let uploadAddr = String::from(line.trim());
         uploadAddrs.push(uploadAddr);
         j-=1;
     }
 
     crate::client::connect::ServerConnecter::ServerConnecter::init(&serverIp,&(controlPort as u16));
     let mut file1 = PathBuf::from(&fragmentFolder);
-    if !file1.exists() || file1.is_dir(){
+    if !file1.exists() || !file1.is_dir(){
         println!("file1 wrong");
         return;
     }
 
     crate::client::connect::FragmentManager::FragmentManager::init(&file1, &serverIp, &dataPort);
     let mut file2 = PathBuf::from(&tmpFragmentFolder);
-    if !file2.exists() || file2.is_dir(){
+    if !file2.exists() || !file2.is_dir(){
         println!("file2 wrong");
         return;
     }

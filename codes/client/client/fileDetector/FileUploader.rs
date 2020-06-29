@@ -60,6 +60,9 @@ impl FileUploader {
     }
 
     pub fn checkFolders(mut self, addr: &Vec<String>) -> bool{
+        if !self.createConnection() {
+            return false;
+        }
         let addr:Vec<String> = (*addr).clone().to_vec();
         match &mut self.to_server {
             None => false,
@@ -108,6 +111,9 @@ impl FileUploader {
     }
 
     pub fn registerFile(&mut self, fa: FileAttrs) -> i32 {
+        if !self.createConnection(){
+            return -2;
+        }
         match &mut self.to_server {
             None => 0,
             Some (socket) => {
@@ -142,6 +148,9 @@ impl FileUploader {
     }
 
     pub fn pushFragment(&mut self, fileId: i32, fragmentNum: i32, fragmentCount: i32) -> bool {
+        if !self.createConnection() {
+            return false;
+        }
         match &mut self.to_server {
             None => false,
             Some (socket) => {
@@ -177,7 +186,10 @@ impl FileUploader {
         }
     }
 
-    pub fn createConnection(&mut self) {
+    pub fn createConnection(&mut self) -> bool{
+        if self.serverIP.is_empty(){
+            return false;
+        }
         if let Ok(connect_socket) = TcpStream::connect((&self.serverIP[..], self.server_port)) {
             self.to_server = Some(connect_socket);
             println!("Connect to server successfully(control)!");
@@ -185,6 +197,9 @@ impl FileUploader {
         } else {
             println!("Couldn't connect to server...");
             self.connecting = false;
+            return false;
         }
+
+        return true;
     }
 }

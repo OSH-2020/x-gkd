@@ -1629,3 +1629,30 @@ client、server各有main，做成两个包这样，然后直接cargo run
 6. status的所有权问题 -> .clone()
 
    ![](C:\Users\12935\Pictures\Screenshots\批注 2020-06-27 125816.png)
+
+### client 注意事项
+
+1. setup.ini
+
+   注意要有空行
+
+   ```
+   127.0.0.1
+   6666
+   6668
+   1
+   
+   E:\STUDY\client\fragment
+   E:\STUDY\client\tmp
+   1
+   E:\STUDY\client\file1
+   TIM
+   ```
+
+   
+
+### seed
+
+node.js的防火墙权限局限在了专用网络
+
+将zhihui-home改为专用网络了
