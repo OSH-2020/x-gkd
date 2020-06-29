@@ -3,7 +3,7 @@ use std::thread;
 
 use super::ClientThread::ClientThread;
 
-struct ServerThread {
+pub struct ServerThread {
     server:TcpListener,
 }
 
