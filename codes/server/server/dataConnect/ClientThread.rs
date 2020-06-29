@@ -219,8 +219,10 @@ impl ClientThread{
         }
         else{
             let temp = file_id * 100 + fragment_num;
-            let mut s: String = self.upload_folder_path.into_os_string().into_string().unwrap();
-            let mut s1: String = s.clone();
+            //let mut s: String = self.upload_folder_path.into_os_string().into_string().unwrap();
+            let mut s: String = self.upload_folder_path.clone().into_os_string().into_string().unwrap();
+            let mut s1: String = self.upload_folder_path.clone().into_os_string().into_string().unwrap();
+            //let mut s1: String = s.clone();
             s.push_str(&temp.to_string());
             let recv_file = File::create(s).unwrap();
             self.client_socket.write(b"received!\n");
@@ -243,9 +245,10 @@ impl ClientThread{
                         query.deleteFile(file_id);
                         for i in 0..fragment_count{
                             if query.deleteFragment(file_id * 100 + i) == 1 {
-                                let temp_2:i32 = file_id * 100 + i;
-                                s1.push_str(&temp_2.to_string());
-                                let f = File::create(s1).unwrap();
+                                //let temp_2:i32 = file_id * 100 + i;
+                                //s1.push_str(&temp_2.to_string());
+                                let temp_2:String = (file_id * 100 + i).to_string();
+                                let f = File::create(s1.clone()+&temp_2).unwrap();
                             }
                         }
                     }
@@ -273,7 +276,10 @@ impl ClientThread{
         let mut i = 0;
         for i in 0..num {
             in_from_client.read_line(&mut input).unwrap();
-            let ipt = input.as_mut_vec();
+            let mut ipt = Vec::new();
+            unsafe {
+                ipt = input.clone().as_mut_vec().to_vec();
+            }
             let input_vec:Vec<&str> = input[..].split(' ').collect();
             let mut file = query.queryFile_Bypathname(Some(ipt[0].to_string()), Some(ipt[1].to_string()));
             if  -1 == file.get_id() {
@@ -312,7 +318,7 @@ impl ClientThread{
 
     pub fn confirm(&mut self, id:&i32, num:&i32)->i32{
         let query = Query::new();
-        let mut return_val:i32 = 0;
+        //let mut return_val:i32 = 0;
 
         let mut di = query.queryOnlineDevice();
         //假定di类型为Vec<DeviceItem>

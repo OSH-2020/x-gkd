@@ -1,4 +1,4 @@
-进度：debug server
+进度：编译成功 server，调试代码中
 
 
 
@@ -524,4 +524,16 @@ server
        |                               ^^^^ cannot borrow as mutable
 
 5. java 里的字符串加法，使用了 rust String 中的 push_str 代替
+
+   pub fn [push_str](https://doc.rust-lang.org/std/string/struct.String.html#method.push_str)(&mut self, string: &[str](https://doc.rust-lang.org/std/primitive.str.html))
+
+   pub fn [insert_str](https://doc.rust-lang.org/std/string/struct.String.html#method.insert_str)(&mut self, idx: [usize](https://doc.rust-lang.org/std/primitive.usize.html), string: &[str](https://doc.rust-lang.org/std/primitive.str.html))
+
+6. unsafe 模块：string 到 vec， 使用了 as_mut_vec()，unsafe，需要
+
+```
+	unsafe {
+        ipt = input.clone().as_mut_vec().to_vec();
+    }
+```
 
