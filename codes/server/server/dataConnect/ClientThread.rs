@@ -265,7 +265,7 @@ impl ClientThread{
 
     pub fn check_folder(mut self)->bool{
         let command:Vec<&str> = self.sentence[..].split(' ').collect();
-        let num:i32 = command[2].parse().unwrap();
+        let num:i32 = command[2].trim().parse().unwrap();
 
         let query = Query::new();
 

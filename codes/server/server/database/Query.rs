@@ -23,7 +23,7 @@ pub struct Query{
 impl Query {
     pub fn new() -> Query{
         //需要大家在自己的电脑把 root:XXXX 改成自己的 mysql 密码
-        let pool = my::Pool::new("mysql://root:mysql@localhost:3306/mysql").unwrap();
+        let pool = my::Pool::new("mysql://root:BB052511@localhost:3306/server_test").unwrap();
         Query {
             pool: pool,
         }

@@ -24,9 +24,9 @@ pub fn main() {
     let mut line = String::new();
 
     fin.read_line(&mut line).unwrap(); 
-    let mut serverIp = String::from(&line);
+    let mut serverIp = String::from(line.trim());
     println!("serverIp:{}\n",serverIp);
-    //serverIP未去掉\n
+    
 
     line.clear();
     fin.read_line(&mut line).unwrap(); 
@@ -38,6 +38,7 @@ pub fn main() {
     line.clear();
     fin.read_line(&mut line).unwrap(); 
     let mut dataPort = line.trim().parse::<i32>().unwrap();
+    println!("dataPort:{}\n",dataPort);
 
     line.clear();
     fin.read_line(&mut line).unwrap(); 

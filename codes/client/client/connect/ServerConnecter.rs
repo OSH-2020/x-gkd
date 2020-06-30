@@ -29,7 +29,7 @@ impl ServerConnecter{
             control_port:unsafe{ sta_control_port},
             
             client_id: c_id,
-            connecting: false,
+            connecting: true,
             to_server:None,
         }
     }
@@ -46,8 +46,9 @@ impl ServerConnecter{
     pub fn run(&mut self,status1:Arc<(Mutex<i32>,Condvar)>){
 
         let mut status = true;
-
+        println!("SeverConnecter run!\n"); //note:by lyf
         while self.connecting{
+            println!("server_ip:{},control_port:{}",self.server_ip,self.control_port);//note:by lyf
             if let Ok(connect_socket) = TcpStream::connect((&self.server_ip[..], self.control_port)) {
                 self.to_server = Some(connect_socket);
                 println!("Connect to server successfully(control)!");
