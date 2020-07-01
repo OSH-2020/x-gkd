@@ -77,9 +77,9 @@ impl ServerConnecter{
                         let mut input_vec:Vec<&str>= input_buf[..].split(' ').collect();
 
                         //debug
-                        println!("input is: {} input_buf\n", input_buf);
+                        println!("input is: {}\n", input_buf);
 
-                        let mut unread_request:u32 = input_vec[2].parse().unwrap();
+                        let mut unread_request:i32 = input_vec[2].trim().parse().unwrap();
                         
                         println!("after input_vec[2]\n");//note:by lyf
 
