@@ -71,6 +71,7 @@ impl ServerConnecter{
                         //我不知道原文件的client.Client.getRS()是什么东西所以没有写
                         socket.write_fmt(format_args!("1 {} {}\n", self.client_id.to_string(),crate::client::client::client::getRs()));//TODO:err handle
                         socket.flush();//TODO:err
+                        input_buf.clear();
                         in_from_server.read_line(&mut input_buf).unwrap();
                         let input_buf = input_buf.trim();
                         println!("input_buf:{}kkk\n",input_buf);
@@ -98,13 +99,14 @@ impl ServerConnecter{
                             f_manager.submit();
                             unread_request = unread_request - 1;
                         }
+                        //sleep
+                        let five_seconds = time::Duration::new(5, 0);
+                        thread::sleep(five_seconds);
                     }
                 
                 }
             }
-            //sleep
-            let five_seconds = time::Duration::new(5, 0);
-            thread::sleep(five_seconds);
+
 
             match &mut self.to_server{
                 None => println!("Error! server not connected..."),
