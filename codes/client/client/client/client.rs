@@ -16,7 +16,7 @@ pub fn main() {
     //read setup.ini 
     let mut controlPort:i32 = 0;
         
-    let setUpFile = String::from("E:\\STUDY\\Rust project\\client_test\\target\\debug\\setup.ini");
+    let setUpFile = String::from("D:\\setup.ini");
     let file = File::open(setUpFile).unwrap();
     println!("open setup.ini successfully!\n");
 
