@@ -21,13 +21,14 @@ impl ClientThread{
     }
 
     fn readsentence(&mut self, sentence:&String) -> i32{
+        println!("control Connect - ClientThread :sentence:{}",sentence);
         let mut first_char = sentence.chars().next();
         match first_char {
             None => return 0,
             Some(c) =>{
                 if c == '1'{
                     let s: Vec<&str> = sentence.split(' ').collect();
-                    let id: i32 = s[1].parse().unwrap();
+                    let id: i32 = s[1].trim().parse().unwrap();
 
                     if self.client_id != -1 && self.client_id != id{
                         self.client_socket.write(b"Error!\n");
@@ -36,7 +37,7 @@ impl ClientThread{
                     }
                     let client_addr = self.client_socket.peer_addr().unwrap();
                     let port = client_addr.port();
-                    let rs: i32 = s[2].parse().unwrap();
+                    let rs: i32 = s[2].trim().parse().unwrap();
                     let ip = client_addr.ip();
 
                     let query = Query::new();
@@ -85,11 +86,14 @@ impl ClientThread{
         //clientsocket.setSoTimeout(60000);
         let stream_clone = self.client_socket.try_clone().expect("clone failed...");
         let mut in_from_client = BufReader::new(stream_clone);
+        println!("control Connect - ClientThread :before loop!/n");
         loop{
             let mut sentence = String::new();
             in_from_client.read_line(&mut sentence).unwrap();
+            println!("control Connect - ClientThread ：after read line!\n");
             if self.readsentence(&sentence) == 0 {
                 break;
+                println!("control Connect - ClientThread ：sentence：{}，break\n",sentence);
             }
             println!("C-RECV: {}", sentence);
         }

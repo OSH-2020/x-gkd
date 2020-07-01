@@ -129,3 +129,8 @@ pub fn main() {
         println!("Err: can detect files");
     }
 }
+
+pub fn getRs() -> i32 {
+    //返回剩余容量,待实现
+	return 250;	
+}

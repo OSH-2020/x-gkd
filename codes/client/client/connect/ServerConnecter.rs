@@ -69,17 +69,20 @@ impl ServerConnecter{
                     let mut in_from_server = BufReader::new(socket_read);
                     while self.connecting{
                         //我不知道原文件的client.Client.getRS()是什么东西所以没有写
-                        socket.write_fmt(format_args!("1 {}\n", self.client_id.to_string()));//TODO:err handle
+                        socket.write_fmt(format_args!("1 {} {}\n", self.client_id.to_string(),crate::client::client::client::getRs()));//TODO:err handle
                         socket.flush();//TODO:err
                         in_from_server.read_line(&mut input_buf).unwrap();
                         let input_buf = input_buf.trim();
+                        println!("input_buf:{}kkk\n",input_buf);
                         let mut input_vec:Vec<&str>= input_buf[..].split(' ').collect();
 
                         //debug
-                        println!("input is: {}", input_buf);
+                        println!("input is: {} input_buf\n", input_buf);
 
                         let mut unread_request:u32 = input_vec[2].parse().unwrap();
                         
+                        println!("after input_vec[2]\n");//note:by lyf
+
                         let mut inputline = String::new();
                         while unread_request>0 {
                             socket.write_fmt(format_args!("2 {}\n", self.client_id.to_string()));
