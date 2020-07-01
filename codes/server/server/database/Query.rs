@@ -23,7 +23,7 @@ pub struct Query{
 impl Query {
     pub fn new() -> Query{
         //需要大家在自己的电脑把 root:XXXX 改成自己的 mysql 密码
-        let pool = my::Pool::new("mysql://root:BB052511@localhost:3306/server_test").unwrap();
+        let pool = my::Pool::new("mysql://root:BB052511@localhost:3306/mysql").unwrap();
         Query {
             pool: pool,
         }
@@ -205,7 +205,7 @@ impl Query {
 
     pub fn queryDevice(&self, id: i32) -> DeviceItem {
         let selected_devices: Result<Vec<DeviceItem>, mysql::Error> =
-        self.pool.prep_exec("SELECT * FROM DFS.DEVICE WHERE WHERE ID=:id", 
+        self.pool.prep_exec("SELECT * FROM DFS.DEVICE WHERE ID=:id", 
                 params!{"id" => id})
         .map(|result| { 
             result.map(|x| x.unwrap()).map(|row| {
@@ -240,7 +240,7 @@ impl Query {
 
     pub fn queryRequest_Byid(&self, id: i32) -> RequestItem {
         let selected_requests: Result<Vec<RequestItem>, mysql::Error> =
-        self.pool.prep_exec("SELECT * FROM DFS.REQUEST WHERE WHERE ID=:id", 
+        self.pool.prep_exec("SELECT * FROM DFS.REQUEST WHERE ID=:id", 
                 params!{"id" => id})
         .map(|result| { 
             result.map(|x| x.unwrap()).map(|row| {
@@ -272,7 +272,7 @@ impl Query {
 
     pub fn queryFirstRequest_Byid(&self, id: i32) -> RequestItem {
         let selected_requests: Result<Vec<RequestItem>, mysql::Error> =
-        self.pool.prep_exec("SELECT * FROM DFS.REQUEST WHERE WHERE DEVICEID=:id LIMIT 1", 
+        self.pool.prep_exec("SELECT * FROM DFS.REQUEST WHERE DEVICEID=:id LIMIT 1", 
                 params!{"id" => id})
         .map(|result| { 
             result.map(|x| x.unwrap()).map(|row| {
@@ -304,7 +304,7 @@ impl Query {
 
     pub fn queryRequest_Bydeviceid(&self, deviceId: i32) -> RequestItem {
         let selected_requests: Result<Vec<RequestItem>, mysql::Error> =
-        self.pool.prep_exec("SELECT * FROM DFS.REQUEST WHERE WHERE DEVICEID=:id", 
+        self.pool.prep_exec("SELECT * FROM DFS.REQUEST WHERE DEVICEID=:id", 
                 params!{"id" => deviceId})
         .map(|result| { 
             result.map(|x| x.unwrap()).map(|row| {
@@ -336,7 +336,7 @@ impl Query {
 
     pub fn queryRequestNumbers_Byid(&self, deviceId: i32) -> i32 {
         let selected_requests: Result<Vec<RequestItem>, mysql::Error> =
-        self.pool.prep_exec("SELECT * FROM DFS.REQUEST WHERE WHERE DEVICEID=:id", 
+        self.pool.prep_exec("SELECT * FROM DFS.REQUEST WHERE DEVICEID=:id", 
                 params!{"id" => deviceId})
         .map(|result| { 
             result.map(|x| x.unwrap()).map(|row| {
@@ -361,7 +361,7 @@ impl Query {
 
     pub fn queryRequestNumbers_Byidtype(&self, fileId: i32, type_: i32) -> i32 {
         let selected_requests: Result<Vec<RequestItem>, mysql::Error> =
-        self.pool.prep_exec("SELECT * FROM DFS.REQUEST WHERE WHERE FRAGMENTID>=:fid
+        self.pool.prep_exec("SELECT * FROM DFS.REQUEST WHERE FRAGMENTID>=:fid
                 AND FRAGMENTID<:fid2 AND TYPE_=:type_",
                 params!{"fid" => fileId*100, "fid2" => (fileId+1)*100, "type_" => type_})
         .map(|result| { 
@@ -516,7 +516,7 @@ impl Query{
             }
         } else {
             for mut stmt in self.pool.prepare(r"UPDATE DFS.DEVICE SET IP=:ip,PORT=:port,ISONLINE=false,
-            RS=:rsWHERE id=:id;").into_iter() {
+            RS=:rs WHERE id=:id;").into_iter() {
                 let res = stmt.execute(params!{
                     "ip" => device.get_ip(),
                     "port" => device.get_port(),

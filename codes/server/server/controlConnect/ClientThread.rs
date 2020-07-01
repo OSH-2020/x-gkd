@@ -89,6 +89,7 @@ impl ClientThread{
         println!("control Connect - ClientThread :before loop!/n");
         loop{
             let mut sentence = String::new();
+            sentence.clear();
             in_from_client.read_line(&mut sentence).unwrap();
             println!("control Connect - ClientThread ：after read line!\n");
             if self.readsentence(&sentence) == 0 {
