@@ -537,3 +537,95 @@ server
     }
 ```
 
+7. rust 常用类型转换
+
+   | x类型\至类型 | i32                | u32  | f64  | String      |
+   | ------------ | ------------------ | ---- | ---- | ----------- |
+   | i32          |                    | as   | as   | to_string() |
+   | u32          | as                 |      | as   |             |
+   | f64          | as                 | as   |      |             |
+   | String       | x.parse().unwrap() | ..   | ..   |             |
+
+   string->&str	&*x
+
+   &str->String	to_string()
+
+
+
+系统使用指南：
+
+1. 首先在 client 中的 client.rs 中修改 ini 的路径：
+
+   let setUpFile = String::from("C:\\Users\\sym\\projects\\setup.ini");
+
+   把括号中的路径名改成自己的。
+
+2. 而后按照 setup.ini 中的文件路径创建文件夹
+
+3. Query.rs 的文件中需要修改自己的 mysql 密码（xxxx处）
+
+   let pool = my::Pool::new("mysql://root:xxxx@localhost:3306/server_test").unwrap();
+
+4. 打开 mysql，创建新的数据库和表单：
+
+   CREATE DATABASE server_test;
+
+   USE server_test;
+
+   CREATE TABLE `DEVICE` (  
+   `ID` int NOT NULL AUTO_INCREMENT,  
+   `IP` char(20) NOT NULL DEFAULT '',  
+   `PORT` int NOT NULL DEFAULT 0,  
+   `ISONLINE` boolean NOT NULL,  
+   `RS` int NULL DEFAULT 0 ,  
+   PRIMARY KEY (`ID`) 
+   ) ENGINE=InnoDB DEFAULT CHARSET=utf8; 
+
+   CREATE TABLE `FRAGMENT` (  
+   `ID` int NOT NULL,  
+   `PATH` char(20) NOT NULL DEFAULT '',  
+   PRIMARY KEY (`ID`) 
+   ) ENGINE=InnoDB DEFAULT CHARSET=utf8; 
+
+   CREATE TABLE `FILE` (  
+   `ID` int NOT NULL AUTO_INCREMENT,  
+   `NAME` char(20) NOT NULL DEFAULT '',  
+   `PATH` char(60) NOT NULL DEFAULT '',  
+   `ATTRIBUTE` char(10) NOT NULL DEFAULT '',  
+   `TIME` char(10) NOT NULL DEFAULT '',  
+   `NOA` int NOT NULL DEFAULT 1,  
+   `ISFOLDER` boolean NOT NULL DEFAULT false,  
+   PRIMARY KEY (`id`) 
+   ) ENGINE=InnoDB DEFAULT CHARSET=utf8; 
+
+   CREATE TABLE `REQUEST` (  
+   `ID` int NOT NULL AUTO_INCREMENT,  
+   `TYPE` int NOT NULL DEFAULT 0,  
+   `FRAGMENTID` int NOT NULL DEFAULT 0,  
+   `DEVICEID` int NOT NULL DEFAULT 0,  
+   PRIMARY KEY (`ID`) 
+   ) ENGINE=InnoDB DEFAULT CHARSET=utf8; 
+
+   CREATE TABLE `USER` (  
+   `ID` int NOT NULL AUTO_INCREMENT,  
+   `NAME` char(20) NOT NULL UNIQUE DEFAULT '', 
+   `PASSWD` char(20) NOT NULL DEFAULT '',  
+   PRIMARY KEY (`ID`) 
+   ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+   之后就会看到表单创建成功
+
+   mysql> SHOW TABLES;
+   +-----------------------+
+   | Tables_in_server_test |
+   +-----------------------+
+   | device                |
+   | file                  |
+   | fragment              |
+   | request               |
+   | user                  |
+   +-----------------------+
+   5 rows in set (0.02 sec)
+
+5. 加一个 id 为1， isonline 为1 的 device。
+
