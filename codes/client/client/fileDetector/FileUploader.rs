@@ -5,6 +5,7 @@ use std::net::TcpStream;
 use std::string::String;
 use std::io::prelude::*;
 use std::fs::read_to_string;
+use std::fs::File;
 
 use super::FileAttrs::FileAttrs;
 
@@ -156,8 +157,15 @@ impl FileUploader {
             Some (socket) => {
                 let mut status = false;
                 let sentence = String::new();
-                if !self.connecting {return false;}
-        
+                
+                let mut f_path = PathBuf::new();
+                f_path.push(&self.tmpFragmentFolder);
+                f_path.push((fileId * 100 + fragmentNum).to_string());
+                if !f_path.exists() {
+                    println!("f create error --FileUploader pushFragment\n");
+                    return false;
+                }
+
                 socket.write_fmt(format_args!("5 {} {} {}\n", fileId, fragmentNum, fragmentCount));
                 socket.flush();
 
@@ -170,8 +178,9 @@ impl FileUploader {
                     else {return false;}
                 }
 
-                //status = connect.FileTransporter.sendFile(f, inFromServer, outToServer);
-                //调用其他
+                let mut f:File = File::open(&f_path.as_path()).unwrap();
+                let socket = self.to_server.as_ref().unwrap();
+                status = crate::client::connect::FileTransporter::send_file(f, &socket);
 
                 if status {
                     let re = ['r','e','c','e','i','v','e','d','!'];

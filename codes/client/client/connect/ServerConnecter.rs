@@ -74,15 +74,15 @@ impl ServerConnecter{
                         input_buf.clear();
                         in_from_server.read_line(&mut input_buf).unwrap();
                         let input_buf = input_buf.trim();
-                        println!("input_buf:{}kkk\n",input_buf);
+                        //println!("input_buf:{}kkk\n",input_buf);
                         let mut input_vec:Vec<&str>= input_buf[..].split(' ').collect();
 
                         //debug
-                        println!("input is: {}\n", input_buf);
+                        //println!("input is: {}\n", input_buf);
 
                         let mut unread_request:i32 = input_vec[2].trim().parse().unwrap();
                         
-                        println!("after input_vec[2]\n");//note:by lyf
+                        //println!("after input_vec[2]\n");//note:by lyf
 
                         let mut inputline = String::new();
                         while unread_request>0 {
