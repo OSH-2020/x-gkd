@@ -319,6 +319,8 @@ https://blog.csdn.net/muziljx/article/details/81541896
 
 基本 MYSQL 使用
 
+net start mysql
+
 mysql -u root -p
 
 USE <新数据库>
@@ -458,6 +460,18 @@ let my_int = my_string.parse::<i32>().unwrap();
    ​      }
 
    ​    }	solved try_clone().unwrap()
+   
+3. java 中使用 File(String parent, String child); 创建新的文件：
+
+   File f = new File(tmpFragmentFolder, Integer.toString(
+
+   ​          fileId * 100 + fragmentNum));
+
+   rust 中 tmpFragmentFolder 是 PathBuf，使用了 
+
+   PathBuf ->(as_path)-> Path ->(File::create) -> File
+
+   但其中有一点差别是 File::open 是要以只读方式打开，而且要是没有文件会报错，而 File::create 是以只写方式打开，要是没有文件创建文件。
 
 
 
@@ -562,15 +576,26 @@ server
 
 2. 而后按照 setup.ini 中的文件路径创建文件夹
 
+   127.0.0.1
+   6666
+   6668
+   1
+
+   D:\\\mine\\\homework\\\file\\\fragment
+   D:\\\mine\\\homework\\\file\\\tmp
+   1
+   D:\\\mine\\\homework\\\file\\\file1
+   TIM
+
 3. Query.rs 的文件中需要修改自己的 mysql 密码（xxxx处）
 
    let pool = my::Pool::new("mysql://root:xxxx@localhost:3306/server_test").unwrap();
 
 4. 打开 mysql，创建新的数据库和表单：
 
-   CREATE DATABASE server_test;
+   CREATE DATABASE DFS;
 
-   USE server_test;
+   USE DFS;
 
    CREATE TABLE `DEVICE` (  
    `ID` int NOT NULL AUTO_INCREMENT,  
@@ -617,7 +642,7 @@ server
 
    mysql> SHOW TABLES;
    +-----------------------+
-   | Tables_in_server_test |
+   | Tables_in_dfs |
    +-----------------------+
    | device                |
    | file                  |
@@ -628,4 +653,16 @@ server
    5 rows in set (0.02 sec)
 
 5. 加一个 id 为1， isonline 为1 的 device。
+
+   INSERT INTO device (id, isonline)
+       -> VALUES
+       -> (1,1);
+
+   mysql> SELECT * FROM device;
+   +----+----+------+----------+------+
+   | ID | IP | PORT | ISONLINE | RS   |
+   +----+----+------+----------+------+
+   |  1 |    |    0 |        1 |    0 |
+   +----+----+------+----------+------+
+   1 row in set (0.00 sec)
 
