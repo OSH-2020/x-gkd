@@ -467,7 +467,11 @@ let my_int = my_string.parse::<i32>().unwrap();
 
    ​          fileId * 100 + fragmentNum));
 
-   rust 中 tmpFragmentFolder 是 PathBuf，
+   rust 中 tmpFragmentFolder 是 PathBuf，使用了 
+
+   PathBuf ->(as_path)-> Path ->(File::create) -> File
+
+   但其中有一点差别是 File::open 是要以只读方式打开，而且要是没有文件会报错，而 File::create 是以只写方式打开，要是没有文件创建文件。
 
 
 

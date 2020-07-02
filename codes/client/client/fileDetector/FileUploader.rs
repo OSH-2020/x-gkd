@@ -178,7 +178,7 @@ impl FileUploader {
                     else {return false;}
                 }
 
-                let mut f:File = File::open(&f_path.as_path()).unwrap();
+                let mut f:File = File::create(&f_path.as_path()).unwrap();
                 let socket = self.to_server.as_ref().unwrap();
                 status = crate::client::connect::FileTransporter::send_file(f, &socket);
 
