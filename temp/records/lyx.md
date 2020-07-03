@@ -1381,9 +1381,202 @@ Rocket遇到的问题与思考
 
 ### Seed教程：
 
-APP1:Counter
+#### APP1:Counter
 
-Model:你的app的state，多为结构体；尽可能把Model简单化，也不要为Model写任何方法；Model中元素为自定义类型时，自定义类型定义写在Model定义的下方
+**Model**:你的app的state，多为结构体；尽可能把Model简单化，也不要为Model写任何方法；Model中元素为自定义类型时，自定义类型定义写在Model定义的下方
 
-Init:
+**Init**:在Web程序运行开始时执行，一般用于返回一个Model;参数一般为url: Url, orders: &mut impl Orders<Msg>，后者有很多方法，可用于giving orders
 
+**Msg**: 在点击按钮等动作发生时会发送Msg;其本身一般为enum，并且是static，即其基本同Model；两种类型的messages：
+
+- Commands - e.g. `ScrollToTop`, `ToggleMenu`, `RemoveItem(ItemId)`, etc.
+- Events - e.g. `ButtonClicked`, `UrlChanged(subs::UrlChanged)`, `TextUpdated(String)`, etc.
+- Attribute `derive`：如Copy,Clone,Eq,PartialEq
+
+**Update**:收到新的Msg时会调用此函数，用于对Msg作匹配，来执行不同操作,一般是更新Model；如何写好：只要一个match语句，对Option，Result等类型，采用多个匹配（即Ok和Err分为两个元素来作匹配），注释要写好
+
+**View**：用于将Model转化为html；如何写好:学会拆分，根View和嵌套view函数
+
+​	fn view(model: &Model) -> Node<Msg>： model为不可变；Node为HTML元素
+
+​	一般流程：
+
+* init函数执行后会立刻执行一次view以初始化app
+* action happens(如button)
+* 执行update函数
+* 调用view函数
+* 页面重新渲染
+
+**Element Macros**: 
+
+```
+div![
+    C!["counter"],
+    "This is a counter.",
+]
+```
+
+等价于
+
+```
+<div class="counter">
+    This is a counter.
+</div>
+```
+
+可以放在其中的：attributes, event handlers, nodes and DOM references；Rust类型：strings and numbers，以及Option,Vec,Iterators(其所含一定也是实现了UpdateEl trait)
+
+```
+div![
+    IF!(menu.is_visible() => view_menu())
+]
+```
+
+```
+div![
+    raw!("<h1>Title</h1>"),
+    // Inline `content.html` during compilation.
+    raw!(include_str!("../content.html")),  
+]
+```
+
+**Attributes**
+
+```
+div![
+    C!["counter", IF!(selected => "active")],
+    style!{
+        St::Display => "flex",
+        St::Padding => px(10),
+    },
+    attrs!{At::Title => "A Title"},
+    "This is a counter.",
+]
+```
+
+即
+
+```
+<div class="counter active" title="A Title" style="display:flex;padding:10px">
+    This is a counter.
+</div>
+```
+
+* C!: items需实现ToClasses trait: String` and `&str`, references and containers `Option` and `Vec；多次C!的使用可以合并：
+
+  ```
+  let selected = false;
+  let optional_classes: Option<Vec<String>> = None;
+  div![
+      C!["counter", IF!(selected => "active")],
+      C![IF!(true => vec!["class_a", "class_b"])],
+      C![optional_classes],
+  ]   
+  ```
+
+  即<div class="counter class_a class_b"></div>
+  
+* style!: 是键值对；Key: St::Display或者自定义名字e.g.`St::from("custom_name")`
+
+  Value:实现了ToString trait的，可以使Option
+
+  ```
+  let selected = true;
+  let apply_custom = true;
+  div![
+      style!{
+          St::Margin => px(50),
+          St::MaxWidth => unit!(50, %),
+          St::Top => 0,
+          St::Padding => px(20) + " " + &px(15)
+          St::BackgroundColor => if selected { "green" } else { "white" },
+          St::from("custom_name") => IF!(apply_custom => "a_value"),
+      }
+  ]   
+  ```
+
+  等价于
+
+  ```
+  <div style="
+      margin:50px;
+      max-width:50%;
+      top:0;
+      padding:20px 15px;
+      background-color:green;
+      custom_name:a_value
+  "></div>
+  ```
+
+* attrs!:同样是键值对
+
+  Key:e.g. `At::Title`或自定义e.g. `At::from("custom_name")`
+
+  Value:实现了ToString trait：有三类值：Ignored，None，`Some(String)` - If `v` in `At::X => v`,implements `ToString`, then it's automatically transformed to `AtValue::Some(v)`.
+
+  事实上C!和style!只是attrs!的特例，如下所示，不过不建议这样写
+
+  ```
+  attrs!{At::Class => "class_a", At::Style => "top:0"}
+  ```
+
+  ```
+  let disabled = false;
+  ...
+  attrs!{
+      At::Disabled => disabled.as_at_value()
+  }
+  ```
+
+  等价于
+
+  ```
+  attrs!{
+      At::Disabled => if disabled { At::None } else { At::Ignored }
+  }
+  ```
+
+  其他例子：
+
+  ```
+  let disabled = true;
+  div![
+      attrs! {
+          At::Disabled => disabled.as_at_value(),
+          At::Title => "a_title",
+          At::AutoFocus => AtValue::None,
+          At::from("custom_name") => 123,
+      }
+  ]   
+  ```
+
+  等价于<div disabled="" title="a_title" autofocus="" custom_name="123"></div>
+
+**Event Handlers:**其原理看的不是很懂
+
+```Rust
+button![
+    model, 
+    ev(Ev::Click, |_| Msg::Increment),//参数：Event（Ev::Click）和Callback（|_| Msg::Increment）
+]//点击button，会调用update函数，并以Msg::Increment作为参数
+```
+
+**Start:**
+
+1. It mounts the app into the chosen root element. (We'll talk about it more later).
+2. Does some low-level app initialization - setups listeners, loads base path for routing, enable panic logging to the console, etc.
+3. Calls your `init` function.
+4. Render the app for the first time.
+5. Returns the `App` instance.It's useful when you need to setup some callbacks as soon as possible (see example [update_from_js](https://github.com/seed-rs/seed/blob/2b134d1de2a8b9aa520d11be6e45eef1e5fcd527/examples/update_from_js/src/lib.rs#L77-L79)).
+
+
+
+#### APP 2:TodoMVC
+
+设计思想: 先Model,Msg结构，再其他
+
+No todos ; New todo; Mark all as complete; Item(包括把一个todo切换为completed，edit todo，remove todo三种交互)；Editing(编辑模式下对SelectedTodo项的修改)
+
+Model设计：
+
+Msg设计:
