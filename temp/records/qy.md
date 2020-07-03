@@ -66,7 +66,6 @@ run 方法接收一行命令，然后根据命令类型 1-6 ，调用对应的�
 
 
 
-
 ## 代码测试
 
 ### FileTransporter.rs
@@ -199,3 +198,13 @@ fn main(){
 } 
 ```
 
+
+
+## Rust Web Applications 文档
+
+* ULID：一个库，用于生成独特 ID 。基于时间戳和随机数生成 ID ，它们可根据时间排序。不同机器上的 ULID 之间可能冲突。
+* ORM ：对象关系映射
+* REST API：REST 为 Representation State Transfer ，表现层状态转化。决定网络资源呈现形式。
+* URI ：统一资源定位符。只代表资源实体，与表现形式无关。
+
+[REST API 介绍](https://www.jianshu.com/p/75389ea9a90b)
