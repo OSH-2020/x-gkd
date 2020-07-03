@@ -50,8 +50,8 @@ impl ClientThread{
         let in_from_client = self.client_socket.try_clone().expect("clone failed...");
         let mut in_from_client = BufReader::new(in_from_client);
         in_from_client.read_line(&mut self.sentence).unwrap();
-        println!("D-RECV: {}", self.sentence);
         let command:Vec<&str> = self.sentence[..].split(' ').collect();
+        println!("D-RECV: {} {} {}", command[0], command[1], command[2]);
 
         status = match command[0] {
             "1" => self.recv_required_fragment(),
@@ -264,31 +264,28 @@ impl ClientThread{
     }
 
     pub fn check_folder(mut self)->bool{
+        println!("enter check folder");
         let command:Vec<&str> = self.sentence[..].split(' ').collect();
+        println!("command:{:?}",command);
         let num:i32 = command[2].trim().parse().unwrap();
+        //println!("num:{}",num);
 
         let query = Query::new();
-
-        let in_from_client = self.client_socket.try_clone().expect("clone failed...");
-        let mut in_from_client = BufReader::new(in_from_client);
-        let mut input = String::new();
         let mut flag: bool = false;
         let mut i = 0;
         for i in 0..num {
-            in_from_client.read_line(&mut input).unwrap();
-            let mut ipt = Vec::new();
-            unsafe {
-                ipt = input.clone().as_mut_vec().to_vec();
-            }
-            let input_vec:Vec<&str> = input[..].split(' ').collect();
-            let mut file = query.queryFile_Bypathname(Some(ipt[0].to_string()), Some(ipt[1].to_string()));
-            if  -1 == file.get_id() {
+            println!("{} {}",command[(3+2*i) as usize], command[(4+2*i) as usize]);
+            let mut file = query.queryFile_Bypathname(Some(command[(3+2*i) as usize].to_string()), 
+                Some(command[(4+2*i) as usize].to_string()));
+            println!("fileid: {}", file.get_id());
+            if  0 == file.get_id() {
+                println!("no file!");
                 let dt = Local::today();
                 let mut date:String = dt.to_string();
                 date.truncate(10);
                 date.remove(7);
                 date.remove(4);
-                let fileitem = FileItem::init_2(ipt[1].to_string(), ipt[0].to_string(),
+                let fileitem = FileItem::init_2(command[(4+2*i) as usize].to_string(), command[(3+2*i) as usize].to_string(),
                     "rw".to_string(), date, 0, true);
                 if query.addFile(file) < 0{
                     flag = true;
@@ -304,10 +301,12 @@ impl ClientThread{
         }
 
         if i == num {
+            println!("received");
             self.client_socket.write(b"received!\n");
             self.client_socket.flush();
         }
         else {
+            println!("ERROR");
             self.client_socket.write(b"ERROR!\n");
             self.client_socket.flush();
         }

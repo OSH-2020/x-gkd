@@ -23,7 +23,7 @@ pub struct Query{
 impl Query {
     pub fn new() -> Query{
         //需要大家在自己的电脑把 root:XXXX 改成自己的 mysql 密码
-        let pool = my::Pool::new("mysql://root:BB052511@localhost:3306/mysql").unwrap();
+        let pool = my::Pool::new("mysql://root:mysql@localhost:3306/mysql").unwrap();
         Query {
             pool: pool,
         }
@@ -60,6 +60,17 @@ impl Query {
                 }
             }
             Ok(selected_files) => {
+                if selected_files.len() == 0 {
+                    return FileItem {
+                        id: 0, 
+                        name: "".to_string(), 
+                        path: "".to_string(), 
+                        attribute: "".to_string(),
+                        time: "".to_string(),
+                        noa: 0,
+                        is_folder: false,
+                    }
+                }
                 return FileItem {
                     id: selected_files[0].id,
                     name: selected_files[0].name.clone(),
@@ -104,6 +115,17 @@ impl Query {
                 }
             }
             Ok(selected_files) => {
+                if selected_files.len() == 0 {
+                    return FileItem {
+                        id: 0, 
+                        name: "".to_string(), 
+                        path: "".to_string(), 
+                        attribute: "".to_string(),
+                        time: "".to_string(),
+                        noa: 0,
+                        is_folder: false,
+                    }
+                }
                 return FileItem {
                     id: selected_files[0].id,
                     name: selected_files[0].name.clone(),
@@ -147,7 +169,20 @@ impl Query {
             };
             return vec![file];
         }
-        selected_files.unwrap()
+        let files = selected_files.unwrap();
+        if files.len() == 0 {
+            let file =  FileItem {
+                id: 0, 
+                name: "".to_string(), 
+                path: "".to_string(), 
+                attribute: "".to_string(),
+                time: "".to_string(),
+                noa: 0,
+                is_folder: false,
+            };
+            return vec![file];
+        }
+        files
     }
 
     pub fn queryFragmentNumbers(&self, fileId: i32) -> i32{
@@ -200,7 +235,18 @@ impl Query {
             };
             return vec![file];
         }
-        selected_devices.unwrap()
+        let devices = selected_devices.unwrap();
+        if 0 == devices.len() {
+            let file = DeviceItem {
+                id: 0,
+                ip: "".to_string(),
+                port: 0,
+                is_online: false,
+                rs: 0,
+            };
+            return vec![file];
+        }
+        devices
     }
 
     pub fn queryDevice(&self, id: i32) -> DeviceItem {
@@ -262,6 +308,14 @@ impl Query {
             };
         }
         let requests = selected_requests.unwrap();
+        if 0 == requests.len() {
+            return RequestItem {
+                id: 0,
+                type_: 0,
+                fragmentId: 0,
+                deviceId: 0,
+            };
+        }
         return RequestItem {
             id: requests[0].id,
             type_: requests[0].type_,
@@ -294,6 +348,14 @@ impl Query {
             };
         }
         let requests = selected_requests.unwrap();
+        if 0 == requests.len() {
+            return RequestItem {
+                id: 0,
+                type_: 0,
+                fragmentId: 0,
+                deviceId: 0,
+            };
+        }
         return RequestItem {
             id: requests[0].id,
             type_: requests[0].type_,
@@ -326,6 +388,14 @@ impl Query {
             };
         }
         let requests = selected_requests.unwrap();
+        if 0 == requests.len() {
+            return RequestItem {
+                id: 0,
+                type_: 0,
+                fragmentId: 0,
+                deviceId: 0,
+            };
+        }
         return RequestItem {
             id: requests[0].id,
             type_: requests[0].type_,
@@ -402,7 +472,11 @@ impl Query {
         if let Err(e) = selected_user {
             return None;
         }
-        selected_user.unwrap()[0].passwd.clone()
+        let users = selected_user.unwrap();
+        if 0 == users.len() {
+            return Some(" ".to_string());
+        }
+        users[0].passwd.clone()
     }
 
     pub fn queryUserID(&self, name: Option<String>) -> i32 {

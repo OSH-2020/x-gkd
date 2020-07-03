@@ -76,7 +76,7 @@ pub fn main() {
         uploadAddrs.push(uploadAddr);
         j-=1;
     }
-
+    println!("uploadFolders:{:?}",uploadFolders);
     crate::client::connect::ServerConnecter::ServerConnecter::init(&serverIp,&(controlPort as u16));
     let mut file1 = PathBuf::from(&fragmentFolder);
     if !file1.exists() || !file1.is_dir(){

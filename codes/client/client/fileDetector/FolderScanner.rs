@@ -45,6 +45,7 @@ pub struct FolderScanner{
 impl FolderScanner{
      /* 参数syn是client.synItem类型，最后整合时记得改一下*/
      pub fn new(f:Vec<PathBuf>,addr:Vec<String>,/*syn:SynItem*/) -> FolderScanner {
+         println!("new FolderScanner\n");
          FolderScanner{
             folder:f,
             address:addr,/*synItem:syn,*/
@@ -62,31 +63,35 @@ impl FolderScanner{
 
      //@Override 未实现
      pub fn run(&self,status:Arc<(Mutex<i32>,Condvar)>){
-         let fUploader:FileUploader = FileUploader::new();
-         if !fUploader.checkFolders(&self.address){
-             println!("ERR: can not register folder");
-             //self.synItem.setStatus(2);
-             let &(ref lock, ref cvar) = &*status;
-             let mut status_cur = lock.lock().unwrap();
-             *status_cur = 2;
-             cvar.notify_all();
-             println!("notify main thread");
+        println!("run FolderScanner\n");
+        let fUploader:FileUploader = FileUploader::new();
+        println!("1\n");
+        if !fUploader.checkFolders(&self.address){
+            println!("ERR: can not register folder");
+            //self.synItem.setStatus(2);
+            let &(ref lock, ref cvar) = &*status;
+            let mut status_cur = lock.lock().unwrap();
+            *status_cur = 2;
+            cvar.notify_all();
+            println!("notify main thread");
 
-             return;
-         }
-         while self.detecting{
-             //未处理catch InterruptedException
+            return;
+        }
+        println!("detecting:{}", self.detecting);
+        while self.detecting{
+            //未处理catch InterruptedException
+            println!("enter loop\n");
             self.scanFiles(status.clone());
             let interval_mills = time::Duration::from_millis(interval.into());
             thread::sleep(interval_mills);
-         }
-
+        }
      }
 
      // 扫描文件夹，如果有文件加入则处理该文件
      fn scanFiles(&self,status:Arc<(Mutex<i32>,Condvar)>){
         //let mut i:i32 = 0;
         let FileUtil:FileUtil = FileUtil::new();
+        println!("folders:{:?}\n", self.folder);
         for i in 0..self.folder.len() {
             let files:LinkedList<PathBuf> = FileUtil::getAllFiles(&self.folder[i]);
             for file in files{

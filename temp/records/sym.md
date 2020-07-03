@@ -2,6 +2,8 @@
 
 
 
+# Mysql
+
 Server
 
 database
@@ -30,7 +32,7 @@ MySql本身没有命名参数支持，因此在客户端实现。应该将其`:n
 
 应该使用`params!`宏来构建执行参数。
 
-查询
+## 查询
 
 ```rust
     // Let's select payments from database
@@ -82,7 +84,7 @@ let selected_payments = conn
     
         (username, email)
     }).await?;
-添加
+## 添加
 
 ```
 // Now let's insert payments to the database
@@ -185,7 +187,7 @@ Query 文件夹，FileItem.rs文件
 
 
 
-MySQL 详细设计报告
+## MySQL 详细设计报告
 
 第一组主要负责实现客户端java和服务器java，并实现两者间的通讯和文件传输； 另一组实现了web服务和网页的实现，搭建了一个网站。 两组之间的融合靠的是mysql数据库，二者通过数据库传达各个子系统的状态信息和请求。当整个系统出错时，我们通过数据库这个中间层的信息就可以初步判断错误出现在哪一组。 
 
@@ -224,7 +226,7 @@ MySQL 详细设计报告
 - 客户端将删除这一碎片并新建一条与服务器的数据连接以通知服务器请求完成. 
 - 服务器通知后删除数据库中的请求 
 
-数据库表定义：
+### 数据库表定义：
 
 ```
 CREATE TABLE `DEVICE` (   
@@ -287,7 +289,7 @@ Query 类定义了对上述五个表查询、修改、删除、新增条目的�
 
 版本问题 各个版本之间的方法不一样
 
-Result
+## Result
 
 ![image-20200610200653631](C:\Users\sym\AppData\Roaming\Typora\typora-user-images\image-20200610200653631.png)
 
@@ -303,7 +305,7 @@ Result 是一个函数返回的类型，它可以是 Err，也可以是 Ok。如
 
 
 
-安装 MySQL 遇到的问题
+## 安装 MySQL 遇到的问题
 
 大部分在 lyf.md 中有，补充两条
 
@@ -317,7 +319,7 @@ https://blog.csdn.net/muziljx/article/details/81541896
 
 
 
-基本 MYSQL 使用
+## 基本 MYSQL 使用
 
 net start mysql
 
@@ -333,7 +335,7 @@ SELECT * FROM DFS.FILE;
 
 
 
-使用的实例程序
+## 使用的实例程序
 
 ```
 #[macro_use]
@@ -414,7 +416,9 @@ fn main() {
 }
 ```
 
-改写Query过程中：
+# 改写过程中的问题：
+
+## Query：
 
 getInt(index)，getString(index) 表明返回第 index 列的数据
 
@@ -437,7 +441,7 @@ rust 不支持函数重载，所以有些函数修改了名字，在后面加上
 
 
 
-改写FileUploader过程中：
+## FileUploader：
 
 1. int = Integer.parseInt(String) 表示把 String 的数字提取出来变成int
 
@@ -475,7 +479,7 @@ let my_int = my_string.parse::<i32>().unwrap();
 
 
 
-改写 server：
+## server：
 
 架构：
 
@@ -566,7 +570,19 @@ server
 
 
 
-系统使用指南：
+## debug 中的问题：
+
+1. rust 读取文件时好像会自己把 \ 变成两个 \
+
+   所以 setup.ini 中不用写成两个 \
+   
+2. 貌似 FileUploader 中写的分几次发送实际上是一次发送的，所以要是在前一个报文后加 \n 后就看不到下一次报文了，所以删去换行符就可以把报文全部接收。（还没有修改完其他部分）
+
+3. 增加 Query 中查询正确但没有符合要求的结果的情况：返回 id 为0.
+
+
+
+# 系统使用指南：
 
 1. 首先在 client 中的 client.rs 中修改 ini 的路径：
 
