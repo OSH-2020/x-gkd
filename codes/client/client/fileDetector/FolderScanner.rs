@@ -94,6 +94,7 @@ impl FolderScanner{
         println!("folders:{:?}\n", self.folder);
         for i in 0..self.folder.len() {
             let files:LinkedList<PathBuf> = FileUtil::getAllFiles(&self.folder[i]);
+            println!("FolderScanner--scanfiles--after getallfiles");
             for file in files{
                 if !self.handleFile(file.as_path().to_path_buf(),i.try_into().unwrap(),status.clone()){
                     return;
@@ -110,6 +111,7 @@ impl FolderScanner{
      }
 
      pub fn handleFile(&self,file:PathBuf,i:i32,status:Arc<(Mutex<i32>,Condvar)>) -> bool{
+         println!("enter handleFile\n");
          let fileName:String = file.file_name().unwrap().to_str().unwrap().to_string();
          let filePath:String = self.address[i as usize].clone() + "/";
          
@@ -130,7 +132,8 @@ impl FolderScanner{
             }*/
         let mut noa:i32 = (((metadata.len() as u32) / BYTES_IN_SHARDS) + 1).try_into().unwrap();   //metadata.len()返回值类型为u64
         noa = noa * 2;
-        
+        println!("noa:{}\n",noa);
+
         let fileAttrs = FileAttrs::FileAttrs::init(fileName,filePath,attribute,noa);
         
         let mut fUploader:FileUploader = FileUploader::new();
@@ -176,12 +179,13 @@ impl FolderScanner{
 
                 return false;
             }
+            
         }
 
         let FileUtil:FileUtil = FileUtil::new();
         // 处理完毕，清空块文件夹
         FileUtil.clearFolder(&self.tmpFragmentFolder);
-        
+        println!("handleFile end\n");
         return true;
      }
  }

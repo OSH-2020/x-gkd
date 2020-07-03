@@ -36,8 +36,8 @@ impl ClientThread{
         ClientThread{
             client_socket: stream,
             sentence: String::new(),
-            download_folder_path: PathBuf::from("/opt/tomcat/webapps/DFS/CloudDriveServer/downloadFragment/"),
-            upload_folder_path: PathBuf::from("/opt/tomcat/webapps/DFS/CloudDriveServer/uploadFragment/"),
+            download_folder_path: PathBuf::from("D:webapps/DFS/CloudDriveServer/downloadFragment/"),
+            upload_folder_path: PathBuf::from("D:webapps/DFS/CloudDriveServer/uploadFragment/"),
         }
     }
 
@@ -49,9 +49,11 @@ impl ClientThread{
         //clientsocket.setSoTimeout(5000);
         let in_from_client = self.client_socket.try_clone().expect("clone failed...");
         let mut in_from_client = BufReader::new(in_from_client);
+        self.sentence.clear();
         in_from_client.read_line(&mut self.sentence).unwrap();
         let command:Vec<&str> = self.sentence[..].split(' ').collect();
         println!("D-RECV: {} {} {}", command[0], command[1], command[2]);
+        println!("test:D-RECV:{}",self.sentence);
 
         status = match command[0] {
             "1" => self.recv_required_fragment(),
@@ -182,7 +184,7 @@ impl ClientThread{
     pub fn register_file(&mut self)->bool{
         let command:Vec<&str> = self.sentence[..].split(' ').collect();
         let noa:i32 = command[5].parse().unwrap();
-        let isf:bool = command[6].parse().unwrap();
+        let isf:bool = command[6].trim().parse().unwrap();
 
         let query = Query::new();
         let dt = Local::today();
@@ -207,7 +209,7 @@ impl ClientThread{
         let command:Vec<&str> = self.sentence[..].split(' ').collect();
         let file_id:i32 = command[1].parse().unwrap();
         let fragment_num:i32 = command[2].parse().unwrap();
-        let fragment_count:i32 = command[3].parse().unwrap();
+        let fragment_count:i32 = command[3].trim().parse().unwrap();
 
         let query = Query::new();
         let mut file = query.queryFile_Byid(file_id);
@@ -227,6 +229,7 @@ impl ClientThread{
             let recv_file = File::create(s).unwrap();
             self.client_socket.write(b"received!\n");
             self.client_socket.flush();
+            println!("dataConnect--recv_file_fragment:after received!");
 
             status = super::FileTransporter::recv_file(recv_file, &self.client_socket);
             if status{
@@ -268,7 +271,7 @@ impl ClientThread{
         let command:Vec<&str> = self.sentence[..].split(' ').collect();
         println!("command:{:?}",command);
         let num:i32 = command[2].trim().parse().unwrap();
-        //println!("num:{}",num);
+        println!("num:{}",num);
 
         let query = Query::new();
         let mut flag: bool = false;
@@ -285,7 +288,7 @@ impl ClientThread{
                 date.truncate(10);
                 date.remove(7);
                 date.remove(4);
-                let fileitem = FileItem::init_2(command[(4+2*i) as usize].to_string(), command[(3+2*i) as usize].to_string(),
+                let file = FileItem::init_2(command[(4+2*i) as usize].to_string(), command[(3+2*i) as usize].to_string(),
                     "rw".to_string(), date, 0, true);
                 if query.addFile(file) < 0{
                     flag = true;
@@ -300,6 +303,8 @@ impl ClientThread{
             }
         }
 
+        println!("i:{}\n",i);
+        i = i + 1;
         if i == num {
             println!("received");
             self.client_socket.write(b"received!\n");

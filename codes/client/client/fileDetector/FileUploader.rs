@@ -105,7 +105,7 @@ impl FileUploader {
                     socket.flush();
                     i = i + 1;
                 }
-                let re = ['r','e','c','e','i','v','e','d','!'];
+                let re = ['r','e','c','e','i','v','e','d','!','\n'];
                 let mut i = 0;
                 let mut input_buf = String::new();
                 socket.read_to_string(&mut input_buf);
@@ -121,6 +121,7 @@ impl FileUploader {
     }
 
     pub fn registerFile(&mut self, fa: FileAttrs) -> i32 {
+        println!("enter registerfile\n");
         if !self.createConnection(){
             return -2;
         }
@@ -151,13 +152,14 @@ impl FileUploader {
                     if num == 2 {break;}
                     else if num == 1 {inputline.push(cha);}
                 }
-                let integer = inputline.parse::<i32>().unwrap();
+                let integer = inputline.trim().parse::<i32>().unwrap();
                 return integer;
             }
         }
     }
 
     pub fn pushFragment(&mut self, fileId: i32, fragmentNum: i32, fragmentCount: i32) -> bool {
+        println!("enter pushFragment\n");
         if !self.createConnection() {
             return false;
         }
@@ -181,7 +183,9 @@ impl FileUploader {
                 let re = ['r','e','c','e','i','v','e','d','!'];
                 let mut i = 0;
                 let mut inFromServer = String::new();
+                println!("Fileuploader--pushFragment:before read_to_string");
                 socket.read_to_string(&mut inFromServer);
+                println!("Fileuploader--pushFragment:after read_to_string");
                 for c in inFromServer.chars() {
                     if c == re[i] {i = i+1;}
                     else {return false;}
@@ -199,6 +203,7 @@ impl FileUploader {
                         else {return false;}
                     }
                 }
+                println!("push Fragment end");
                 return true;
             }
         }
