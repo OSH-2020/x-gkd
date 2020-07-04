@@ -227,9 +227,12 @@ impl ClientThread{
             //let mut s1: String = s.clone();
             s.push_str(&temp.to_string());
             let recv_file = File::create(s).unwrap();
-            self.client_socket.write(b"received!\n");
+            self.client_socket.write(b"received!\n").unwrap();
             self.client_socket.flush();
             println!("dataConnect--recv_file_fragment:after received!");
+            //test:by lyf
+            //self.client_socket.write(b"received!\n");
+            //self.client_socket.flush();
 
             status = super::FileTransporter::recv_file(recv_file, &self.client_socket);
             if status{

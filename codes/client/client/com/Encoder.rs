@@ -9,6 +9,7 @@ use std::path::Path;
 use std::path::PathBuf;
 use std::convert::TryInto;
 use std::io::Read;
+use std::io::Write;
 
 const BYTES_IN_SHARDS:i32 = 500000;
 const BYTES_IN_INT :i32 = 4;
@@ -35,6 +36,7 @@ impl Encoder{
         let dataShards:i32 = fileSize / BYTES_IN_SHARDS + 1;
         let totalShards:i32 = 2 * dataShards;
 
+        println!("fileSize:{}",fileSize);//test
         // Figure out how big each shard will be.  The total size stored
         // will be the file size (8 bytes) plus the file.
         let storedSize:i32 = fileSize + BYTES_IN_INT;
@@ -104,7 +106,13 @@ impl Encoder{
         for i in 0..totalShards.try_into().unwrap() {
             let pathbuf = shardsFolder.join(Path::new(&(fid * 100 + i as i32).to_string()));
             let path:&Path = pathbuf.as_path();
-            fs::write(&path,&shards[i]).unwrap();
+            let mut file = File::create(path).unwrap();
+            file.write(&shards[i]).unwrap();
+            file.flush().unwrap();
+            println!("shards[{}]:{:?}",i,&shards[i]);
+            let mut perms = file.metadata().unwrap().permissions();
+            perms.set_readonly(true);
+            file.set_permissions(perms).unwrap();
         }
 
         println!("Encode Success");

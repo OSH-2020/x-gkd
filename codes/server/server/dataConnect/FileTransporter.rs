@@ -3,22 +3,31 @@ use std::fs::File;
 use std::net::TcpStream;
 
 pub fn recv_file(mut f: File, mut soc_in: &TcpStream)->bool{
+    println!("enter FileTransporter -- recv_file");
     //原java文件中socout这个参数并没有用到，此处删去
     //手动实现读取一个long类型的数据
-    let mut buffer = [0; 8];
+    let mut buffer = [0; 4];
     soc_in.read_exact(&mut buffer).unwrap();
     //Java 数据传输都是big endian，此处也默认读到数据是big endian
     //from_bytes is a nightly-only experimental API.
     //let file_length = i64::from_bytes(buffer);
-    let file_length:i64 = ((buffer[0] as i64) << 56) + (((buffer[1] as i64) & 255) << 48) + (((buffer[2] as i64) & 255) << 40)       
-     + (((buffer[3] as i64) & 255) << 32) + (((buffer[4] as i64) & 255) << 24) + (((buffer[5] as i64) & 255) << 16)        
-     + (((buffer[6] as i64) & 255) << 8) + (((buffer[7] as i64) & 255) << 0);
+
     
+     let file_length:i64 = (((buffer[0] as i64) & 255) << 24) + (((buffer[1] as i64) & 255) << 16)        
+     + (((buffer[2] as i64) & 255) << 8) + (((buffer[3] as i64) & 255) << 0);
+
     let mut toread:i64 = file_length;
     let mut send_bytes = [0; 1024];
+
+    println!("file_length:{}",file_length);
+
+
     while toread >= 1024{
-        soc_in.read_exact(&mut send_bytes).unwrap();
-        toread = toread - 1024;
+        //soc_in.read_exact(&mut send_bytes).unwrap();
+        //toread = toread - 1024;
+        let readlen = soc_in.read(&mut send_bytes).unwrap();
+        toread = toread - readlen as i64;
+
         f.write(&send_bytes);
         f.flush();
     }

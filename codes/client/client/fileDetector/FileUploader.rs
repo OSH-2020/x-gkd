@@ -6,6 +6,7 @@ use std::string::String;
 use std::io::prelude::*;
 use std::fs::read_to_string;
 use std::fs::File;
+use std::io::BufReader;
 
 use super::FileAttrs::FileAttrs;
 
@@ -180,23 +181,32 @@ impl FileUploader {
                 socket.write_fmt(format_args!("5 {} {} {}\n", fileId, fragmentNum, fragmentCount));
                 socket.flush();
 
-                let re = ['r','e','c','e','i','v','e','d','!'];
+                let re = ['r','e','c','e','i','v','e','d','!','\n'];
                 let mut i = 0;
                 let mut inFromServer = String::new();
-                println!("Fileuploader--pushFragment:before read_to_string");
-                socket.read_to_string(&mut inFromServer);
-                println!("Fileuploader--pushFragment:after read_to_string");
+                //println!("Fileuploader--pushFragment:before read_to_string");
+                //socket.read_to_string(&mut inFromServer);
+                let in_from_server = socket.try_clone().expect("clone failed...");
+                let mut in_from_server = BufReader::new(in_from_server);
+                in_from_server.read_line(&mut inFromServer);
+
+
+                //println!("Fileuploader--pushFragment:after read_to_string");
+                //println!("inFromServer:{}",inFromServer);
                 for c in inFromServer.chars() {
                     if c == re[i] {i = i+1;}
                     else {return false;}
                 }
 
-                let mut f:File = File::create(&f_path.as_path()).unwrap();
+                //let mut f:File = File::create(&f_path.as_path()).unwrap();
+                let mut f:File = File::open(&f_path.as_path()).unwrap();
+                println!("传递给FileTransporter的file的path:{}",f_path.display());
                 let socket = self.to_server.as_ref().unwrap();
                 status = crate::client::connect::FileTransporter::send_file(f, &socket);
+                println!("fileUploader--pushFragment--status(result of FileTransporter):{}",status);
 
                 if status {
-                    let re = ['r','e','c','e','i','v','e','d','!'];
+                    let re = ['r','e','c','e','i','v','e','d','!','\n'];
                     let mut i = 0;
                     for c in inFromServer.chars() {
                         if c == re[i] {i = i+1;}
@@ -204,7 +214,7 @@ impl FileUploader {
                     }
                 }
                 println!("push Fragment end");
-                return true;
+                return status;
             }
         }
     }

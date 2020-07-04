@@ -41,6 +41,7 @@ use std::convert::TryInto;
             }
         }
         pub fn clearFolder(&self,folder:&PathBuf) {
+            println!("enter fileutil--clearFolder");
             let folder:PathBuf = (*folder.clone()).to_path_buf();
             //原代码中folder是 FILE类型
             if folder.is_file() {

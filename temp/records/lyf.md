@@ -29,6 +29,7 @@ and the following to your crate root
 ```
 extern crate reed_solomon_erasure;
 ```
+
 示例程序：
 
 ```rust
@@ -105,19 +106,19 @@ pub struct ReedSolomon<F: Field> { /* fields omitted */ }
 
 - 方法结尾处有`_single` 表示 shard by shard encoding，即奇偶校验碎片是一次使用一个数据碎片部分构建的，**容易错误使用**。
 
-| methods            | 说明 |
-| ------------------ | ---- |
-|**new**				| pub fn new(data_shards: usize,  parity_shards: usize) -> Result<ReedSolomon\<F>,Error> |
-| data_shard_count   | 返回data shard的数目 |
-| parity_shard_count | 返回parity shard的数目 |
-| total_shard_count  | 返回total shard的数目 |
+| methods            | 说明                                                         |
+| ------------------ | ------------------------------------------------------------ |
+| **new**            | pub fn new(data_shards: usize,  parity_shards: usize) -> Result<ReedSolomon\<F>,Error> |
+| data_shard_count   | 返回data shard的数目                                         |
+| parity_shard_count | 返回parity shard的数目                                       |
+| total_shard_count  | 返回total shard的数目                                        |
 | **encode**         | Constructs the parity shards. （The slots where the parity shards sit at will be overwritten.） |
 | encode_sep         | Constructs the parity shards using a read-only view into the data shards. （The slots where the parity shards sit at will be overwritten.） |
 | encode_single      | 比encode方法多一个参数i_data索引，只用该索引指向的数据碎片构建奇偶校验碎片 |
-| encode_single_sep  |      |
-| **reconstruct**    | Reconstructs all shards |
-| reconstruct_data   | Reconstructs only the data shards. |
-| **verify**         | 核验奇偶校验碎片是否正确 |
+| encode_single_sep  |                                                              |
+| **reconstruct**    | Reconstructs all shards                                      |
+| reconstruct_data   | Reconstructs only the data shards.                           |
+| **verify**         | 核验奇偶校验碎片是否正确                                     |
 | verify_with_buffer | 每次verify时，需开辟一段内存空间，存储根据数据碎片计算出的奇偶校验碎片内容，再与原内容比较，以判断是否正确。verify_with_buffer 是将buffer指定为这段内存空间，避免重复开辟。 |
 
 注：加粗的为常用方法
@@ -1098,7 +1099,7 @@ SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
 
 1. 所有MySQL命令要以`;`结尾
 
-2.  字符串要用`''`括起来（例如下例中的'lyf','female'）
+2. 字符串要用`''`括起来（例如下例中的'lyf','female'）
 
    ```SQL
    INSERT INTO students (class_id,name,gender) VALUES(1,'lyf','female');
@@ -1224,9 +1225,9 @@ assert!(now.elapsed() >= ten_millis);
        b表示bytes的意思，即要求程序加字符串加载为bytes类型，bytes类型的数据常用于网络的数据封装。
 
     在 Python3 中，bytes 和 str 的互相转换方式是
-   
+
     str.encode('utf-8')
-   
+
     bytes.decode('utf-8')
 
 3. u'字符串' 
@@ -1323,7 +1324,7 @@ let path:Path = *shardsFolder.join(Path::new(&(fid * 100 +i).to_string())).as_pa
   > Representation of the various permissions on a file.
 
   > This module only currently provides one bit of information, [`readonly`](https://doc.rust-lang.org/std/fs/struct.Permissions.html#method.readonly), which is exposed on all currently supported platforms. Unix-specific functionality, such as mode bits, is available through the [`PermissionsExt`](https://doc.rust-lang.org/std/os/unix/fs/trait.PermissionsExt.html) trait.
-  
+
   目前在windows上只实现了查看文件权限是否为只读
 
 # V 进度记录
@@ -1428,10 +1429,13 @@ let path:Path = *shardsFolder.join(Path::new(&(fid * 100 +i).to_string())).as_pa
       println!("Yay!");
   }
   ```
+
 ```
   
 ```
+
       let pool = my::Pool::new("mysql://root:password@localhost:3306/mysql").unwrap();
+
 ```
   
 - 端口号
@@ -1451,9 +1455,11 @@ let path:Path = *shardsFolder.join(Path::new(&(fid * 100 +i).to_string())).as_pa
   windows上的安装教程：https://www.runoob.com/postgresql/windows-install-postgresql.html
   
 ```
+
   //cargo.toml中crate postgres的版本
   [dependencies]
   postgres = "0.15.2"
+
   ```
   
   ```rust
@@ -1500,15 +1506,15 @@ let path:Path = *shardsFolder.join(Path::new(&(fid * 100 +i).to_string())).as_pa
   ```
 
   - 端口号
-  
+
     我pc上的postgreSQL端口号是5432，但安装不同版本的postgreSQL默认端口号可能不同（eg. 5433），也可自定义。
-  
+
   - postgresql是用户名（postgreSQLl默认的用户名） password替换成密码
-  
+
     例：如果密码是`ABCDEF` ，去掉`[]`替换即可 -> "postgresql://postgres:ABCDEF@localhost:5432"
-  
+
   - 若运行成功，则打印“Found person Steven”
-  
+
 - cargo run时可能出现的问题
 
   ```
@@ -1538,7 +1544,7 @@ let path:Path = *shardsFolder.join(Path::new(&(fid * 100 +i).to_string())).as_pa
   ```
 
   （我看不太懂，感觉没什么用）
-  
+
 ### Encoder Decoder
 
 - 解决了二维数组的问题，用Vec<Vec<u8>>解决，但外层“数组索引”编译报错
@@ -1584,7 +1590,7 @@ client、server各有main，做成两个包这样，然后直接cargo run
 **6/24**
 
 1. 锁机制的一些问题 -> lyx已解决
-![](C:\Users\12935\Pictures\Screenshots\批注 2020-06-24 164353.png)
+   ![](C:\Users\12935\Pictures\Screenshots\批注 2020-06-24 164353.png)
 
 ![](C:\Users\12935\Pictures\Screenshots\批注 2020-06-24 164412.png)
 
@@ -1630,7 +1636,7 @@ client、server各有main，做成两个包这样，然后直接cargo run
 
    ![](C:\Users\12935\Pictures\Screenshots\批注 2020-06-27 125816.png)
 
-### client 注意事项
+
 
 1. setup.ini
 
@@ -1649,7 +1655,102 @@ client、server各有main，做成两个包这样，然后直接cargo run
    TIM
    ```
 
+2. Mysql
+
+   注意rust中的SQL用的
+
+**7.3**
+
+1. server -- dataconnect -- checkfolders
+
+   - fileitem -> file 应为addfile(file)
+
+   - for i in 0..num
+
+     i不可能等于num，与java中的循环不同
+
+2. server -- dataconnect -- registerfile
+
+   - bool类型parse -> trim()
    
+3. 服务器upload和download文件夹路径设置
+   
+   server--dataConnect--clientThread
+   
+   ```
+   download_folder_path: PathBuf::from("D:webapps/DFS/CloudDriveServer/downloadFragment/"),
+               upload_folder_path: PathBuf::from("D:webapps/DFS/CloudDriveServer/uploadFragment/"),
+   ```
+
+**7.4**
+
+1. client -- filedetector -- fileUploader
+
+   read_to_string() 以读到EOF结尾，而read_line()EOF/“\n”都可以
+
+   发现问题的过程：server正常write，但read_to_string()会一直等待，将server关闭后，read到“recevied!” -> socket关闭后有EOF
+
+   ```rust
+   //socket.read_to_string(&mut inFromServer);
+   let in_from_server = socket.try_clone().expect("clone failed...");
+   let mut in_from_server = BufReader::new(in_from_server);
+   in_from_server.read_line(&mut inFromServer);
+   ```
+
+2. encoder 修改（其实改不改都行，不确定对后来的打开文件权限不够的bug是否有帮助）
+
+   最后写入文件时，不是直接使用fs::write，先create文件，write之后将permission设为readonly
+
+   ```rust
+   for i in 0..totalShards.try_into().unwrap() {
+               let pathbuf = shardsFolder.join(Path::new(&(fid * 100 + i as i32).to_string()));
+               let path:&Path = pathbuf.as_path();
+               let mut file = File::create(path).unwrap();
+               file.write(&shards[i]).unwrap();
+               file.flush().unwrap();
+               println!("shards[{}]:{:?}",i,&shards[i]);
+               let mut perms = file.metadata().unwrap().permissions();
+               perms.set_readonly(true);
+               file.set_permissions(perms).unwrap();
+           }
+   ```
+
+3. client--fileuploader在给filetransporter传递的file有问题
+
+   对比了java的代码，发现应该是open而不是create
+
+   ```rust
+   //let mut f:File = File::create(&f_path.as_path()).unwrap();
+   let mut f:File = File::open(&f_path.as_path()).unwrap();
+   ```
+
+4. 传递的文件碎片大小出错
+
+   文件碎片filesize的传递过程：
+
+   client -- encoder：将filesize 转换为 4byte 放入dataShards的前4个字节（通过allbytes中转），然后写入文件碎片
+
+   server -- filetrasporter：收到文件碎片，读前四个字节，即为file_length（java中使用readlong()）
+
+   - client中的结果
+
+     b.txt: 1234567890
+
+     filesize = 10 -> 前四个字节为long型的10，后面的49，50，51，52……为“1”，“2”，“3”对应的ascii码
+
+   ![](C:\Users\12935\Pictures\Screenshots\批注 2020-07-04 192919.png)
+
+   用记事本打开的结果如下：
+
+   10为0xA即换行符，其他的ascii码自动转为对应数字
+
+   ![](C:\Users\12935\Pictures\Screenshots\批注 2020-07-04 193431.png)
+
+   - server中的filesize读的不对
+
+     结果：file_length:43775046452
+
+     导致写入server的uploadfolderaddr的文件碎片有2.5G
 
 ### seed
 

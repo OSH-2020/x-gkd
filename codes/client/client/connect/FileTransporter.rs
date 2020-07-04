@@ -45,6 +45,7 @@ pub fn send_file(mut f: File, mut soc_out: &TcpStream)->bool{
             Err(e) => -1,
             Ok(len) => len as i32,
         };
+        
         if len == -1 {
             return false;
         }
