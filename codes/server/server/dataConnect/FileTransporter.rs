@@ -40,6 +40,7 @@ pub fn recv_file(mut f: File, mut soc_in: &TcpStream)->bool{
 }//TODO:err handle
 
 pub fn send_file(mut f: File, mut soc_out: &TcpStream)->bool{
+    println!("enter filetransporter--send_file");
     let mut send_bytes = [0; 1024];
 
     let length = f.metadata().unwrap().len();
@@ -61,6 +62,7 @@ pub fn send_file(mut f: File, mut soc_out: &TcpStream)->bool{
         }
         soc_out.write(&mut send_bytes[..]);
         soc_out.flush();
+       
     }
 
     return true

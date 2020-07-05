@@ -1752,6 +1752,35 @@ client、server各有main，做成两个包这样，然后直接cargo run
 
      导致写入server的uploadfolderaddr的文件碎片有2.5G
 
+     测试发现原代码中的buffer[0..7]为0，0，0，10，49，50……故不应该读8个byte，应读4个byte再进行转换
+
+     ```rust
+     //原代码
+     // let file_length:i64 = ((buffer[0] as i64) << 56) + (((buffer[1] as i64) & 255) << 48) + (((buffer[2] as i64) & 255) << 40)       
+         //  + (((buffer[3] as i64) & 255) << 32) + (((buffer[4] as i64) & 255) << 24) + (((buffer[5] as i64) & 255) << 16)        
+         //  + (((buffer[6] as i64) & 255) << 8) + (((buffer[7] as i64) & 255) << 0);
+     let file_length:i64 = (((buffer[0] as i64) & 255) << 24) + (((buffer[1] as i64) & 255) << 16)        
+          + (((buffer[2] as i64) & 255) << 8) + (((buffer[3] as i64) & 255) << 0);
+     ```
+
+**7.5**
+
+1. 捋顺了fragment的发送机制
+
+   -> 解决了由于SQL语句不正确导致的错误（ISONLINE or IS_ONLINE）
+
+2. 发现mysql中的alterDevice会失败 
+
+   IP地址127.0.0.1失败，IP为char(20)，但似乎只能出现一个点 .
+
+3. client和server的filetransporter相同，send_file方法会传多（eg.10字节文件传了1024字节）
+
+4. filetransporter的recvfile和sendfile有一个互相的约定，先传一个long型的filelength，之前认为是server端与encode的文件单方面的约定，其实不是。
+
+   目前send_file并没有先write4字节的file length
+
+5. 
+
 ### seed
 
 node.js的防火墙权限局限在了专用网络
