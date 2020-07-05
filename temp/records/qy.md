@@ -1,5 +1,3 @@
-* 一些调用其他模块中内容的变量，可能涉及到漏设置 mut 属性！！调用其他模块中的方法，还没有校队接口
-
 ### ServerConnecter.rs
 
 目前为1.0版。这个文件定义了 ServerConnect 结构体，以及 new, init, run, stopConnect 四个方法。这个文件可以通过编译，但没有解决大部分的 warning。
@@ -200,11 +198,138 @@ fn main(){
 
 
 
-## Rust Web Applications 文档
+## Seed 相关
+
+### Rust Web Applications
 
 * ULID：一个库，用于生成独特 ID 。基于时间戳和随机数生成 ID ，它们可根据时间排序。不同机器上的 ULID 之间可能冲突。
 * ORM ：对象关系映射
-* REST API：REST 为 Representation State Transfer ，表现层状态转化。决定网络资源呈现形式。
+* REST API：REST 为 Representation State Transfer ，表现层状态转化。决定网络资源呈现形式。[REST API 介绍](https://www.jianshu.com/p/75389ea9a90b)
 * URI ：统一资源定位符。只代表资源实体，与表现形式无关。
 
-[REST API 介绍](https://www.jianshu.com/p/75389ea9a90b)
+
+
+### Seed-rs-realworld
+
+lib.rs 中的 Model 为枚举体，是由于一整个 app 中可能出现 home, login, article 等不同的页面，每个页面在对应的 rs 文件中都定义了自己的 Model 结构体。同一时刻同一线程内不会有多个页面存在，lib.rs 即为这些 Model 的枚举。
+
+#### /src/session.rs
+
+* session    [Session 简介](https://blog.csdn.net/weixin_42217767/article/details/92760353)
+
+  记录一系列状态。Session 与 cookie 功能效果相同。区别在于 Session 是记录在服务端的，而 Cookie 是记录在客户端的。
+
+  realworld 中的 session 结构体记录当前是游客状态还是已登录。
+
+* Token    [Token 简介](https://www.jianshu.com/p/24825a2683e6)
+
+  Token是服务端生成的一串字符串，以作客户端进行请求的一个令牌，当第一次登录后，服务器生成一个Token便将此Token返回给客户端，以后客户端只需带上这个Token前来请求数据即可，无需再次带上用户名和密码。
+
+  Token 的应用是为了减少查询数据库频次。
+
+  realworld 中 session Login 字段使用到 src/entity/viewer::Viewer ，该结构体中有名为 auth_token 的 String 字段，应该为上述的生成 Token。
+
+#### /src/page/register.rs
+
+```rust
+///src/page/register.rs 中 Model：
+pub struct Model {
+    session: Session,
+    problems: Vec<Problem>,
+    form: Form,
+}
+///src/entity/form.rs:
+pub struct Form<T: FormField>(IndexMap<FieldKey, T>);
+pub enum Problem {
+    InvalidField {
+        field_key: &'static str,
+        message: Cow<'static, str>,
+    },
+    ServerError {
+        message: Cow<'static, str>,
+    },
+}
+///src/entity/form/register.rs
+pub type Form = form::Form<Field>;
+pub enum Field {
+    Username(String),
+    Email(String),
+    Password(String),
+}
+```
+
+其中 Field 三个字段与网页注册需要输入的相同，但 Field 为枚举体。
+
+目前还不知道 register.rs 的功能应该如何概括，register 页面是哪一个页面、用户是否能进入这个页面，但这个模块肯定是登录注册模块需要的。
+
+* [indexmap库](https://github.com/bluss/indexmap)
+
+  一个动态的 hash 表，可以在一定范围内保持插入顺序。
+
+#### /src/page/login.rs
+
+login.rs 文件的大部分内容（包括 Model 结构体，init 函数等）都与 register.rs 文件相同。根据 viewer 函数，register 为 Sign up 注册页面，login 为 Sign in 登录页面。
+
+两文件 Msg 枚举体不同。register.rs 中 RegisterCompleted 字段名改为 LoginCompleted ，但变量类型还是一样的。
+
+两者 update 函数对于 Msg::FormSubmitted 的处理不同。但 RegisterCompleted 和 LoginCompleted 的处理完全相同。
+
+#### /src/page/profile.rs
+
+```rust
+pub struct Model<'a> {
+    session: Session,
+    errors: Vec<ErrorMessage>,
+    selected_feed: SelectedFeed,
+    feed_page: PageNumber,
+    author: Status<'a, Author>,
+    feed: Status<'a, article::feed::Model>,
+}
+pub enum SelectedFeed {
+    MyArticles,
+    FavoritedArticles,
+}
+enum Status<'a, T> {
+    Loading(Username<'a>),
+    LoadingSlowly(Username<'a>),
+    Loaded(T),
+    Failed(Username<'a>),
+}
+```
+
+其中 PageNumber 为 usize，在 /entity/page_number.rs 中定义。
+
+Model 中只有 session, errors 字段是我们需要的，其他都跟 article 有关。本文件可能需要大幅重写。
+
+* feed    [什么是 feed 流](https://www.zhihu.com/question/20690652)
+
+  feed 指满足用户需求的信息单元。
+
+  可以确定关于 "feed" 的代码都是与 realworld 中 article 有关，是我们不需要的。
+
+#### /src/page/home.rs
+
+```rust
+pub struct Model<'a> {
+    session: Session,
+    selected_feed: SelectedFeed,
+    feed_page: PageNumber,
+    tags: Status<Vec<Tag>>,
+    feed: Status<article::feed::Model>,
+}
+```
+
+Model 中只有 session 与我们需要的有关。
+
+#### /src/storage
+
+使用 seed::storage, serde_json 库。存储 /entity/viewer::Viewer 实体的信息。
+
+```rust
+///entity/viewer::Viewer
+pub struct Viewer {
+    pub profile: Profile,
+    pub auth_token: String,
+}
+```
+
