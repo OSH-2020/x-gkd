@@ -272,9 +272,9 @@ impl ClientThread{
     pub fn check_folder(mut self)->bool{
         println!("enter check folder");
         let command:Vec<&str> = self.sentence[..].split(' ').collect();
-        println!("command:{:?}",command);
+        //println!("command:{:?}",command);
         let num:i32 = command[2].trim().parse().unwrap();
-        println!("num:{}",num);
+        //println!("num:{}",num);
 
         let query = Query::new();
         let mut flag: bool = false;
@@ -283,7 +283,7 @@ impl ClientThread{
             println!("{} {}",command[(3+2*i) as usize], command[(4+2*i) as usize]);
             let mut file = query.queryFile_Bypathname(Some(command[(3+2*i) as usize].to_string()), 
                 Some(command[(4+2*i) as usize].to_string()));
-            println!("fileid: {}", file.get_id());
+            //println!("fileid: {}", file.get_id());
             if  0 == file.get_id() {
                 println!("no file!");
                 let dt = Local::today();
@@ -306,7 +306,7 @@ impl ClientThread{
             }
         }
 
-        println!("i:{}\n",i);
+        //println!("i:{}\n",i);
         i = i + 1;
         if i == num {
             println!("received");

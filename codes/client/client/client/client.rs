@@ -58,7 +58,7 @@ pub fn main() {
 
     line.clear();
     fin.read_line(&mut line).unwrap(); 
-    println!("line:{}\n",line);
+    //println!("line:{}\n",line);
     let i = line.trim().parse::<i32>().unwrap(); //需监控的上传文件夹数量
 
     //self.uploadFolders = Vec::new();
@@ -76,7 +76,7 @@ pub fn main() {
         uploadAddrs.push(uploadAddr);
         j-=1;
     }
-    println!("uploadFolders:{:?}",uploadFolders);
+    //println!("uploadFolders:{:?}",uploadFolders);
     crate::client::connect::ServerConnecter::ServerConnecter::init(&serverIp,&(controlPort as u16));
     let mut file1 = PathBuf::from(&fragmentFolder);
     if !file1.exists() || !file1.is_dir(){

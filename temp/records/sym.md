@@ -325,7 +325,7 @@ net start mysql
 
 mysql -u root -p
 
-USE <新数据库>
+USE <新数据库>	USE DFS;
 
 SHOW TABLES;
 
@@ -580,7 +580,17 @@ server
 
 3. 增加 Query 中查询正确但没有符合要求的结果的情况：返回 id 为0.
 
+4. 在 clearFolder 中添加 remove_dir，删去文件夹，rust 中还有 remove_dir_all
 
+   | [remove_dir](https://doc.rust-lang.org/std/fs/fn.remove_dir.html) | Removes an existing, empty directory.                        |
+   | ------------------------------------------------------------ | ------------------------------------------------------------ |
+   | [remove_dir_all](https://doc.rust-lang.org/std/fs/fn.remove_dir_all.html) | Removes a directory at this path, after removing all its contents. Use carefully! |
+
+
+
+## 调用关系图：
+
+<img src="./photo/image-20200705194021399.png" alt="image-20200705194021399" style="zoom:200%;" /><img src="./photo/image-20200705193719943.png" alt="image-20200705193719943" style="zoom:200%;" />
 
 # 系统使用指南：
 
@@ -682,3 +692,18 @@ server
    +----+----+------+----------+------+
    1 row in set (0.00 sec)
 
+6. 修改 dataConnect 中的 ClientThread 中的 
+
+   ClientThread{
+
+   ​      client_socket: stream,
+
+   ​      sentence: String::new(),
+
+   ​      download_folder_path: PathBuf::from("xxxx/downloadFragment/"),
+
+   ​      upload_folder_path: PathBuf::from("xxxx/uploadFragment/"),
+
+   ​    }
+
+   xxxx改成所需路径
