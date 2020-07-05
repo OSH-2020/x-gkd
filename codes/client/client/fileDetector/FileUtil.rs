@@ -55,6 +55,7 @@ use std::convert::TryInto;
                             let path:&Path = pathbuf.as_path();
                             if path.is_dir() {
                                 self.clearFolder(&path.to_path_buf());
+                                fs::remove_dir_all(path.to_path_buf());
                             } else {
                                 fs::remove_file(path);
                             }

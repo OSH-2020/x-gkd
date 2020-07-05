@@ -35,11 +35,13 @@ impl ClientThread{
                         self.client_socket.flush();
                         return 0;
                     }
+                    println!("controlconnect--clientthread--准备修改device");
                     let client_addr = self.client_socket.peer_addr().unwrap();
                     let port = client_addr.port();
                     let rs: i32 = s[2].trim().parse().unwrap();
                     let ip = client_addr.ip();
 
+                    println!("controlconnect--queryDevice所用的id：{}",id);
                     let query = Query::new();
                     let mut deviceitem = query.queryDevice(id);
 
@@ -48,8 +50,11 @@ impl ClientThread{
                     deviceitem.set_port(port.try_into().unwrap());
                     deviceitem.set_is_online(true);
                     deviceitem.set_rs(rs);
-                    query.alterDevice(deviceitem);
+                    if query.alterDevice(deviceitem) == -1 {
+                        println!("alterDevice fail");
+                    }
 
+                    println!("controlconnect--queryrequestnumber_byid所用id:{}",id);
                     self.client_socket.write_fmt(format_args!("received with {} unread request!\n", query.queryRequestNumbers_Byid(id)));
                     self.client_socket.flush();
                     //query.closeConnection();
@@ -57,7 +62,7 @@ impl ClientThread{
                 }
                 else if c == '2'{
                     let s: Vec<&str> = sentence.split(' ').collect();
-                    let id: i32 = s[1].parse().unwrap();
+                    let id: i32 = s[1].trim().parse().unwrap();
 
                     if self.client_id != -1 && self.client_id != id{
                         self.client_socket.write(b"Error!\n");

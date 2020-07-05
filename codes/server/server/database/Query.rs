@@ -211,7 +211,7 @@ impl Query {
 
     pub fn queryOnlineDevice(&self) -> Vec<DeviceItem> {
         let selected_devices: Result<Vec<DeviceItem>, mysql::Error> =
-        self.pool.prep_exec("SELECT * FROM DFS.DEVICE WHERE IS_ONLINE=true ORDER BY RS DESC", 
+        self.pool.prep_exec("SELECT * FROM DFS.DEVICE WHERE ISONLINE=true ORDER BY RS DESC", 
                 ())
         .map(|result| { 
             result.map(|x| x.unwrap()).map(|row| {
@@ -577,6 +577,8 @@ impl Query{
     }
 
     pub fn alterDevice(&self, mut device:DeviceItem) -> i32{
+        println!("enter alterDevice");//note:by lyf
+        println!("device:ip={},port={},rs={},id={}",device.get_ip(),device.get_port(),device.get_rs(),device.get_id());
         let mut suc:i32 = -1;
         if device.is_online(){
             for mut stmt in self.pool.prepare(r"UPDATE DFS.DEVICE SET IP=:ip',PORT=:port,ISONLINE=true,

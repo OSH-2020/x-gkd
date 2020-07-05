@@ -74,7 +74,7 @@ impl ServerConnecter{
                         input_buf.clear();
                         in_from_server.read_line(&mut input_buf).unwrap();
                         let input_buf = input_buf.trim();
-                        //println!("input_buf:{}kkk\n",input_buf);
+                        println!("serverconnecter -- input_buf:{}\n",input_buf);
                         let mut input_vec:Vec<&str>= input_buf[..].split(' ').collect();
 
                         //debug
@@ -93,7 +93,7 @@ impl ServerConnecter{
                             let mut input_vec:Vec<&str>= inputline[..].split(' ').collect();
                             let request_id:u32 = input_vec[0].parse().unwrap();
                             let fragment_id:u32 = input_vec[1].parse().unwrap();
-                            let ftype:u32 = input_vec[2].parse().unwrap();
+                            let ftype:u32 = input_vec[2].trim().parse().unwrap();
                             //以下两行用到其他文件中定义的结构体
                             let mut f_manager = super::FragmentManager::FragmentManager::new(request_id.try_into().unwrap(), fragment_id.try_into().unwrap(), ftype.try_into().unwrap());
                             f_manager.submit();
