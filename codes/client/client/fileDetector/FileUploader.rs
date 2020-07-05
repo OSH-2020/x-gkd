@@ -87,9 +87,9 @@ impl FileUploader {
                         n = n+1;
                     }
                     if j==-1
-                        {socket.write_fmt(format_args!("/ {} ", &addr[i]));
+                        {socket.write_fmt(format_args!("/ {} ", &addr[i]));}
                         //println!("no \\");
-                        //println!("/ {}\n", addr[i]);}
+                        //println!("/ {}\n", addr[i]);
                     else {
                         let mut number = 0;
                         let ch = addr[i].chars();
