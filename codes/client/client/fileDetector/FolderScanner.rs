@@ -65,7 +65,7 @@ impl FolderScanner{
      pub fn run(&self,status:Arc<(Mutex<i32>,Condvar)>){
         println!("run FolderScanner\n");
         let fUploader:FileUploader = FileUploader::new();
-        println!("1\n");
+        //println!("1\n");
         if !fUploader.checkFolders(&self.address){
             println!("ERR: can not register folder");
             //self.synItem.setStatus(2);
@@ -77,10 +77,10 @@ impl FolderScanner{
 
             return;
         }
-        println!("detecting:{}", self.detecting);
+        //println!("detecting:{}", self.detecting);
         while self.detecting{
             //未处理catch InterruptedException
-            println!("enter loop\n");
+            //println!("enter loop\n");
             self.scanFiles(status.clone());
             let interval_mills = time::Duration::from_millis(interval.into());
             thread::sleep(interval_mills);
@@ -91,7 +91,7 @@ impl FolderScanner{
      fn scanFiles(&self,status:Arc<(Mutex<i32>,Condvar)>){
         //let mut i:i32 = 0;
         let FileUtil:FileUtil = FileUtil::new();
-        println!("folders:{:?}\n", self.folder);
+        //println!("folders:{:?}\n", self.folder);
         for i in 0..self.folder.len() {
             let files:LinkedList<PathBuf> = FileUtil::getAllFiles(&self.folder[i]);
             println!("FolderScanner--scanfiles--after getallfiles");
@@ -132,7 +132,7 @@ impl FolderScanner{
             }*/
         let mut noa:i32 = (((metadata.len() as u32) / BYTES_IN_SHARDS) + 1).try_into().unwrap();   //metadata.len()返回值类型为u64
         noa = noa * 2;
-        println!("noa:{}\n",noa);
+        //println!("noa:{}\n",noa);
 
         let fileAttrs = FileAttrs::FileAttrs::init(fileName,filePath,attribute,noa);
         

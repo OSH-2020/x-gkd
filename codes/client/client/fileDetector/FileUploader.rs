@@ -65,16 +65,16 @@ impl FileUploader {
         if !self.createConnection() {
             return false;
         }
-        println!("1\n");
+        //println!("1\n");
         let addr:Vec<String> = (*addr).clone().to_vec();
         match &mut self.to_server {
             None => false,
             Some (socket) => {
-                println!("2\n");
+                //println!("2\n");
                 if !self.connecting
                     {return false;}
                 socket.write_fmt(format_args!("6 0 {} ", addr.len()));
-                println!("6 0 {}\n", addr.len());
+                //println!("6 0 {}\n", addr.len());
                 socket.flush();
 
                 let mut i = 0;
@@ -88,8 +88,8 @@ impl FileUploader {
                     }
                     if j==-1
                         {socket.write_fmt(format_args!("/ {} ", &addr[i]));
-                        println!("no \\");
-                        println!("/ {}\n", addr[i]);}
+                        //println!("no \\");
+                        //println!("/ {}\n", addr[i]);}
                     else {
                         let mut number = 0;
                         let ch = addr[i].chars();
@@ -101,7 +101,7 @@ impl FileUploader {
                         socket.write_fmt(format_args!("\n"));
                     }
                     socket.flush();
-                    println!("send suc");
+                    //println!("send suc");
                     socket.write_fmt(format_args!("\n"));
                     socket.flush();
                     i = i + 1;
@@ -110,7 +110,7 @@ impl FileUploader {
                 let mut i = 0;
                 let mut input_buf = String::new();
                 socket.read_to_string(&mut input_buf);
-                println!("input: {}\n", input_buf);
+                //println!("input: {}\n", input_buf);
                 for c in input_buf.chars() {
                     if c == re[i] {i = i+1;}
                     else {return false;}

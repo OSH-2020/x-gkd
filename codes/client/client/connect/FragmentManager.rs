@@ -68,7 +68,7 @@ impl FragmentManager {
         if self.serverIP.len() == 0 {
             return false;
         }
-        if let Ok(connect_socket) = TcpStream::connect((&self.serverIP[..], self.controlPort)) {
+        if let Ok(connect_socket) = TcpStream::connect((&self.serverIP[..], self.serverPort as u16)) {
             self.toServer = Some(connect_socket);//忽略了setKeepAlieve和setsoTimeout，未找到rust中对应的长连接和超时连接的处理函数
             match &mut self.toServer {
                 None => println!("Error"),
