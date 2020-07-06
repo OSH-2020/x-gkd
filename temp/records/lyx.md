@@ -1295,9 +1295,7 @@ Rocket遇到的问题与思考
 
 * index_ajax.js:让网页具有和用户和服务器交互的动态能力。 即为注册和登录的button提供js动作，调用异步的 ajax 将表单信息提交给服务器（没有用submit提交，因为这样会导致页面刷新，不符合预期，使用ajax实现页面部分刷新）并调用下面两个 java 程序之一进行服务（参见对应文件）
 
-  eg：form 格式的 var 来进行 data 的传送，采用 post 方法，在回
-
-  调函数中更改网页 html，输出服务器反馈信息 
+  eg：form 格式的 var 来进行 data 的传送，采用 post 方法，在回调函数中更改网页 html，输出服务器反馈信息 
 
 * 网页主界面:
 
@@ -1575,8 +1573,85 @@ button![
 
 设计思想: 先Model,Msg结构，再其他
 
-No todos ; New todo; Mark all as complete; Item(包括把一个todo切换为completed，edit todo，remove todo三种交互)；Editing(编辑模式下对SelectedTodo项的修改)
+* No todos ; 
+* New todo;
+* Mark all as complete; Item(包括把一个todo切换为completed，edit todo，remove todo三种交互)；
+* Editing(编辑模式下对SelectedTodo项的修改);Clear completed button;
+* Persistence(使用localStorage来persist data：If the framework has capabilities for persisting data (e.g. Backbone.sync), use that. Otherwise, use vanilla localStorage.)；
+* Routing：包含all，active，completed三种状态，当选定一个状态时（此时网页url也会改变），会filter todos，隐藏不需要显示的todos，而且会动态更新(即输入新的todo，那么all和active里均会立即出现)
 
-Model设计：
+Model设计：Model结构体是对整个页面元素的设计；Todo结构体则是对一个待办事项元素的设计
 
-Msg设计:
+```rust
+struct Model {
+    base_url: Url,
+    todos: BTreeMap<Ulid, Todo>,
+    new_todo_title: String,
+    selected_todo: Option<SelectedTodo>,
+    filter: Filter,
+}
+
+#[derive(Deserialize, Serialize)]
+struct Todo {
+    id: Ulid,
+    title: String,
+    completed: bool,
+}
+
+struct SelectedTodo {
+    id: Ulid,
+    title: String,
+    input_element: ElRef<web_sys::HtmlInputElement>,
+}
+
+// ------ Filter ------
+
+#[derive(Copy, Clone, Eq, PartialEq, EnumIter)]
+enum Filter {
+    All,
+    Active,
+    Completed,
+}
+```
+
+
+
+Msg设计:对于设计好的Model，根据项目的功能需求，设置相应的Msg项
+
+```rust
+enum Msg {
+   UrlChanged(subs::UrlChanged),
+   NewTodoTitleChanged(String),
+
+   // ------ Basic Todo operations ------
+
+   CreateTodo,
+   ToggleTodo(Ulid),
+   RemoveTodo(Ulid),
+   
+   // ------ Bulk operations ------
+
+   CheckOrUncheckAll,
+   ClearCompleted,
+   
+   // ------ Selection ------
+
+   SelectTodo(Option<Ulid>),
+   SelectedTodoTitleChanged(String),
+   SaveSelectedTodo,
+}
+```
+
+Project Setup:设计好了Model和Msg就可以creating project了：update和view应该是一边写一边验证，快速找问题并解决
+
+View函数实现:把大的view函数拆分成几个部分(而且实际上就是用seed宏来替代html文件罢了)，此外就是需要注意具体实现了，比如view返回值为Vec<Node<Msg>> 还是Node<Msg>，以及其内部实现的写法，可通过seed crate查询其宏，大部分能直接与html对应上；
+
+​	此外就是Model的值也是会在这里用到，其数据就是我们需要呈现在前端的相关信息；
+
+However it causes compilation errors because the root `vec![...]` expects only `Node` as items but our `IF!` returns `Option>>`. Fortunately, there is macro `nodes!` that aligns all types to make the compiler happy:
+
+建议:better to pass `Option<&Item>` instead of `&Option`;   Use `.unwrap()` (instead of `expect("...")`) in places when you are SURE the code will work
+
+主要疑问:1. filter那一块的实现；2.新输入的todo项的更新
+
+Update函数的实现:主要就是匹配Msg然后做出不同的修改，此外引发事件的按钮等需要在view函数里相应实现
