@@ -36,8 +36,8 @@ impl ClientThread{
         ClientThread{
             client_socket: stream,
             sentence: String::new(),
-            download_folder_path: PathBuf::from("D:webapps/DFS/CloudDriveServer/downloadFragment/"),
-            upload_folder_path: PathBuf::from("D:webapps/DFS/CloudDriveServer/uploadFragment/"),
+            download_folder_path: PathBuf::from("D:/mine/homework/file/downloadFragment/"),
+            upload_folder_path: PathBuf::from("D:/mine/homework/file/uploadFragment/"),
         }
     }
 
@@ -122,7 +122,7 @@ impl ClientThread{
             status = false;
         }
         else{
-            let mut s: String = self.download_folder_path.into_os_string().into_string().unwrap();
+            let mut s: String = self.upload_folder_path.into_os_string().into_string().unwrap();
             s.push_str(&fid.to_string());
             let send_file = File::open(s);
             match send_file{

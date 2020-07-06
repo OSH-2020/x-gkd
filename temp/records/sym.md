@@ -586,6 +586,12 @@ server
    | ------------------------------------------------------------ | ------------------------------------------------------------ |
    | [remove_dir_all](https://doc.rust-lang.org/std/fs/fn.remove_dir_all.html) | Removes a directory at this path, after removing all its contents. Use carefully! |
 
+5. 在 server 和 client 端的 send_file 中把发送的数组长度改为 
+
+   soc_out.write(&mut send_bytes[0..length as usize]);
+
+   就可以解决发送文件大小变大的问题。
+
 
 
 ## 调用关系图：
