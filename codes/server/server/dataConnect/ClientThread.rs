@@ -144,7 +144,8 @@ impl ClientThread{
                             if sen != re[n] {break;}
                             else {n = n + 1;}
                         }
-                        if n == re.len() - 1 {
+                        //println!("n={},re,len={}",n,re.len());
+                        if n == re.len() {
                             //sendFile.delete();
                             if query.deleteRequest(request.get_id()) == -1{
                                 println!("deleteRequest fail!");
@@ -233,7 +234,7 @@ impl ClientThread{
             let recv_file = File::create(s).unwrap();
             self.client_socket.write(b"received!\n").unwrap();
             self.client_socket.flush();
-            println!("dataConnect--recv_file_fragment:after received!");
+            //println!("dataConnect--recv_file_fragment:after received!");
             //test:by lyf
             //self.client_socket.write(b"received!\n");
             //self.client_socket.flush();
@@ -364,7 +365,7 @@ impl ClientThread{
             let mut k:i32 = 0;
             for i in 0..size {
                 for j in 0..n[i as usize] as usize{
-                    let temp = RequestItem::init_2(2, id * 100 + (i as i32), di[i as usize].get_id());
+                    let temp = RequestItem::init_2(2, id * 100 + (k as i32), di[i as usize].get_id());
                     query.addRequest(temp);
                     k = k + 1;
                 }
