@@ -668,6 +668,7 @@ impl Query{
     }
 
     pub fn deleteRequest(&self,id:i32) -> i32{
+        println!("enter delete request");
         let mut suc:i32 = -1;
         for mut stmt in self.pool.prepare(r"DELETE FROM DFS.REQUEST WHERE ID=:id").into_iter() {
             let res = stmt.execute(params!{

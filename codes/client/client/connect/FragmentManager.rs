@@ -161,7 +161,7 @@ impl FragmentManager {
         let mut path = Path::new(&s);
         //可能会根据运行平台的不同添加/,分为posix和windows
         let mut f = File::create(path).unwrap();
-        remove_file(path);
+        //remove_file(path);
         match &mut self.toServer {
             None => println!("Error"),
             Some(socket) => {

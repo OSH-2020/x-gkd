@@ -23,21 +23,21 @@ pub fn recv_file(mut f: File, mut soc_in: &TcpStream)->bool{
     println!("file_length:{}",file_length);
 
 
-    while toread >= 1024{
+    while toread > 0{
         //soc_in.read_exact(&mut send_bytes).unwrap();
         //toread = toread - 1024;
         let readlen = soc_in.read(&mut send_bytes).unwrap();
         toread = toread - readlen as i64;
 
-        f.write(&send_bytes).unwrap();//test
+        f.write(&send_bytes[0..readlen]).unwrap();//test
         f.flush();
     }
-    let mut file_end: Vec<u8> = Vec::new();
-    println!("before read_to_end");
-    soc_in.read_to_end(&mut file_end).unwrap();
-    println!("after read_to_end");
-    f.write(&file_end).unwrap();//test
-    f.flush();
+    //let mut file_end: Vec<u8> = Vec::new();
+    //println!("before read_to_end");
+    //soc_in.read_to_end(&mut file_end).unwrap();
+    //println!("after read_to_end");
+    //f.write(&file_end).unwrap();//test
+    //f.flush();
     println!("recv_file success");
     //没有再创建FileOutputStream对象，这里不需要关闭什么
     return true

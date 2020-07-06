@@ -131,12 +131,14 @@ impl ClientThread{
                     query.deleteRequest(request.get_id());
                 },
                 Ok(file) =>{
+                  
                     status = super::FileTransporter::send_file(file, &self.client_socket);
                     if status{
                         let mut in_from_cilent = BufReader::new(self.client_socket);
                         let mut sentence = String::new();
                         in_from_cilent.read_line(&mut sentence).unwrap();
-                        let re = vec!['r', 'e', 'c', 'e', 'i', 'v', 'e', 'd', '!'];
+                        println!("sentence after send file:{}",sentence);
+                        let re = vec!['r', 'e', 'c', 'e', 'i', 'v', 'e', 'd', '!','\n'];
                         let mut n: usize = 0;
                         for sen in sentence.chars() {
                             if sen != re[n] {break;}
@@ -144,7 +146,9 @@ impl ClientThread{
                         }
                         if n == re.len() - 1 {
                             //sendFile.delete();
-                            query.deleteRequest(request.get_id());
+                            if query.deleteRequest(request.get_id()) == -1{
+                                println!("deleteRequest fail!");
+                            };
                             //query.alterFragment(fid, Integer.toString(request.getDeviceId()));
                             query.alterFragment(fid, request.get_device_id().to_string());
                         }

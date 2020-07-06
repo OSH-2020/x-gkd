@@ -3,7 +3,7 @@ use std::fs::File;
 use std::net::TcpStream;
 
 pub fn recv_file(mut f: File, mut soc_in: &TcpStream)->bool{
-    println!("enter FileTransporter -- recv_file");
+    //println!("enter FileTransporter -- recv_file");
     //原java文件中socout这个参数并没有用到，此处删去
     //手动实现读取一个long类型的数据
     let mut buffer = [0; 8];
@@ -13,9 +13,9 @@ pub fn recv_file(mut f: File, mut soc_in: &TcpStream)->bool{
     //let file_length = i64::from_bytes(buffer);
 
     
-    let file_length:i64 = ((buffer[0] as i64) << 56) + (((buffer[1] as i64) & 255) << 48) + (((buffer[2] as i64) & 255) << 40)       
-    + (((buffer[3] as i64) & 255) << 32) + (((buffer[4] as i64) & 255) << 24) + (((buffer[5] as i64) & 255) << 16)        
-    + (((buffer[6] as i64) & 255) << 8) + (((buffer[7] as i64) & 255) << 0);
+      let file_length:i64 = ((buffer[0] as i64) << 56) + (((buffer[1] as i64) & 255) << 48) + (((buffer[2] as i64) & 255) << 40)       
+      + (((buffer[3] as i64) & 255) << 32) + (((buffer[4] as i64) & 255) << 24) + (((buffer[5] as i64) & 255) << 16)        
+      + (((buffer[6] as i64) & 255) << 8) + (((buffer[7] as i64) & 255) << 0);
 
     let mut toread:i64 = file_length;
     let mut send_bytes = [0; 1024];
@@ -23,25 +23,28 @@ pub fn recv_file(mut f: File, mut soc_in: &TcpStream)->bool{
     println!("file_length:{}",file_length);
 
 
-    while toread >= 1024{
+    while toread > 0{
         //soc_in.read_exact(&mut send_bytes).unwrap();
         //toread = toread - 1024;
         let readlen = soc_in.read(&mut send_bytes).unwrap();
         toread = toread - readlen as i64;
 
-        f.write(&send_bytes);
+        f.write(&send_bytes[0..readlen]).unwrap();//test
         f.flush();
     }
-    let mut file_end: Vec<u8> = Vec::new();
-    soc_in.read_to_end(&mut file_end).unwrap();
-    f.write(&file_end);
-    f.flush();
+    //let mut file_end: Vec<u8> = Vec::new();
+    //println!("before read_to_end");
+    //soc_in.read_to_end(&mut file_end).unwrap();
+    //println!("after read_to_end");
+    //f.write(&file_end).unwrap();//test
+    //f.flush();
+    println!("recv_file success");
     //没有再创建FileOutputStream对象，这里不需要关闭什么
     return true
 }//TODO:err handle
 
 pub fn send_file(mut f: File, mut soc_out: &TcpStream)->bool{
-    println!("enter filetransporter--send_file");
+    //println!("enter filetransporter--send_file");
     let mut send_bytes = [0; 1024];
 
     let length = f.metadata().unwrap().len();
@@ -65,13 +68,7 @@ pub fn send_file(mut f: File, mut soc_out: &TcpStream)->bool{
         soc_out.write(&mut send_bytes[0..length as usize]);
         soc_out.flush();
 
-        println!("send_bytes:");
-        for i in 0..length as usize{
-            println!("{}",send_bytes[i]);
-        }
-        
-       
     }
-    println!("FileTransporter -- sendfile end AND return true");
+    //println!("FileTransporter -- sendfile end AND return true");
     return true
 }

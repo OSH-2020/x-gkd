@@ -88,6 +88,7 @@ impl ServerConnecter{
                         while unread_request>0 {
                             socket.write_fmt(format_args!("2 {}\n", self.client_id.to_string()));
                             socket.flush();
+                            inputline.clear();
                             in_from_server.read_line(&mut inputline).unwrap();
                             let inputline = inputline.trim();
                             let mut input_vec:Vec<&str>= inputline[..].split(' ').collect();
