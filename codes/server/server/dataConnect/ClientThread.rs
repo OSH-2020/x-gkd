@@ -36,8 +36,8 @@ impl ClientThread{
         ClientThread{
             client_socket: stream,
             sentence: String::new(),
-            download_folder_path: PathBuf::from("D:/mine/homework/file/downloadFragment/"),
-            upload_folder_path: PathBuf::from("D:/mine/homework/file/uploadFragment/"),
+            download_folder_path: PathBuf::from("D:webapps/DFS/CloudDriveServer/downloadFragment/"),
+            upload_folder_path: PathBuf::from("D:webapps/DFS/CloudDriveServer/uploadFragment/"),
         }
     }
 
@@ -113,7 +113,7 @@ impl ClientThread{
         let mut status:bool = true;
         let command:Vec<&str> = self.sentence[..].split(' ').collect();
         let id:i32 = command[1].parse().unwrap();
-        let fid:i32 = command[2].parse().unwrap();
+        let fid:i32 = command[2].trim().parse().unwrap();
         
         let query = Query::new();
         let mut request = query.queryRequest_Byid(id);

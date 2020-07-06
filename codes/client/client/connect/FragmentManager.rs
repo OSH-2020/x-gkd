@@ -171,6 +171,7 @@ impl FragmentManager {
                 if (super::FileTransporter::recv_file(f, &socket1)){
                     socket.write_fmt(format_args!("received!\n"));
                     socket.flush();
+                    println!("recvfragment success");
                     return true;
                 }else {
                     return false;
