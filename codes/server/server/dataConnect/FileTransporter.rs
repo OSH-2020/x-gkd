@@ -3,7 +3,7 @@ use std::fs::File;
 use std::net::TcpStream;
 
 pub fn recv_file(mut f: File, mut soc_in: &TcpStream)->bool{
-    //println!("enter FileTransporter -- recv_file");
+    println!("enter FileTransporter -- recv_file");
     //原java文件中socout这个参数并没有用到，此处删去
     //手动实现读取一个long类型的数据
     let mut buffer = [0; 8];
@@ -23,15 +23,19 @@ pub fn recv_file(mut f: File, mut soc_in: &TcpStream)->bool{
     println!("file_length:{}",file_length);
 
 
-    while toread > 0{
+    while toread > 1024{
         //soc_in.read_exact(&mut send_bytes).unwrap();
         //toread = toread - 1024;
-        let readlen = soc_in.read(&mut send_bytes).unwrap();
-        toread = toread - readlen as i64;
+        soc_in.read_exact(&mut send_bytes).unwrap();
+        toread = toread - 1024;
 
-        f.write(&send_bytes[0..readlen]).unwrap();//test
+        f.write(&send_bytes[..]).unwrap();//test
         f.flush();
     }
+
+    let readlen = soc_in.read(&mut send_bytes).unwrap();
+    f.write(&send_bytes[0..readlen]).unwrap();
+    f.flush();
     //let mut file_end: Vec<u8> = Vec::new();
     //println!("before read_to_end");
     //soc_in.read_to_end(&mut file_end).unwrap();
@@ -44,32 +48,63 @@ pub fn recv_file(mut f: File, mut soc_in: &TcpStream)->bool{
 }//TODO:err handle
 
 pub fn send_file(mut f: File, mut soc_out: &TcpStream)->bool{
-    //println!("enter filetransporter--send_file");
+    println!("enter connect-send_file");
     let mut send_bytes = [0; 1024];
 
     let length = f.metadata().unwrap().len();
 
-    //soc_out.write(b(format!("{:08}", length)));
     let send_length = soc_out.write(&length.to_be_bytes()).unwrap();
-    println!("send_file--发送的length应为8bytes，实际发送:{}bytes",send_length);
     soc_out.flush();
+    //test
+    println!("send_file--发送的length应为8bytes，实际发送:{}bytes",send_length);
+    println!("filelength:{}",length);
 
-    loop {
-        let readlen = f.read(&mut send_bytes[..]);
-        let len: i32 = match readlen{
-            Err(e) => -1,
-            Ok(len) => len as i32,
-        };
-        if len == -1 {
-            return false;
-        }
-        if len == 0 {
-            break;
-        }
-        soc_out.write(&mut send_bytes[0..length as usize]);
+    let mut file_toread = length;
+
+    while file_toread > 1024 {
+        f.read_exact(&mut send_bytes[..]).unwrap();//还未写错误处理
+        file_toread = file_toread - 1024;
+        soc_out.write(&mut send_bytes[..]);
         soc_out.flush();
-
     }
-    //println!("FileTransporter -- sendfile end AND return true");
+
+    let readlen = f.read(&mut send_bytes[..]);
+
+    let len: i32 = match readlen{
+        Err(e) => -1,
+        Ok(len) => len as i32,
+    };
+    if len == -1 {
+        return false;
+    }
+
+    if len == 0 {
+        return true;
+    }
+
+    soc_out.write(&mut send_bytes[0..len as usize]);
+    // loop {
+    //     let readlen = f.read(&mut send_bytes[..]);
+    //     let len: i32 = match readlen{
+    //         Err(e) => -1,
+    //         Ok(len) => len as i32,
+    //     };
+        
+    //     if len == -1 {
+    //         return false;
+    //     }
+    //     if len == 0 {
+    //         break;
+    //     }
+    //     soc_out.write(&mut send_bytes[0..length as usize]);
+    //     //let eof = [-1;1];
+    //     //soc_out.write(&eof);
+    //     soc_out.flush();
+    //     println!("send_bytes:");
+    //     // for i in 0..length as usize{
+    //     //     println!("{}",send_bytes[i]);
+    //     // }
+    // }
+     println!("end connect-send_file");
     return true
 }

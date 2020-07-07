@@ -75,12 +75,26 @@ impl Encoder{
         
         //let index:Vec<usize> = vec![]
         //println!("shardSize:{}",shardSize);
-        for i in 0..dataShards as usize {
-            &shards[i].clear();
-            for j in 0..shardSize.try_into().unwrap(){
-                &shards[i].push(allBytes[((i as u32) * (shardSize as u32) + j) as usize]);
-                //println!("process:shards[{}] size:{}",i,&shards[i].len());
+        if dataShards > 1{
+            for i in 0..(dataShards-1) as usize {
+                &shards[i].clear();
+                for j in 0..shardSize.try_into().unwrap(){
+                    &shards[i].push(allBytes[((i as u32) * (shardSize as u32) + j) as usize]);
+                    //println!("process:shards[{}] size:{}",i,&shards[i].len());
+                }
             }
+        }
+
+        let tocopy = allBytes.len() as i32- (dataShards-1)*shardSize;
+        &shards[(dataShards-1) as usize].clear();
+        for j in 0..shardSize.try_into().unwrap(){
+            if j < tocopy{
+                &shards[(dataShards-1) as usize].push(allBytes[(((dataShards - 1) as u32) * (shardSize as u32) + j as u32) as usize]);
+            } else {
+                &shards[(dataShards-1) as usize].push(0);
+            }
+
+            //println!("process:shards[{}] size:{}",i,&shards[i].len());
         }
 
         // for i in (dataShards+1)..totalShards.try_into().unwrap() {
@@ -90,13 +104,13 @@ impl Encoder{
         // }
 
         // Use Reed-Solomon to calculate the parity.
-        //println!("shards size:{}",shards.len());
-        // for i in 0..shards.len(){
-        //     println!("shards[{}] size:{}",i,&shards[i].len());
-        // }
+        println!("shards size:{}",shards.len());
+         for i in 0..shards.len(){
+             println!("shards[{}] size:{}",i,&shards[i].len());
+         }
         
-        //println!("dataShards:{}",dataShards);
-        //println!("totalShards-dataShards:{}",totalShards - dataShards);
+        println!("dataShards:{}",dataShards);
+        println!("totalShards-dataShards:{}",totalShards - dataShards);
         let reedSolomon = ReedSolomon::new(dataShards.try_into().unwrap(),(totalShards - dataShards).try_into().unwrap()).unwrap();
         reedSolomon.encode(&mut shards).unwrap();
 
@@ -109,7 +123,7 @@ impl Encoder{
             let mut file = File::create(path).unwrap();
             file.write(&shards[i]).unwrap();
             file.flush().unwrap();
-            println!("shards[{}]:{:?}",i,&shards[i]);
+            //println!("shards[{}]:{:?}",i,&shards[i]);
             // let mut perms = file.metadata().unwrap().permissions();
             // perms.set_readonly(true);
             // file.set_permissions(perms).unwrap();
