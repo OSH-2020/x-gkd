@@ -313,6 +313,10 @@ Result 是一个函数返回的类型，它可以是 Err，也可以是 Ok。如
 
 https://blog.csdn.net/weixin_43250455/article/details/88372731
 
+netstat -ano
+
+taskkill /f /pid 3312
+
 登陆之后 ERROR 1820 (HY000): You must reset your password using ALTER USER statement before executing this statement.
 
 https://blog.csdn.net/muziljx/article/details/81541896
@@ -332,6 +336,8 @@ SHOW TABLES;
 DESC <表>
 
 SELECT * FROM DFS.FILE;
+
+DELETE FROM DFS.
 
 
 
@@ -586,11 +592,38 @@ server
    | ------------------------------------------------------------ | ------------------------------------------------------------ |
    | [remove_dir_all](https://doc.rust-lang.org/std/fs/fn.remove_dir_all.html) | Removes a directory at this path, after removing all its contents. Use carefully! |
 
-5. 在 server 和 client 端的 send_file 中把发送的数组长度改为 
+5. java 中 socOut.write(sendBytes, 0, length);
+
+   在 server 和 client 端的 send_file 中把发送的数组长度改为 
 
    soc_out.write(&mut send_bytes[0..length as usize]);
 
    就可以解决发送文件大小变大的问题。
+
+6. read_to_end eof -> write([0..len])
+
+7. thread '<unnamed>' panicked at 'called `Result::unwrap()` on an `Err` value: Custom { kind: UnexpectedEof, error: "failed to fill whole buffer" }', src\client\connect\FileTransporter.rs:10:5
+   note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+   清空数据库中的信息和文件夹中的文件等
+
+8. tmp 中的文件没有删掉，可能是文件属性为 只读 的问题
+
+   solved：删去 set_readonly
+
+9. alterDevice出错，注意到 IP 为 String 型，加双引号解决
+
+   mysql> UPDATE DEVICE SET IP = "127.0.0.1" WHERE ID = 1;
+   Query OK, 1 row affected (0.33 sec)
+   Rows matched: 1  Changed: 1  Warnings: 0
+
+   mysql> SELECT * FROM DFS.DEVICE;
+   +----+-----------+------+----------+------+
+   | ID | IP        | PORT | ISONLINE | RS   |
+   +----+-----------+------+----------+------+
+   |  1 | 127.0.0.1 |    0 |        1 |    0 |
+   +----+-----------+------+----------+------+
+   1 row in set (0.01 sec)
 
 
 
@@ -713,3 +746,341 @@ server
    ​    }
 
    xxxx改成所需路径
+
+
+
+# Introduction to Rust Web Applications
+
+网址：https://erwabook.com/intro//
+
+## Migration
+
+- 提供 do 和 undo 两种 SQL 命令
+
+- diesel migration generate task
+
+  create a subdirectory under ./migrations/ which is named with a date/time stamp and the suffix "_task". In that timestamped subdirectory are two stub files: up and down
+
+- up.sql:
+
+  ```sql
+  CREATE TABLE task (    
+  	id INTEGER NOT NULL,    
+  	title TEXT NOT NULL,    
+  	PRIMARY KEY (id) 
+  ); 
+  ```
+
+  down.sql
+
+  ```sql
+  DROP TABLE task;
+  ```
+
+- test: diesel migration run
+
+- 查看表单：echo .dump | sqlite3 testdb.sqlite3
+
+- redo = rollback + re-run
+
+## Database Access Layer
+
+### Inserting a Task
+
+- diesel.toml
+
+  by diesel setup
+
+- src/lib.rs
+
+  ```
+  #[macro_use]
+  extern crate diesel;
+  
+  pub mod db;
+  //let Rust know we're making the db module
+  ```
+
+- module structure:
+
+  ```
+  mytodo
+    +-- db
+    |    +-- models
+    |    +-- schema
+    +-- rest
+  ```
+
+- removing the existing `schema.rs` file
+
+  in diesel.toml
+
+  [print_schema] 
+
+  file = "src/db/schema.rs"
+
+- src/db/models.rs:
+
+  ```
+  use super::schema::task;
+  
+  #[derive(Insertable)]
+  #[table_name = "task"]
+  pub struct NewTask<'a> {
+      pub title: &'a str,
+  }
+  //define some types that we can use for reading //and writing the database
+  ```
+
+- src/db/mod.rs:
+
+  automagically give us code to perform database inserts
+
+  ```
+  use diesel::{prelude::*, sqlite::SqliteConnection};
+  
+  pub mod models;
+  pub mod schema;
+  
+  pub fn establish_connection() -> SqliteConnection {
+      let db = "./testdb.sqlite3";
+      SqliteConnection::establish(db)
+          .unwrap_or_else(|_| panic!("Error connecting to {}", db))
+  }
+  
+  pub fn create_task(connection: &SqliteConnection, title: &str) {
+      let task = models::NewTask { title };
+  
+      diesel::insert_into(schema::task::table)
+          .values(&task)
+          .execute(connection)
+          .expect("Error inserting new task");
+  }
+  ```
+
+### Development Tool
+
+- create a new binary
+
+  $ mkdir src/bin/
+
+- src/bin/todo.rs:
+
+  ```
+  use std::env;
+  use mytodo::db::{create_task, establish_connection};
+  
+  fn help() {
+      println!("subcommands:");
+      println!("    new<title>: create a new task");
+  }
+  
+  fn main() {
+      let args: Vec<String> = env::args().collect();
+  
+      if args.len() < 2 {
+          help();
+          return;
+      }
+  
+      let subcommand = &args[1];
+      match subcommand.as_ref() {
+          "new" => new_task(&args[2..]),
+          _ => help(),
+      }
+  }
+  ```
+
+- run
+
+  cargo run --bin todo new 'xxx'
+
+  echo 'select * from task;' | sqlite3 testdb.sqlite3
+
+  1|xxx
+
+### Querying Tasks
+
+- use a struct derived from `Queryable` to perform queries
+
+  src/db/models.rs:
+
+  ```
+  #[derive(Queryable)]
+  pub struct Task {
+      pub id: i32,
+      pub title: String,
+  }
+  ```
+
+- want to let the database engine automatically assign the id instead of setting the id
+
+  src/db/mod.rs:
+
+  ```
+  pub fn query_task(connection: &SqliteConnection) -> Vec<models::Task> {
+      schema::task::table
+          .load::<models::Task>(connection)
+          .expect("Error loading tasks")
+  }
+  ```
+
+  `src/bin/todo.rs`:
+
+  ```
+  fn show_tasks(args: &[String]) {
+      if args.len() > 0 {
+          println!("show: unexpected argument");
+          help();
+          return;
+      }
+  
+      let conn = establish_connection();
+      println!("TASKS\n-----");
+      for task in query_task(&conn) {
+          println!("{}", task.title);
+      }
+  }
+  ```
+
+- run
+
+  $ cargo run --bin todo show
+
+### Database Layer Wrap-Up
+
+### Database Layer Exercises
+
+- add 'done' column to table
+- add delete task subcommand
+
+## REST API Layer
+
+- add Rocket to Cargo.toml
+
+  ```
+  [dependencies]
+  diesel = { version = "1.0.0", features = ["sqlite"] }
+  rocket = "0.4.2"
+  ```
+
+- backend binary
+
+  ```
+  #![feature(proc_macro_hygiene, decl_macro)]
+  
+  #[macro_use]
+  extern crate rocket;
+  
+  use mytodo::db::models::Task;
+  use mytodo::db::{query_task, establish_connection};
+  
+  #[get("/tasks")]
+  fn tasks_get() -> String {
+      "this is a response\n".into()
+  }
+  
+  fn main() {
+      rocket::ignite()
+          .mount("/", routes![tasks_get])
+          .launch();
+  }
+  ```
+
+  cargo run --bin backend -> listening on localhost port 8000
+
+- query database
+
+  return dynamic data
+
+  ```
+  #[get("/tasks")]
+  fn tasks_get() -> String {
+      let mut response: Vec<String> = vec![];
+  
+      let conn = establish_connection();
+      for task in query_task(&conn) {
+          response.push(task.title);
+      }
+  
+      response.join("\n")
+  }
+  ```
+
+- json
+
+  Cargo.toml:
+
+  ```
+  [package]
+  name = "mytodo"
+  version = "0.1.0"
+  authors = ["Your Name <you@example.com>"]
+  edition = "2018"
+  
+  [dependencies]
+  diesel = { version = "1.0.0", features = ["sqlite"] }
+  rocket = "0.4.2"
+  serde = { version = "1.0", features = ["derive"] }
+  
+  [dependencies.rocket_contrib]
+  version = "0.4.2"
+  default-features = false
+  features = ["json"]
+  ```
+
+  backend.rs:
+
+  ```
+  #[macro_use]
+  extern crate rocket_contrib;
+  #[macro_use]
+  extern crate serde;
+  
+  #[derive(Serialize)]
+  struct JsonApiResponse {
+      data: Vec<Task>,
+  }
+  
+  {
+      "data": [
+          { "id": 1, "title": "do the thing" },
+          { "id": 2, "title": "get stuff done" },
+      ]
+  }
+  ```
+
+  fix bugs:
+
+  both lib.rs and backend.rs: 
+
+  \#[macro_use] extern crate serde;
+
+  db/models.rs: 
+
+  \#[derive(Queryable, Serialize)] pub struct Task {    pub id: i32,    pub title: String, }
+
+  backend.rs:
+
+  use rocket_contrib::json::Json;
+
+  push the tasks we get back from `query_task` onto a response object, and then convert that to Json on the way out:
+
+  ```
+  #[get("/tasks")]
+  fn tasks_get() -> Json<JsonApiResponse> {
+      let mut response = JsonApiResponse { data: vec![], };
+  
+      let conn = establish_connection();
+      for task in query_task(&conn) {
+          response.data.push(task);
+      }
+  
+      Json(response)
+  }
+  ```
+
+## Browser-based frontend UI
+
+seed
+
