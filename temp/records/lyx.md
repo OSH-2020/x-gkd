@@ -11,6 +11,8 @@
 
 ### Rust总结:
 
+* collect方法：把迭代器元素以集合形式返回
+
 * 多线程
 
   * thread::spawn+闭包：创建新线程及其运行代码
@@ -72,6 +74,19 @@
     Sync 标记 trait 表明一个实现了 Sync 的类型可以安全的在多个线程中拥有其值的引用，对于任意类型 T ，如果 &T （ T 的引用）是 Send 的话 T 就是 Sync 的，这意味着其引用就可以安全的发送到另一个线程，同理，基本类型是 Sync 的，完全由 Sync 的类型组成的类型也是 Sync 的
 
 * unwrap():调用 `option.unwrap()` 来获取 `option` 中包裹的值,出错则直接panic
+
+  如果想使一个可恢复错误按不可恢复错误处理，Result 类提供了两个办法：unwrap() 和 expect(message: &str) 
+
+  ```
+  use std::fs::File;
+  
+  fn main() {
+    let f1 = File::open("hello.txt").unwrap();
+    let f2 = File::open("hello.txt").expect("Failed to open.");
+  }
+  ```
+
+  这段程序相当于在 Result 为 Err 时调用 panic! 宏。两者的区别在于 expect 能够向 panic! 宏发送一段指定的错误信息。
 
 * 线程安全智能指针：为了在多个线程间共享所有权并允许线程修改 
 
@@ -1387,6 +1402,127 @@ Rocket遇到的问题与思考
 
 ### Rust Web应用程序简介：https://erwabook.com/intro/
 
+架构:数据库层    ---    数据库访问层（相比于直接修改数据库啥的会更安全） ---  REST API层（基于Rocket构建，这是一个Rust网络框架。我们的前端客户端将向我们的Rocket程序发送HTTP请求。当Rocket调用我们的代码时，我们将使用数据库访问层来读取或写入数据库。REST API代码会将数据整理成适当的格式（JSON），然后再将其返回给客户端。） ---顶层、前端即提供给用户的Web UI(它在Web浏览器中作为WebAssembly（JavaScript）运行。我们将使用Seed框架将Rust代码编译为WebAssembly应用，然后将其加载到浏览器中)
+
+* 环境安装
+
+* 设置ORM和数据库：*可以*只对数据库进行原始查询，然后将数据临时整理为应用程序将使用的类型，但这很复杂且容易出错，[Diesel](https://diesel.rs/)是Rust的ORM，它为我们提供了一种类型安全的方式来与数据库进行交互；此外，`diesel_cli` tool让我们更好的manage项目
+
+* 编写第一次迁移
+
+  * generate the skeleton: 生成migrations文件夹，其下有up和down.sql两个文件，其中分别含有create和delete  table的代码
+
+* 创建数据库访问层：在Diesel代码周围编写一组精简包装并将其作为模块公开
+
+  主要结构：db文件夹：models.rs,schema.rs,mod.rs
+
+  * 在数据库中插入一条记录
+  * Create a Development Tool（主要用来测试之类）：在与db文件夹同级的bin文件夹下创建todo.rs,通过`cargo run --bin todo new 'do the thing'`等命令行命令读取指令并对数据库进行相应操作(用到了db文件夹下写的接口)
+  * Querying tasks:查询数据库的接口，也实现在db里面
+
+* Create a REST API Layer
+
+  * 创建bin/backend.rs
+  * 使用Rocket来mount "/tasks",在有网址访问请求时，通过backend.rs查询数据库并将数据返回到浏览器
+  * Serializing to JSON：将数据以json格式返回到浏览器
+
+  更多？数据库连接池（参见Rocket文档）
+
+* 创建基于浏览器的前端UI:基于seed,通过将Rust代码交叉编译到WebAssembly（wasm），我们将在浏览器中运行它
+
+  * 采取 backend 和 frontend两个library crate, 然后交互部分写在root crate
+
+  * 安装wasm工具链
+
+  * cargo make：通过在root crate下的Makefile.toml以及frontend下的Makefile.toml实现对前端后端两个crate的一次性编译
+
+    * With all that in place, now just running `cargo make` in the root will give us:
+      * backend library and binaries under target/debug
+      * browser-loadable web assembly package in frontend/pkg/package_bg.wasm
+
+  * Behind the scenes:
+
+    * The way our frontend app is going to work:
+      * we write some Rust
+      * wasm-pack generates some files
+        * the .wasm file is a WebAssembly binary
+        * the .js file is a JavaScript loader that will pull in the wasm, and it acts as the gatekeeper between JavaScript and Rust
+        * package.json has some metadata in case we want to integrate with npm and friends
+      * we write an html stub file, that loads the .js, which loads the .wasm
+      * our app attaches itself to a DOM element in the html file
+      * the browser shows our app's UI elements
+      * our users rejoice
+
+  * Create a Stub App
+
+    Let's walk through this starting from the bottom. Everything kicks off with our `render` function because we added the `start` attribute to the `#[wasm_bindgen]` macro. This sets things up so that our function is called as soon as the module is loaded.
+
+    This function creates a seed app, passing in our init, update, and view functions, and then launches the app.
+
+    我们的init函数首先被调用，它负责使用应用程序从其开始的url路径进行任何操作（我们在此不进行处理-本指南中根本不处理任何路由）。然后，它需要创建并返回一个模型，该模型将存储应用程序的状态
+
+    our view function takes the model and returns a DOM node. Here we're simply matching on coming or going and setting an appropriate greeting in our  <h1>. Seed provides macros for all valid HTML5 tags, and as you can see in the xample it also has macros for things like class and style.
+
+    您还可以在这里看到我们如何附加了一个简单的事件处理程序：只要在h1上发生单击（由于样式，它就是视口的整个大小），它将向我们的update函数发送点击消息。
+
+    ```rust
+    fn fetch_drills() -> impl Future<Item = Msg, Error = Msg> {
+        Request::new("http://localhost:8000/tasks/").fetch_json_data(Msg::FetchedTasks)
+    }
+    
+    fn init(_url: Url, orders: &mut impl Orders<Msg>) -> Model {
+        orders.perform_cmd(fetch_drills());
+        Model {
+            direction: Direction::Coming,
+        }
+    }
+    ```
+
+    orders provides a mechanism for us to be able to add messages or futures to a queue. We can send multiple messages or futures and they will be performed in the order that we call the functions, with futures being scheduled after the model update.
+
+    fetch_drill()函数：Since we want to fetch our tasks, we create a future using the Requests struct, which is seed's wrapper around the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch). We create a new request for a hard-coded (gasp!) url, and then call its `fetch_json_data` method which returns a Future. This future will create the Msg we provided, which will then get pumped into our `update` function when the request completes (or fails).当request成功或失败，都会把Msg参数传入update函数
+
+    所以还需构造新的Msg：enum Msg {    FetchedTasks(fetch::ResponseDataResult<JsonApiResponse>), }
+
+    另外，涉及到对于backend里内容的调用，但后端引入了甚至无法为wasm构建的依赖项，并且第二个原因实际上是相同的：我们不想被迫建立那些额外的依赖项
+
+    所以考虑在root crate中定义需要在前后端同时用到的结构，并将root crate同时引入前后端的Cargo.toml:   mytodo = { path = ".." }
+
+    ```rust
+    #[derive(Clone, Debug, Deserialize, Serialize)]
+    pub struct Task {//与db文件夹下的Task区分开，这个是为了能把数据传到前端而重建的一个结构体
+        pub id: i32,
+        pub title: String,
+    }
+    
+    #[derive(Clone, Debug, Deserialize, Serialize)]
+    pub struct JsonApiResponse {
+        pub data: Vec<Task>,
+    }
+    ```
+
+    最后完善updata函数里对Msg的处理:If we get an Ok then the fetch has succeeded and we should update the model so we can render the tasks in the DOM.
+
+  * Displaying the Tasks:完善view函数
+  * Adding CORS Support in the Backend：**跨域资源共享**（[CORS](https://developer.mozilla.org/en-US/docs/Glossary/CORS)）是一种机制，它使用附加的[HTTP](https://developer.mozilla.org/en-US/docs/Glossary/HTTP)标头来告诉浏览器以使Web应用程序在一个[来源](https://developer.mozilla.org/en-US/docs/Glossary/origin)运行，并从另一个[来源](https://developer.mozilla.org/en-US/docs/Glossary/origin)访问选定的资源。Web应用程序请求其来源（域，协议或端口）不同的资源时，将执行跨域HTTP请求
+
+  报错：type mismatch resolving 
+
+  ```rust
+  for<'r> <for<'s> fn(seed::Url, &'s mut seed::orders::OrdersContainer<Msg, _, _>) -> Model{
+      init::<seed::orders::OrdersContainer<Msg, _, _>>
+  }
+  as std::ops::FnOnce<(seed::Url, &'r mut seed::orders::OrdersContainer<Msg, _, _>)>>::Output == seed::prelude::Init<_>
+  ```
+
+  
+
+  for<'r> <for<'s> fn(seed::Url, &'s mut seed::orders::OrdersContainer<Msg, _, _>) -> Model {init::<seed::orders::OrdersContainer<Msg, _, _>>} as std::ops::FnOnce<(seed::Url, &'r mut seed::orders::OrdersContainer<Msg, _, _>)>>::Output == seed::prelude::Init<_>`
+
+
+
+
+
 ### Seed教程：
 
 #### APP1:Counter
@@ -1590,7 +1726,7 @@ button![
 * Persistence(使用localStorage来persist data：If the framework has capabilities for persisting data (e.g. Backbone.sync), use that. Otherwise, use vanilla localStorage.)；
 * Routing：包含all，active，completed三种状态，当选定一个状态时（此时网页url也会改变），会filter todos，隐藏不需要显示的todos，而且会动态更新(即输入新的todo，那么all和active里均会立即出现)
 
-Model设计：Model结构体是对整个页面元素的设计；Todo结构体则是对一个待办事项元素的设计
+**Model设计**：Model结构体是对整个页面元素的设计；Todo结构体则是对一个待办事项元素的设计
 
 ```rust
 struct Model {
@@ -1626,7 +1762,7 @@ enum Filter {
 
 
 
-Msg设计:对于设计好的Model，根据项目的功能需求，设置相应的Msg项
+**Msg设计**:对于设计好的Model，根据项目的功能需求，设置相应的Msg项
 
 ```rust
 enum Msg {
@@ -1652,9 +1788,9 @@ enum Msg {
 }
 ```
 
-Project Setup:设计好了Model和Msg就可以creating project了：update和view应该是一边写一边验证，快速找问题并解决
+**Project Setup:**设计好了Model和Msg就可以creating project了：update和view应该是一边写一边验证，快速找问题并解决
 
-View函数实现:把大的view函数拆分成几个部分(而且实际上就是用seed宏来替代html文件罢了)，此外就是需要注意具体实现了，比如view返回值为Vec<Node<Msg>> 还是Node<Msg>，以及其内部实现的写法，可通过seed crate查询其宏，大部分能直接与html对应上；
+**View函数实现**:把大的view函数拆分成几个部分(而且实际上就是用seed宏来替代html文件罢了)，此外就是需要注意具体实现了，比如view返回值为Vec<Node<Msg>> 还是Node<Msg>，以及其内部实现的写法，可通过seed crate查询其宏，大部分能直接与html对应上；
 
 ​	此外就是Model的值也是会在这里用到，其数据就是我们需要呈现在前端的相关信息；
 
@@ -1664,4 +1800,149 @@ However it causes compilation errors because the root `vec![...]` expects only `
 
 主要疑问:1. filter那一块的实现；2.新输入的todo项的更新
 
-Update函数的实现:主要就是匹配Msg然后做出不同的修改，此外引发事件的按钮等需要在view函数里相应实现
+
+
+**Update函数的实现**:主要就是匹配Msg然后做出不同的修改，此外引发事件的按钮（button,keyenter，Ev::Blur）等需要在view函数里相应实现
+
+`orders.after_next_render` registers a callback that is invoked after the next `view` invocation
+
+`input_element.get()` returns `Option` where `E` is a specific DOM element reference like `web_sys::HtmlInputElement`. It returns `None` when the element doesn't exists in the DOM or has an incompatible type => all [ElRef](https://github.com/seed-rs/seed/blob/0a538f03d6aeb56b00d997c80a666e388279a727/src/virtual_dom/el_ref.rs) methods are safe to use.
+
+
+
+
+
+**LocalStorage**
+
+We need a new dependency [serde](https://crates.io/crates/serde) to **ser**ialize and **de**serialize todos to/from JSON because we can store only JSON strings in `LocalStorage`.
+
+这个类似于在本地存储todos，在同一浏览器不同页面加载该网页时，数据仍在
+
+
+
+**Routing**:
+
+* view函数里需根据filter值的不同而显示不同的todos等
+
+* url
+
+  ```rust
+  let filter = match url.next_hash_path_part(){
+          Some("active") => Filter::Active,
+          Some("completed") => Filter::Completed,
+          _ => Filter::All,
+      };
+  ```
+
+  when you call `url.next_hash_path_part()`:
+
+  1. The *path part* (item in `hash_path`) at the position `next_hash_path_part_index` is returned (or `None`)
+  2. `next_hash_path_part_index` is incremented.
+
+* `remaining_hash_path_parts()` returns `vec!["active", "foo", "bar"]` for url `/#/active/foo/bar` if you haven't called `url.next_hash_path_part()` before (i.e. if "iterator" starts from 0).
+
+* Subscriptions：Keep in mind there is no magic - `subscribe`, `stream`, `notify`, `UrlChanged`, etc. work the same - Seed or user creates a *notification* (basically any item) and Seed's or user's *subscriptions* (closures) handle it.
+* Handle UrlChanged:
+
+
+
+**Link Building**:
+
+* const path parts
+
+* Standard link building
+
+  ```rust
+  // ----------------- A) -----------------
+  
+  fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
+      ...
+      Model {
+          base_url: url.to_hash_base_url(),
+          ...
+          filter: Filter::from(url),
+      }
+  }
+  ```
+
+  `Url` method `to_hash_base_url()` deletes all path parts with index >= `next_hash_path_part_index` in the cloned url. In our case it removes all path parts because `next_hash_path_part_index` is always set to 0 in `url` in `init`.
+
+  ```rust
+  // ----------------- B) -----------------
+  
+  struct Model {
+      base_url: Url,
+      ...
+      filter: Filter,
+  }
+  ```
+
+  ```rust
+  // ----------------- C) -----------------
+  
+  // ------ ------
+  //     Urls
+  // ------ ------
+  
+  struct_urls!();
+  impl<'a> Urls<'a> {
+      pub fn home(self) -> Url {
+          self.base_url()
+      }
+      pub fn active(self) -> Url {
+          self.base_url().add_hash_path_part(ACTIVE)
+      }
+      pub fn completed(self) -> Url {
+          self.base_url().add_hash_path_part(COMPLETED)
+      }
+  }
+  ```
+
+  ```rust
+  // ----------------- D) -----------------
+  
+  fn view(model: &Model) -> Vec<Node<Msg>> {
+      ...
+              view_footer(&model.todos, model.filter, &model.base_url),
+  ...
+  
+  fn view_footer(todos: &BTreeMap<Ulid, Todo>, selected_filter: Filter, base_url: &Url) -> Node<Msg> {
+      ...
+          view_filters(selected_filter, base_url),
+  ```
+
+  ```rust
+  // ----------------- E) -----------------
+  
+  fn view_filters(selected_filter: Filter, base_url: &Url) -> Node<Msg> {
+      ul![C!["filters"],
+          Filter::iter().map(|filter| {
+              let urls = Urls::new(base_url);
+  
+              let (url, title) = match filter {
+                  Filter::All => (urls.home(), "All"),
+                  Filter::Active => (urls.active(), "Active"),
+                  Filter::Completed => (urls.completed(), "Completed"),
+              };
+  
+              li![
+                  a![C![IF!(filter == selected_filter => "selected")],
+                      attrs!{At::Href => url},
+                      title,
+                  ],
+              ]
+  .
+  ```
+
+* struct_urls!
+
+Seed app blocks should be in this order:
+
+1. `Init`
+2. `Model`
+3. `Urls` (optional)
+4. `Update`
+5. `View`
+6. `Start`
+7. `Exported` (optional, Rust functions available in JS/TS)
+8. `Extern` (optional, JS items used in Rust)
