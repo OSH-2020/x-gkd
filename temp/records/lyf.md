@@ -1326,6 +1326,12 @@ let path:Path = *shardsFolder.join(Path::new(&(fid * 100 +i).to_string())).as_pa
   > This module only currently provides one bit of information, [`readonly`](https://doc.rust-lang.org/std/fs/struct.Permissions.html#method.readonly), which is exposed on all currently supported platforms. Unix-specific functionality, such as mode bits, is available through the [`PermissionsExt`](https://doc.rust-lang.org/std/os/unix/fs/trait.PermissionsExt.html) trait.
 
   目前在windows上只实现了查看文件权限是否为只读
+  
+- 多客户端（目前只尝试了双客户端）
+
+  注意客户端、服务端最好都在命令行中运行，不要用VScode。使用VScode可能出现一个client传文件后，另一客户端阻塞的情况。
+
+  目前双客户端是可以运行成功的，两个文件碎片一个客户端传一个
 
 # V 进度记录
 
@@ -1810,6 +1816,15 @@ client、server各有main，做成两个包这样，然后直接cargo run
 3. request表的问题 -> 已解决
 
 4. tmp文件夹没有自动清空
+
+**7.7**
+
+剩余问题：
+
+1. 三个及以上客户端没试过，多文件夹扫描没试过
+2. 有些前端才会涉及的函数没试 比如 decoder、dataconnect收到报文3
+3. userregister userlogin函数
+4. 
 
 ### seed
 
