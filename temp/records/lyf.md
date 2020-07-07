@@ -1824,10 +1824,28 @@ client、server各有main，做成两个包这样，然后直接cargo run
 1. 三个及以上客户端没试过，多文件夹扫描没试过
 2. 有些前端才会涉及的函数没试 比如 decoder、dataconnect收到报文3
 3. userregister userlogin函数
-4. 
+4. 调试decoder
+
+**多客户端遇到的问题**
+
+1. 关于client过一段时间心跳连接中止的问题
+
+- 心跳连接中止后，folderscanner仍正常运行，一分钟一次输出（scanfile clearfolder）
+- 在心跳连接中止后，在server的命令行窗口中ctrl+c，竟然恢复了心跳连接
+- server_test.exe线程数5，client_test.exe线程数3（test1）
+- server_test.exe线程数7，后又变为5，client_test.exe线程数3（test2）
+
+2. 传多个小文件
+
+   一个client收到了全部的文件碎片，一个client在接到第一个碎片时在read_exac处panic出unexpectedeof
+
+   随后panic的客户端心跳连接也终止，另一客户端正常运行
+
+
 
 ### seed
 
 node.js的防火墙权限局限在了专用网络
 
 将zhihui-home改为专用网络了
+

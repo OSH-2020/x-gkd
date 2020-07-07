@@ -50,7 +50,8 @@ pub fn send_file(mut f: File, mut soc_out: &TcpStream)->bool{
     let length = f.metadata().unwrap().len();
 
     //soc_out.write(b(format!("{:08}", length)));
-    soc_out.write(&length.to_be_bytes()).unwrap();
+    let send_length = soc_out.write(&length.to_be_bytes()).unwrap();
+    println!("send_file--发送的length应为8bytes，实际发送:{}bytes",send_length);
     soc_out.flush();
 
     loop {

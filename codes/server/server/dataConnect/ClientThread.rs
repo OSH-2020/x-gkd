@@ -6,6 +6,7 @@ use chrono::Local;
 use rand::Rng;
 use std::path::PathBuf;
 use std::fs::File;
+use std::path::Path;
 
 use super::super::database::Query::Query;
 use super::super::database::Query::FileItem;
@@ -122,16 +123,23 @@ impl ClientThread{
             status = false;
         }
         else{
-            let mut s: String = self.upload_folder_path.into_os_string().into_string().unwrap();
-            s.push_str(&fid.to_string());
-            let send_file = File::open(s);
+            let mut s = PathBuf::new();
+            s.push(self.upload_folder_path);
+            //let mut s: PathBuf = self.upload_folder_path.into_os_string().into_string().unwrap();
+            s.push(&fid.to_string());
+            //let mut s: String = self.upload_folder_path.into_os_string().into_string().unwrap();
+            //s.push_str(&fid.to_string());
+            let send_file = File::open(&s);
+            //test
+            println!("send_file_path:{}",s.clone().as_path().display());
+            
             match send_file{
                 Err(e) => {
                     status = false;
                     query.deleteRequest(request.get_id());
                 },
                 Ok(file) =>{
-                  
+                    
                     status = super::FileTransporter::send_file(file, &self.client_socket);
                     if status{
                         let mut in_from_cilent = BufReader::new(self.client_socket);
