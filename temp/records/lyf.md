@@ -1769,17 +1769,47 @@ client、server各有main，做成两个包这样，然后直接cargo run
 
    -> 解决了由于SQL语句不正确导致的错误（ISONLINE or IS_ONLINE）
 
-2. 发现mysql中的alterDevice会失败 
+2. **发现mysql中的alterDevice会失败** 
 
    IP地址127.0.0.1失败，IP为char(20)，但似乎只能出现一个点 .
 
 3. client和server的filetransporter相同，send_file方法会传多（eg.10字节文件传了1024字节）
 
+   -> 解决：f.write(&send_bytes[0..readlen])
+
 4. filetransporter的recvfile和sendfile有一个互相的约定，先传一个long型的filelength，之前认为是server端与encode的文件单方面的约定，其实不是。
 
    目前send_file并没有先write4字节的file length
 
-5. 
+**7.6**
+
+1. 传的文件大小 4字节or8字节？
+
+   recvfile和sendfile统一为8字节
+
+2. filetransporter的sendfile和recvfile无EOF，导致read_to_end阻塞
+
+   原java代码所用函数可以指定读取的字节数，故无此问题，但rust没有对应的方法
+
+   -> 解决：利用read模仿实现类似方法，并解决了传输字节问题
+
+   ```rust
+   while toread > 0{
+           //soc_in.read_exact(&mut send_bytes).unwrap();
+           //toread = toread - 1024;
+           let readlen = soc_in.read(&mut send_bytes).unwrap();
+           toread = toread - readlen as i64;
+   
+           f.write(&send_bytes[0..readlen]).unwrap();//test
+           f.flush();
+       }
+   ```
+
+   注：EOF在tcpstream中很难解决，通常方法是：先传输文件大小，然后传文件内容，最后可选择以特殊字符串标志结束。本次采用的是利用文件大小约束read
+
+3. request表的问题 -> 已解决
+
+4. tmp文件夹没有自动清空
 
 ### seed
 

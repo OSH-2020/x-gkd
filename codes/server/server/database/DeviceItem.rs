@@ -24,10 +24,14 @@ impl DeviceItem {
     pub fn get_ip(&mut self) -> String {
         let chars: Vec<char> = self.ip.chars().collect();
         let mut string = String::new();
+        //string.push('"');
         for c in chars {
             string.push(c);
         }
+        //string.push('"');
+        //println!("string:{}",string);
         string //返回有问题
+        
     }
 
     pub fn set_ip(&mut self, ip: String) {

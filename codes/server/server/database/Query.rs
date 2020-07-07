@@ -577,11 +577,11 @@ impl Query{
     }
 
     pub fn alterDevice(&self, mut device:DeviceItem) -> i32{
-        println!("enter alterDevice");//note:by lyf
-        println!("device:ip={},port={},rs={},id={}",device.get_ip(),device.get_port(),device.get_rs(),device.get_id());
+        //println!("enter alterDevice");//note:by lyf
+        //println!("device:ip={},port={},rs={},id={}",device.get_ip(),device.get_port(),device.get_rs(),device.get_id());
         let mut suc:i32 = -1;
         if device.is_online(){
-            for mut stmt in self.pool.prepare(r"UPDATE DFS.DEVICE SET IP=:ip',PORT=:port,ISONLINE=true,
+            for mut stmt in self.pool.prepare("UPDATE DFS.DEVICE SET IP=:ip,PORT=:port,ISONLINE=true,
             RS=:rs WHERE id=:id;").into_iter() {
                 let res = stmt.execute(params!{
                     "ip" => device.get_ip(),
@@ -589,7 +589,12 @@ impl Query{
                     "rs" => device.get_rs(),
                     "id" => device.get_id()
                 });
+                suc = match res{
+                    Ok(_) => 1,
+                    Err(_) => -1
+                };
             }
+            
         } else {
             for mut stmt in self.pool.prepare(r"UPDATE DFS.DEVICE SET IP=:ip,PORT=:port,ISONLINE=false,
             RS=:rs WHERE id=:id;").into_iter() {
@@ -598,12 +603,13 @@ impl Query{
                     "port" => device.get_port(),
                     "rs" => device.get_rs(),
                     "id" => device.get_id()
-                });   
+                });    
                 suc = match res{
                     Ok(_) => 1,
                     Err(_) => -1
-                };
+                };   
             }
+            
         }       
         return suc;
     }

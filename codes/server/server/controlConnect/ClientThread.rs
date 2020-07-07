@@ -21,7 +21,7 @@ impl ClientThread{
     }
 
     fn readsentence(&mut self, sentence:&String) -> i32{
-        println!("control Connect - ClientThread :sentence:{}",sentence);
+        //println!("control Connect - ClientThread :sentence:{}",sentence);
         let mut first_char = sentence.chars().next();
         match first_char {
             None => return 0,
@@ -35,13 +35,13 @@ impl ClientThread{
                         self.client_socket.flush();
                         return 0;
                     }
-                    println!("controlconnect--clientthread--准备修改device");
+                    //println!("controlconnect--clientthread--准备修改device");
                     let client_addr = self.client_socket.peer_addr().unwrap();
                     let port = client_addr.port();
                     let rs: i32 = s[2].trim().parse().unwrap();
                     let ip = client_addr.ip();
 
-                    println!("controlconnect--queryDevice所用的id：{}",id);
+                    //println!("controlconnect--queryDevice所用的id：{}",id);
                     let query = Query::new();
                     let mut deviceitem = query.queryDevice(id);
 
@@ -54,7 +54,7 @@ impl ClientThread{
                         println!("alterDevice fail");
                     }
 
-                    println!("controlconnect--queryrequestnumber_byid所用id:{}",id);
+                    //println!("controlconnect--queryrequestnumber_byid所用id:{}",id);
                     self.client_socket.write_fmt(format_args!("received with {} unread request!\n", query.queryRequestNumbers_Byid(id)));
                     self.client_socket.flush();
                     //query.closeConnection();
@@ -91,15 +91,15 @@ impl ClientThread{
         //clientsocket.setSoTimeout(60000);
         let stream_clone = self.client_socket.try_clone().expect("clone failed...");
         let mut in_from_client = BufReader::new(stream_clone);
-        println!("control Connect - ClientThread :before loop!/n");
+        //println!("control Connect - ClientThread :before loop!/n");
         loop{
             let mut sentence = String::new();
             sentence.clear();
             in_from_client.read_line(&mut sentence).unwrap();
-            println!("control Connect - ClientThread ：after read line!\n");
+            //println!("control Connect - ClientThread ：after read line!\n");
             if self.readsentence(&sentence) == 0 {
                 break;
-                println!("control Connect - ClientThread ：sentence：{}，break\n",sentence);
+                //println!("control Connect - ClientThread ：sentence：{}，break\n",sentence);
             }
             println!("C-RECV: {}", sentence);
         }

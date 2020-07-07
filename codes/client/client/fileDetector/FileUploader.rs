@@ -1,4 +1,3 @@
-use lazy_static;
 
 use std::path::PathBuf;
 use std::net::TcpStream;

@@ -110,9 +110,9 @@ impl Encoder{
             file.write(&shards[i]).unwrap();
             file.flush().unwrap();
             println!("shards[{}]:{:?}",i,&shards[i]);
-            let mut perms = file.metadata().unwrap().permissions();
-            perms.set_readonly(true);
-            file.set_permissions(perms).unwrap();
+            // let mut perms = file.metadata().unwrap().permissions();
+            // perms.set_readonly(true);
+            // file.set_permissions(perms).unwrap();
         }
 
         println!("Encode Success");
