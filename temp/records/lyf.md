@@ -1822,8 +1822,13 @@ client、server各有main，做成两个包这样，然后直接cargo run
 剩余问题：
 
 1. 三个及以上客户端没试过，多文件夹扫描没试过
+
+   三客户端测试成功，多文件扫描成功
+
 2. 有些前端才会涉及的函数没试 比如 decoder、dataconnect收到报文3
+
 3. userregister userlogin函数
+
 4. 调试decoder
 
 **多客户端遇到的问题**
