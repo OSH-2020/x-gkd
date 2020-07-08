@@ -4,6 +4,7 @@ use std::io::BufReader;
 use std::io::BufRead;
 use std::io::prelude::*;
 use std::convert::TryInto;
+use std::time::Duration;
 
 use super::super::database::Query::Query;
 
@@ -86,9 +87,8 @@ impl ClientThread{
 
     pub fn run(&mut self){
         println!("start!");
-        //以下两行未实现：（推测为心跳机制保持连接功能）
-        //clientsocket.setKeepAlive(true);
-        //clientsocket.setSoTimeout(60000);
+        self.client_socket.set_read_timeout(Some(Duration::new(60, 0))).expect("set_read_timeout call failed");
+        self.client_socket.set_write_timeout(Some(Duration::new(60, 0))).expect("set_read_timeout call failed");
         let stream_clone = self.client_socket.try_clone().expect("clone failed...");
         let mut in_from_client = BufReader::new(stream_clone);
         //println!("control Connect - ClientThread :before loop!/n");

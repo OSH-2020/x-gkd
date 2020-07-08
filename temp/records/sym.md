@@ -625,7 +625,22 @@ server
    +----+-----------+------+----------+------+
    1 row in set (0.01 sec)
 
+10. 有时候会 panic，可能是断开了连接，加了错误处理：如果断开之后，就返回错误，重新建立连接，再发送文件
 
+    ![image-20200708210525431](C:\Users\sym\AppData\Roaming\Typora\typora-user-images\image-20200708210525431.png)
+
+11. java 中 setSoTimeout(5000); 是表示如果对方连接状态5秒没有收到数据的话强制断开客户端。
+
+    rust 中找到 set_write_timeout 和 set_write_timeout，函数原型是：
+
+    pub fn set_write_timeout(&self, dur: Option<Duration>) -> Result<()>
+
+    Duration：let five_seconds = Duration::new(5, 0); 每个持续时间由整数秒和以纳秒表示的小数部分组成。
+
+12. keepalive 不是说TCP的长连接，当我们作为服务端，一个客户端连接上来，如果设置了keeplive为 true，当对方没有发送任何数据过来，超过一个时间(看系统内核参数配置)，那么我们这边会发送一个ack探测包发到对方，探测双方的TCP/IP连接是否有效(对方可能断点，断网)。
+    如果不设置，那么客户端宕机时，服务器永远也不知道客户端宕机了，仍然保存这个失效的连接。
+
+13. 测试3个客户端同时运行成功了，一个客户端检测两个文件夹成功了，可以传6M大小图片，decode成功
 
 ## 调用关系图：
 

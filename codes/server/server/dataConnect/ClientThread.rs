@@ -7,6 +7,7 @@ use rand::Rng;
 use std::path::PathBuf;
 use std::fs::File;
 use std::path::Path;
+use std::time::Duration;
 
 use super::super::database::Query::Query;
 use super::super::database::Query::FileItem;
@@ -45,9 +46,8 @@ impl ClientThread{
     pub fn run(mut self){
         let mut status:bool = false;
         println!("start!");
-        //这两行java代码未对应实现
-        //clientsocket.setKeepAlive(true);
-        //clientsocket.setSoTimeout(5000);
+        self.client_socket.set_read_timeout(Some(Duration::new(5, 0))).expect("set_read_timeout call failed");
+        self.client_socket.set_write_timeout(Some(Duration::new(5, 0))).expect("set_read_timeout call failed");
         let in_from_client = self.client_socket.try_clone().expect("clone failed...");
         let mut in_from_client = BufReader::new(in_from_client);
         self.sentence.clear();

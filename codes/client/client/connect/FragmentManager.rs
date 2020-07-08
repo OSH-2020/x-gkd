@@ -13,6 +13,7 @@ use std::path::Path;
 use std::path::PathBuf;
 //use std::option::NoneError;
 use std::option::Option;
+use std::time::Duration;
 
 
 //note:by lyf
@@ -69,6 +70,8 @@ impl FragmentManager {
             return false;
         }
         if let Ok(connect_socket) = TcpStream::connect((&self.serverIP[..], self.serverPort as u16)) {
+            connect_socket.set_read_timeout(Some(Duration::new(5, 0))).expect("set_read_timeout call failed");
+            connect_socket.set_write_timeout(Some(Duration::new(5, 0))).expect("set_read_timeout call failed");
             self.toServer = Some(connect_socket);//忽略了setKeepAlieve和setsoTimeout，未找到rust中对应的长连接和超时连接的处理函数
             match &mut self.toServer {
                 None => println!("Error"),
