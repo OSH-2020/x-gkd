@@ -6,6 +6,7 @@ use std::io::prelude::*;
 use std::fs::read_to_string;
 use std::fs::File;
 use std::io::BufReader;
+use std::time::Duration;
 
 use super::FileAttrs::FileAttrs;
 
@@ -223,6 +224,8 @@ impl FileUploader {
             return false;
         }
         if let Ok(connect_socket) = TcpStream::connect((&self.serverIP[..], self.server_port)) {
+            connect_socket.set_read_timeout(Some(Duration::new(5, 0))).expect("set_read_timeout call failed");
+            connect_socket.set_write_timeout(Some(Duration::new(5, 0))).expect("set_read_timeout call failed");
             self.to_server = Some(connect_socket);
             println!("Connect to server successfully(control)!");
             self.connecting = true;
