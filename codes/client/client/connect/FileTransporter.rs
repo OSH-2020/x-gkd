@@ -7,7 +7,10 @@ pub fn recv_file(mut f: File, mut soc_in: &TcpStream)->bool{
     //原java文件中socout这个参数并没有用到，此处删去
     //手动实现读取一个long类型的数据
     let mut buffer = [0; 8];
-    soc_in.read_exact(&mut buffer).unwrap();
+    let size = soc_in.read_exact(&mut buffer);
+    if let Err(e) = size {
+        return false;
+    }
     //Java 数据传输都是big endian，此处也默认读到数据是big endian
     //from_bytes is a nightly-only experimental API.
     //let file_length = i64::from_bytes(buffer);

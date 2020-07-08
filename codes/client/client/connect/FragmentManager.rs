@@ -160,8 +160,9 @@ impl FragmentManager {
         s.push_str(&self.fragmentID.to_string());
         let mut path = Path::new(&s);
         //可能会根据运行平台的不同添加/,分为posix和windows
-        let mut f = File::create(path).unwrap();
+        let mut f = File::create(&path).unwrap();
         //remove_file(path);
+        println!("receive fragment");
         match &mut self.toServer {
             None => println!("Error"),
             Some(socket) => {
@@ -174,7 +175,18 @@ impl FragmentManager {
                     println!("recvfragment success");
                     return true;
                 }else {
-                    return false;
+                    //return false;
+                    println!("!!recv failed");
+                    let mut f2 = File::create(path).unwrap();
+                    let socket2 = socket.try_clone().expect("clone failed");
+                    if (super::FileTransporter::recv_file(f2, &socket2)){
+                        socket.write_fmt(format_args!("received!\n"));
+                        socket.flush();
+                        println!("recvfragment success");
+                        return true;
+                    } else {
+                        return false;
+                    }
                 }
 
             }
