@@ -661,10 +661,12 @@ server
    6668
    1
 
-   D:\\\mine\\\homework\\\file\\\fragment
-   D:\\\mine\\\homework\\\file\\\tmp
+   
+
+   D:\mine\homework\file\fragment
+   D:\mine\homework\file\tmp
    1
-   D:\\\mine\\\homework\\\file\\\file1
+   D:\mine\homework\file\file1
    TIM
 
 3. Query.rs 的文件中需要修改自己的 mysql 密码（xxxx处）
@@ -1098,4 +1100,21 @@ server
 ## Browser-based frontend UI
 
 seed
+
+# Rocket
+
+## Overview
+
+- dynamic params <name>
+- FromData: automatically attempt to parse the request body into the `Form` and call the function
+- request guards: ApiKey
+- responder: return type must implement responder
+- launching: mount launch
+- 3-steps: validation, processing, response
+
+## QuickStart
+
+
+
+Requests
 
