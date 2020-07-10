@@ -82,7 +82,7 @@ impl ClientThread{
         let mut status:bool = true;
         let command:Vec<&str> = self.sentence[..].split(' ').collect();
         let id:i32 = command[1].parse().unwrap();
-        let fid:i32 = command[2].parse().unwrap();
+        let fid:i32 = command[2].trim().parse().unwrap();
 
         let query = Query::new();
         let mut request = query.queryRequest_Byid(id);
@@ -223,7 +223,7 @@ impl ClientThread{
 
     pub fn register_file(&mut self)->bool{
         let command:Vec<&str> = self.sentence[..].split(' ').collect();
-        let noa:i32 = command[5].parse().unwrap();
+        let noa:i32 = command[5].trim().parse().unwrap();
         let isf:bool = command[6].trim().parse().unwrap();
 
         let query = Query::new();
