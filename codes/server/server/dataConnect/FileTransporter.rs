@@ -7,7 +7,11 @@ pub fn recv_file(mut f: File, mut soc_in: &TcpStream)->bool{
     //原java文件中socout这个参数并没有用到，此处删去
     //手动实现读取一个long类型的数据
     let mut buffer = [0; 8];
-    soc_in.read_exact(&mut buffer).unwrap();
+    //soc_in.read_exact(&mut buffer).unwrap();
+    let size = soc_in.read_exact(&mut buffer);
+    if let Err(e) = size {
+        return false;
+    }
     //Java 数据传输都是big endian，此处也默认读到数据是big endian
     //from_bytes is a nightly-only experimental API.
     //let file_length = i64::from_bytes(buffer);
@@ -20,7 +24,7 @@ pub fn recv_file(mut f: File, mut soc_in: &TcpStream)->bool{
     let mut toread:i64 = file_length;
     let mut send_bytes = [0; 1024];
 
-    println!("file_length:{}",file_length);
+    //println!("file_length:{}",file_length);
 
 
     while toread > 1024{
@@ -42,7 +46,7 @@ pub fn recv_file(mut f: File, mut soc_in: &TcpStream)->bool{
     //println!("after read_to_end");
     //f.write(&file_end).unwrap();//test
     //f.flush();
-    println!("recv_file success");
+    //println!("recv_file success");
     //没有再创建FileOutputStream对象，这里不需要关闭什么
     return true
 }//TODO:err handle
@@ -53,10 +57,13 @@ pub fn send_file(mut f: File, mut soc_out: &TcpStream)->bool{
 
     let length = f.metadata().unwrap().len();
 
-    let send_length = soc_out.write(&length.to_be_bytes()).unwrap();
+    let send_length = soc_out.write(&length.to_be_bytes());
+    if let Err(e) = send_length {
+        return false;
+    }
     soc_out.flush();
     //test
-    println!("send_file--发送的length应为8bytes，实际发送:{}bytes",send_length);
+    //println!("send_file--发送的length应为8bytes，实际发送:{}bytes",send_length);
     println!("filelength:{}",length);
 
     let mut file_toread = length;

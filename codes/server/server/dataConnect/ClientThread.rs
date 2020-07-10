@@ -45,7 +45,7 @@ impl ClientThread{
 
     pub fn run(mut self){
         let mut status:bool = false;
-        println!("start!");
+        //println!("start!");
         self.client_socket.set_read_timeout(Some(Duration::new(5, 0))).expect("set_read_timeout call failed");
         self.client_socket.set_write_timeout(Some(Duration::new(5, 0))).expect("set_read_timeout call failed");
         let in_from_client = self.client_socket.try_clone().expect("clone failed...");
@@ -145,7 +145,7 @@ impl ClientThread{
                         let mut in_from_cilent = BufReader::new(self.client_socket);
                         let mut sentence = String::new();
                         in_from_cilent.read_line(&mut sentence).unwrap();
-                        println!("sentence after send file:{}",sentence);
+                        //println!("sentence after send file:{}",sentence);
                         let re = vec!['r', 'e', 'c', 'e', 'i', 'v', 'e', 'd', '!','\n'];
                         let mut n: usize = 0;
                         for sen in sentence.chars() {
@@ -160,6 +160,33 @@ impl ClientThread{
                             };
                             //query.alterFragment(fid, Integer.toString(request.getDeviceId()));
                             query.alterFragment(fid, request.get_device_id().to_string());
+                        }
+                    } else {
+                        println!("!!send error");
+                        let mut f2 = File::open(&s).unwrap();
+                        let socket2 = self.client_socket.try_clone().expect("clone failed");
+                        if(super::FileTransporter::send_file(f2, &socket2)) {
+                            let mut in_from_cilent = BufReader::new(socket2);
+                            let mut sentence = String::new();
+                            in_from_cilent.read_line(&mut sentence).unwrap();
+                            //println!("sentence after send file:{}",sentence);
+                            let re = vec!['r', 'e', 'c', 'e', 'i', 'v', 'e', 'd', '!','\n'];
+                            let mut n: usize = 0;
+                            for sen in sentence.chars() {
+                                if sen != re[n] {break;}
+                                else {n = n + 1;}
+                            }
+                            //println!("n={},re,len={}",n,re.len());
+                            if n == re.len() {
+                                //sendFile.delete();
+                                if query.deleteRequest(request.get_id()) == -1{
+                                    println!("deleteRequest fail!");
+                                };
+                                //query.alterFragment(fid, Integer.toString(request.getDeviceId()));
+                                query.alterFragment(fid, request.get_device_id().to_string());
+                            }
+                        } else {
+                            println!("send file failed again");
                         }
                     }
                 }
@@ -239,7 +266,7 @@ impl ClientThread{
             let mut s1: String = self.upload_folder_path.clone().into_os_string().into_string().unwrap();
             //let mut s1: String = s.clone();
             s.push_str(&temp.to_string());
-            let recv_file = File::create(s).unwrap();
+            let recv_file = File::create(&s).unwrap();
             self.client_socket.write(b"received!\n").unwrap();
             self.client_socket.flush();
             //println!("dataConnect--recv_file_fragment:after received!");
@@ -248,6 +275,7 @@ impl ClientThread{
             //self.client_socket.flush();
 
             status = super::FileTransporter::recv_file(recv_file, &self.client_socket);
+            //println!("status: {}", &status);
             if status{
                 query.addFragment(temp, "-1".to_string());
                 if fragment_num == fragment_count - 1 {
@@ -276,6 +304,41 @@ impl ClientThread{
                     self.client_socket.write(b"received!\n");
                     self.client_socket.flush();
                 }
+            } else {
+                println!("!!recv file failed");
+                let recv_file2 = File::create(&s).unwrap();
+                let mut socket2 = self.client_socket.try_clone().expect("clone failed");
+                if(super::FileTransporter::recv_file(recv_file2, &socket2)) {
+                    query.addFragment(temp, "-1".to_string());
+                    if fragment_num == fragment_count - 1 {
+                        let count = query.queryFragmentNumbers(file_id);
+                        if count == fragment_count && self.confirm(&file_id, &fragment_count) == 1{
+                            socket2.write(b"received!\n");
+                            socket2.flush();
+                            file.set_noa(fragment_count);
+                            query.alterFile(file);
+                        }
+                        else{
+                            socket2.write(b"UPLOADFAIL!\n");
+                            socket2.flush();
+                            query.deleteFile(file_id);
+                            for i in 0..fragment_count{
+                                if query.deleteFragment(file_id * 100 + i) == 1 {
+                                    //let temp_2:i32 = file_id * 100 + i;
+                                    //s1.push_str(&temp_2.to_string());
+                                    let temp_2:String = (file_id * 100 + i).to_string();
+                                    let f = File::create(s1.clone()+&temp_2).unwrap();
+                                }
+                            }
+                        }
+                    }
+                    else{
+                        socket2.write(b"received!\n");
+                        socket2.flush();
+                    }
+                } else {
+                    println!("recv file failed again");
+                }
             }
         }
         //query.closeConnection();
@@ -283,7 +346,7 @@ impl ClientThread{
     }
 
     pub fn check_folder(mut self)->bool{
-        println!("enter check folder");
+        //println!("enter check folder");
         let command:Vec<&str> = self.sentence[..].split(' ').collect();
         //println!("command:{:?}",command);
         let num:i32 = command[2].trim().parse().unwrap();
@@ -293,12 +356,12 @@ impl ClientThread{
         let mut flag: bool = false;
         let mut i = 0;
         for i in 0..num {
-            println!("{} {}",command[(3+2*i) as usize], command[(4+2*i) as usize]);
+            //println!("{} {}",command[(3+2*i) as usize], command[(4+2*i) as usize]);
             let mut file = query.queryFile_Bypathname(Some(command[(3+2*i) as usize].to_string()), 
                 Some(command[(4+2*i) as usize].to_string()));
             //println!("fileid: {}", file.get_id());
             if  0 == file.get_id() {
-                println!("no file!");
+                //println!("no file!");
                 let dt = Local::today();
                 let mut date:String = dt.to_string();
                 date.truncate(10);

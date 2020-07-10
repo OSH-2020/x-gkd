@@ -18,7 +18,7 @@ impl ServerThread{
 
     pub fn run(&self){
         loop{
-            println!("before accept");//note:by lyf
+            //println!("before accept");//note:by lyf
             let (socket, addr) = self.server.accept().unwrap();
             println!("accepted a control link!");
             thread::spawn(||{

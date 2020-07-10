@@ -48,7 +48,7 @@ impl ServerConnecter{
         let mut status = true;
         println!("SeverConnecter run!\n"); //note:by lyf
         while self.connecting{
-            println!("server_ip:{},control_port:{}",self.server_ip,self.control_port);//note:by lyf
+            //println!("server_ip:{},control_port:{}",self.server_ip,self.control_port);//note:by lyf
             if let Ok(connect_socket) = TcpStream::connect((&self.server_ip[..], self.control_port)) {
                 self.to_server = Some(connect_socket);
                 println!("Connect to server successfully(control)!");
@@ -86,6 +86,8 @@ impl ServerConnecter{
 
                         let mut inputline = String::new();
                         while unread_request>0 {
+                            println!("!!enter loop");
+                            println!("unread request: {}\n", unread_request);
                             socket.write_fmt(format_args!("2 {}\n", self.client_id.to_string()));
                             socket.flush();
                             inputline.clear();

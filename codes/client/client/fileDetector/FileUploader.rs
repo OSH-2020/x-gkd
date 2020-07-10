@@ -28,9 +28,6 @@ static mut sta_server_port:u16 = 0;
 // }
 //static mut sta_tmpFragmentFolder:PathBuf = PathBuf::new();
 static mut sta_tmpFragmentFolder:String = String::new();
-fn main() {
-    println!("hello");
-}
 
 impl FileUploader {
     pub fn init(f:/*&PathBuf*/&String, ip: &String, port:&u16)/* -> Self*/{

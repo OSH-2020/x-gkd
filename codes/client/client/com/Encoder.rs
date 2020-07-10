@@ -20,7 +20,7 @@ pub struct Encoder{
 impl Encoder{
     /*原参数的FILE 改为 Path，未实现 throw IOEception */
     pub fn encode(inputFile_Path:PathBuf,shardsFolder:PathBuf,fid:i32) -> bool{
-        println!("enter encoder\n");
+        //println!("enter encoder\n");
         if !inputFile_Path.exists() {
             //注：std::path::Path的exists()方法，由于权限错误而无法访问包含文件的目录，也将返回false。
             println!("Cannot read input file: {}" ,inputFile_Path.display());
@@ -36,7 +36,7 @@ impl Encoder{
         let dataShards:i32 = fileSize / BYTES_IN_SHARDS + 1;
         let totalShards:i32 = 2 * dataShards;
 
-        println!("fileSize:{}",fileSize);//test
+        //println!("fileSize:{}",fileSize);//test
         // Figure out how big each shard will be.  The total size stored
         // will be the file size (8 bytes) plus the file.
         let storedSize:i32 = fileSize + BYTES_IN_INT;
@@ -104,13 +104,13 @@ impl Encoder{
         // }
 
         // Use Reed-Solomon to calculate the parity.
-        println!("shards size:{}",shards.len());
-         for i in 0..shards.len(){
-             println!("shards[{}] size:{}",i,&shards[i].len());
-         }
+        //println!("shards size:{}",shards.len());
+        // for i in 0..shards.len(){
+        //     println!("shards[{}] size:{}",i,&shards[i].len());
+        // }
         
-        println!("dataShards:{}",dataShards);
-        println!("totalShards-dataShards:{}",totalShards - dataShards);
+        //println!("dataShards:{}",dataShards);
+        //println!("totalShards-dataShards:{}",totalShards - dataShards);
         let reedSolomon = ReedSolomon::new(dataShards.try_into().unwrap(),(totalShards - dataShards).try_into().unwrap()).unwrap();
         reedSolomon.encode(&mut shards).unwrap();
 

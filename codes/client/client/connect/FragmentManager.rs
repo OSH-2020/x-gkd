@@ -170,6 +170,7 @@ impl FragmentManager {
             None => println!("Error"),
             Some(socket) => {
                 let socket1 = socket.try_clone().expect("clone failed");//克隆端口
+                println!("{} {} {}\n", self.Type, self.requestID, self.fragmentID);
                 socket.write_fmt(format_args!("{} {} {}\n", self.Type, self.requestID, self.fragmentID));
                 socket.flush();
                 if (super::FileTransporter::recv_file(f, &socket1)){

@@ -18,22 +18,22 @@ pub fn main() {
         
     let setUpFile = String::from("D:\\setup.ini");
     let file = File::open(setUpFile).unwrap();
-    println!("open setup.ini successfully!\n");
+    println!("open setup.ini successfully!");
 
     let mut fin = BufReader::new(file);
     let mut line = String::new();
 
     fin.read_line(&mut line).unwrap(); 
     let mut serverIp = String::from(line.trim());
-    println!("serverIp:{}\n",serverIp);
+    println!("serverIp:{}",serverIp);
     
 
     line.clear();
     fin.read_line(&mut line).unwrap(); 
-    println!("line:{}\n",line);
+    //println!("line:{}\n",line);
 
     let mut controlPort = line.trim().parse::<i32>().unwrap();
-    println!("controlPort:{}\n",controlPort);
+    println!("controlPort:{}",controlPort);
     
     line.clear();
     fin.read_line(&mut line).unwrap(); 

@@ -60,7 +60,7 @@ pub fn send_file(mut f: File, mut soc_out: &TcpStream)->bool{
     soc_out.flush();
     //test
     println!("send_file--发送的length应为8bytes，实际发送:{}bytes",send_length);
-    println!("filelength:{}",length);
+    //println!("filelength:{}",length);
 
     let mut file_toread = length;
 

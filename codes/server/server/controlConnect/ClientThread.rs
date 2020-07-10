@@ -73,7 +73,8 @@ impl ClientThread{
                     let query = Query::new();
                     let mut request = query.queryFirstRequest_Byid(id);
                     //query.closeConnection();
-
+                    println!("{} {} {}\n", 
+                        request.get_id(), request.get_fragment_id(), request.get_type());
                     self.client_socket.write_fmt(format_args!("{} {} {}\n", 
                         request.get_id(), request.get_fragment_id(), request.get_type()));
                     self.client_socket.flush();
@@ -86,7 +87,7 @@ impl ClientThread{
     }
 
     pub fn run(&mut self){
-        println!("start!");
+        //println!("start!");
         self.client_socket.set_read_timeout(Some(Duration::new(60, 0))).expect("set_read_timeout call failed");
         self.client_socket.set_write_timeout(Some(Duration::new(60, 0))).expect("set_read_timeout call failed");
         let stream_clone = self.client_socket.try_clone().expect("clone failed...");
