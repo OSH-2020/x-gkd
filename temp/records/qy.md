@@ -1,3 +1,5 @@
+## Rust 代码说明
+
 ### ServerConnecter.rs
 
 目前为1.0版。这个文件定义了 ServerConnect 结构体，以及 new, init, run, stopConnect 四个方法。这个文件可以通过编译，但没有解决大部分的 warning。
@@ -64,7 +66,7 @@ run 方法接收一行命令，然后根据命令类型 1-6 ，调用对应的�
 
 
 
-## 代码测试
+## Rust 代码测试
 
 ### FileTransporter.rs
 
@@ -333,3 +335,77 @@ pub struct Viewer {
 }
 ```
 
+
+
+### drop_zone
+
+* 使用 web_sys::FileList 和 wasm_bindgen_futures::JsFuture 呈现文件。拖入的文件直接读取为 FileList 类型的结构体。
+
+  提取文件内容：
+
+  ```rust
+              // Note: `FileList` doesn't implement `Iterator`.
+              let files = (0..file_list.length())
+                  .map(|index| file_list.get(index).expect("get file with given index"))
+                  .collect::<Vec<_>>();
+  
+              // Get file names.
+              model.drop_zone_content = files.iter().map(|file| div![file.name()]).collect();
+  
+              // Read files (async).
+              for file in files {
+                  orders.perform_cmd(async move {
+                      let text =
+                          // Convert `promise` to `Future`.
+                          JsFuture::from(file.text())
+                              .await
+                              .expect("read file")
+                              .as_string()
+                              .expect("cast file text to String");
+                      Msg::FileRead(text)
+                  });
+              }
+  ```
+
+* Msg 中多个状态，与 model 中 drop_zone_active 字段配合，实现文件加载的同步互斥操作。
+* 本例中应是读取文件而非上传到网页端；而 DFS 项目显示文件内容应当是次要的考虑，对 FileList 的学习暂缓。
+
+
+
+### web_sys MDN 文件相关内容
+
+* File
+
+  File 对象大多从 FileList 对象转变而来，相当于 html 中 、\<input> 标签的返回结果。
+
+  File 对象视为一种特殊的 blob 对象，继承了 blob 的方法。有文件名、大小、类型、最后修改时间等字段。有 blob 的转换为 stream、String、ArrayBuffer 的方法。
+
+* FileSystem
+
+  用于呈现一个文件系统。
+
+  不能访问用户本地的文件系统，而是得到一个“虚拟驱动”的浏览器沙盒内的文件系统。
+
+  Chrome 支持额外的 requestFileSystem() 方法（返回 FileSystem 对象）等。
+
+  得到 FileSystem 对象方法：
+
+  * 调用 window.requestFileSystem() 方法。
+
+    > directly ask for one representing a sandboxed file system created just for your web app 
+
+    rust 的 web_sys 库中没有这个方法。
+
+  * 从 FileSystemEntry 对象的 FileSystem 字段中获取。若采用这个方法，则获取的内容是只读的。
+
+* FileSystemEntry
+
+  是 non-standard feature，缺乏浏览器兼容性，Firefox 浏览器不支持它的部分功能，Chrome 全部支持。
+
+  FileSystemEntry 可以是文件也可以是目录。有 copy、moveTo 等文件处理的方法；除此之外还有 toURL 方法。
+
+  > Creates and returns a URL which identifies the entry. This URL uses the URL scheme `"filesystem:"`.
+
+* Directory
+
+* FileSystemDirectoryEntry
