@@ -625,5 +625,86 @@ fn download_data_uri_as(data_uri: &str, filename: &str) {
   - XML DOM - 针对 XML 文档的标准模型
   - HTML DOM - 针对 HTML 文档的标准模型
 
+# 17级web工程部分
 
+## Tomcat与Servlet关系
+
+1. 浏览器产生HTTP请求给Tomcat
+2. Tomcat将HTTP解析为request
+3. Tomcat从磁盘加载servlet
+4. 把request给servlet处理，并返回response
+5. Tomcat将response转换为HTTP响应
+6. 发回给前端
+
+## struts2框架
+
+![image-20200711200406395](C:\Users\dell\AppData\Roaming\Typora\typora-user-images\image-20200711200406395.png)
+
+## 登录注册模块
+
+### index.html(友好的网页)
+
+* 主要采用了bootstrap 主题，采用了其提供的垂直表单元素
+* 同时注册和登录表单是可以单击进行切换的，使用了bootstrap 切换卡元素
+
+### index_ajax.js(让网页具有和用户和服务器交互的动态能力)
+
+* 主要是为两个button（注册和登录）提供了对应的js 动作
+* 调用异步的ajax 将表单信息提交给服务器并调用下面两个java 程序之一进行服务
+
+1. UserLogin.java------接受来自网页的登录请求，查询数据库进行身份核实和反馈核实结
+   果
+2. UserReg.java------接收来自网页的用户注册请求，将请求插入数据库等待管理员审核。
+   基本和UserLogin 类似
+
+### 网页主界面
+
+#### majorPage.jsp
+
+* 包含了界面的主要的html 代码。之所以还采用了jsp 在服务器端动
+  态生成html 代码，是因为第一次打开该网页就会展示文件系统根目录文件夹信息，这些信
+  息是动态的。因此我动态的查询数据库并返回html 代码
+
+#### 文件目录展示交互模块
+
+* 用户可以单击进入子目录或者返回上层目录，同时当前访问路径导航栏随之刷新
+* GetFileList.java------根据输入查询的全路径；输出该路径下的全部列表项的html 代
+  码。
+* majorPage_ajax.js------包含该模块主要代码
+* 点击列表项之后，首先判断是点击的文件夹------从列表项获取对应的文件夹名称；
+  将该文件夹加入全路径；
+  刷新导航栏；
+  通过ajax 向服务器查询新路径下文件列表。
+* 还是文件------控制台显示，点击的是文件，不可进入；不采取其他措施
+* 还是返回上一层------ 将全路径最里层元素去掉；
+  刷新导航栏；
+  通过ajax 向服务器查询新路径下文件列表。
+
+### 文件下载模块
+
+* 该模块提供了用户选中单个文件并进行下载的全套服务。
+  用户选中单个文件，点击下载，服务器开始收集碎片，实时反馈进度，网页进度条实时更
+  新，进度100%后可单击进度条下载该文件。
+
+* FileDownloader.java------包含了三个功能函数
+
+  * downloadRegister()
+    将一条下载请求插入数据库，这样的话服务器将知道要从各个客户端收集该指定的碎片。该函数调用了数据库访问函数包：import database.*
+
+  * progressCheck()
+    服务器查询特定本地临时碎片数目，计算出碎片收集进度并且返回给网页。
+    该函数调用了本地文件访问接口
+
+  * decodeFile()
+
+    服务器调用erasurecode 开源解码程序，将特定文件复原，等待用户通过http 请求下载
+
+* majorPage_ajax.js------包含该模块的主要代码
+
+  * 当用户点击下载后，遍历列表，对于每一个勾选项进行下载操作。
+  * 下载操作：
+    * 利用ajax 调用动态方法FileDownloader!downloadRegister，请求服务器收集碎片，为文件任务添加进度条
+    * 定时通过ajax 调用动态方法FileDownloader!progressCheck 检测收集进度，并刷新进度条，如果进度到达100%，利用ajax 调用动态方法FileDownloader!decodeFile 进碎片远程拼接，为进度条添加下载属性，链接到生成的要下载的文件
+
+### 异步and同步ajax？
 
