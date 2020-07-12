@@ -184,6 +184,29 @@ impl Query {
         }
         files
     }
+    
+    pub fn queryFragment(&self, id: i32) -> String {
+        let selected_fragments: Result<Vec<FragmentItem>, mysql::Error> =
+        self.pool.prep_exec("SELECT * FROM DFS.FRAGMENT WHERE ID = :id", 
+                params!{"id" => id})
+        .map(|result| { 
+            result.map(|x| x.unwrap()).map(|row| {
+                let (id, path) = my::from_row(row);
+                FragmentItem {
+                    id: id,
+                    path: path,
+                }
+            }).collect()
+        });
+        if let Err(e) = selected_fragments {
+            return "".to_string();
+        }
+        let fragment = selected_fragments.unwrap();
+        if fragment.len() == 0 {
+            return "".to_string();
+        }
+        return fragment[0].path.clone().unwrap();
+    }
 
     pub fn queryFragmentNumbers(&self, fileId: i32) -> i32{
         let selected_fragments: Result<Vec<FragmentItem>, mysql::Error> =
