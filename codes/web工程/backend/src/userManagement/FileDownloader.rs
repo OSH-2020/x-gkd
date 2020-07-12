@@ -5,9 +5,11 @@ use std::ffi::{OsStr, OsString};
 use std::fs::{self, File, DirEntry, remove_file};
 
 use super::super::database::Query::Query;
+use super::super::com::Decoder::Decoder;
+use super::super::database::RequestItem::RequestItem;
 //use decoder
 
-struct FileDownloader{
+pub struct FileDownloader{
     path: String,
     name: String,
     result: String,
@@ -62,7 +64,7 @@ impl FileDownloader {
         let query = Query::new();
         let qpath: Option<String> = Some(self.path);
         let qname: Option<String> = Some(self.name);
-        let file_item = queryFile_Bypathname(qpath, qname);
+        let file_item = query.queryFile_Bypathname(qpath, qname);
         let online_device = query.queryOnlineDevice();
 
         if online_device.len() == 0 {
@@ -122,7 +124,7 @@ impl FileDownloader {
         let query = Query::new();
         let qpath: Option<String> = Some(self.path);
         let qname: Option<String> = Some(self.name);
-        let file_item = queryFile_Bypathname(qpath, qname);
+        let file_item = query.queryFile_Bypathname(qpath, qname);
         
         let file_id = file_item.get_id().to_string().to_os_string();
         let mut collected_files: i32 = 0;
@@ -165,7 +167,7 @@ impl FileDownloader {
         let file_id = file_item.get_id().to_string();
         let mut str = String::new();
         let file_folder = self.fileFolderPath.join(self.name);
-        if Decoder::decoder(self.fragmentFolderPath, file_folder, file_item.get_id(), file_item.get_noa()) {
+        if Decoder::decode(self.fragmentFolderPath, file_folder, file_item.get_id(), file_item.get_noa()) {
 
             for entry in self.fragmentFolderPath.read_dir().unwrap(){
                 let path = entry.unwrap().path();

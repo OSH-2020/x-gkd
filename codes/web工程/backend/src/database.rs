@@ -1,4 +1,4 @@
-mod DeviceItem;
-mod FileItem;
-mod Query;
-mod RequestItem;
+pub mod DeviceItem;
+pub mod FileItem;
+pub mod Query;
+pub mod RequestItem;

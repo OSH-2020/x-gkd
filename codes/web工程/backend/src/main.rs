@@ -15,6 +15,10 @@ mod userManagement;
 mod database;
 mod com;
 
+use userManagement::UserReg::UserReg;
+use userManagement::UserLogin::UserLogin;
+use userManagement::FileDownloader::FileDownloader;
+
 #[derive(Serialize, Deserialize)]//用户名和密码，注册登录时用到
 pub struct User {
     userName: String,
@@ -47,7 +51,7 @@ async fn index() -> impl Responder {
 #[post("/UserReg")]
 async fn register(params: web::Json<User>) -> web::Json<Return_string> {
     println!("username: {0} ,userPasswd:{1}",params.userName,params.userPasswd);
-    let result:String = UserReg.execute(params.userName,params.userPasswd);
+    let result:String = UserReg::execute(params.userName,params.userPasswd);
     //let result:String=String::from("sddd");
     web::Json(Return_string {
         result,
@@ -57,7 +61,7 @@ async fn register(params: web::Json<User>) -> web::Json<Return_string> {
 #[post("/UserLogin")]
 async fn login(params: web::Json<User>) -> web::Json<Return_string> {
     println!("username: {0} ,userPasswd:{1}",params.userName,params.userPasswd);
-    let result:String = UserLogin.execute(params.userName,params.userPasswd);
+    let result:String = UserLogin::execute(params.userName,params.userPasswd);
     web::Json(Return_string {
         result,
     })
