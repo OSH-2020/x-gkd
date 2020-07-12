@@ -39,16 +39,30 @@ impl UserReg {
         return self.userPasswd.clone();
     } 
     
-    pub fn execute(&mut self) -> String {
+    // pub fn execute(&mut self) -> String {
+    //     let query = Query::new();
+    //     let ID:i32 = query.addUser(self.userName.clone(),self.userPasswd.clone());
+    //     //query.closeConnection();
+    //     if ID == -1 {
+    //         self.result = "注册失败!".to_string();
+    //     }
+    //     else {
+    //         self.result = "恭喜你，注册成功!".to_string();
+    //     }
+    //     return "success".to_string();
+    // }
+
+    pub fn execute(userName:String,userPasswd:String)  -> String{
         let query = Query::new();
-        let ID:i32 = query.addUser(self.userName.clone(),self.userPasswd.clone());
-        //query.closeConnection();
+        let ID:i32 = query.addUser(userName,userPasswd);
         if ID == -1 {
-            self.result = "注册失败!".to_string();
+            return "fail".to_string();
         }
         else {
-            self.result = "恭喜你，注册成功!".to_string();
+            return "success".to_string();
         }
-        return "success".to_string();
     }
 }
+
+// * UserReg.execute(params.userName,params.userPasswd);成功返回字符串"success",失败返回字符串"fail"
+// * UserLogin.execute(params.userName,params.userPasswd); 成功返回字符串"login sucessfully!"，失败返回字符串"login fail!"

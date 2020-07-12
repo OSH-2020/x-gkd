@@ -42,29 +42,57 @@ impl UserLogin{
         return self.userPasswd.clone();
     }
 
-    pub fn execute(&mut self) -> String {
+    // pub fn execute(&mut self) -> String {
+    //     let query = Query::new();
+    //     let passwdStandard:Option<String> = query.queryUserPasswd(Some(self.userName.clone()));
+    //     //query.closeConnection();
+        
+    //     if passwdStandard == None {
+    //        self.result = "登录失败：该用户不存在！".to_string();
+    //        return "success".to_string();
+    //     }
+        
+    //     match passwdStandard.unwrap().cmp(&self.userPasswd){
+    //         Ordering::Equal => {
+    //             self.result = "login sucessfully!".to_string();
+    //             return "success".to_string();
+    //         }
+    //         Ordering::Greater => {
+    //             self.result = "登录失败：密码错误！".to_string();
+    //             return "success".to_string();
+    //         }
+    //         Ordering::Less => {
+    //             self.result = "登录失败：密码错误！".to_string();
+    //             return "success".to_string();
+    //         }
+    //     }
+    // }
+    pub fn execute(userName:String,userPasswd:String) -> String {
         let query = Query::new();
-        let passwdStandard:Option<String> = query.queryUserPasswd(Some(self.userName.clone()));
+        let passwdStandard:Option<String> = query.queryUserPasswd(Some(userName));
         //query.closeConnection();
         
         if passwdStandard == None {
-           self.result = "登录失败：该用户不存在！".to_string();
-           return "success".to_string();
+           //self.result = "登录失败：该用户不存在！".to_string();
+           return "login fail!".to_string();
         }
         
-        match passwdStandard.unwrap().cmp(&self.userPasswd){
+        match passwdStandard.unwrap().cmp(&userPasswd){
             Ordering::Equal => {
-                self.result = "login sucessfully!".to_string();
-                return "success".to_string();
+                //self.result = "login sucessfully!".to_string();
+                return "login sucessfully!".to_string();
             }
             Ordering::Greater => {
-                self.result = "登录失败：密码错误！".to_string();
-                return "success".to_string();
+                //self.result = "登录失败：密码错误！".to_string();
+                return "login fail!".to_string();
             }
             Ordering::Less => {
-                self.result = "登录失败：密码错误！".to_string();
-                return "success".to_string();
+                //self.result = "登录失败：密码错误！".to_string();
+                return "login fail!".to_string();
             }
         }
     }
 }
+
+// * UserReg.execute(params.userName,params.userPasswd);成功返回字符串"success",失败返回字符串"fail"
+// * UserLogin.execute(params.userName,params.userPasswd); 成功返回字符串"login sucessfully!"，失败返回字符串"login fail!"
