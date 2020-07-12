@@ -1398,6 +1398,110 @@ Rocket遇到的问题与思考
 
 登录注册模块:考虑接受来自网页的登录请求，查询数据库进行身份核实和反馈核实结果。注册也同理
 
+* 需要解决的问题：文件目录的显示和子目录刷新？（原来是用jsp动态显示)：考虑还是改写成ajax响应：挂载到登录按钮上
+
+  这样还是可以通过struts+Tomcat来运行
+
+* 然后后端就还是Rocket来响应，还是完善GetFilelist和FileDownloader模块，再写写Rocket的接口即可
+
+  不过还需调研一下ajax的那个设置
+
+* 接口：
+
+  * UserReg.execute(params.userName,params.userPasswd);成功返回字符串"success",失败返回字符串"fail"
+
+  * UserLogin.execute(params.userName,params.userPasswd); 成功返回字符串"login sucessfully!"，失败返回字符串"login fail!"
+
+  * FileDownloader:
+
+    * downloadRegister:  FileDownloader::downloadRegister(params.path,params.name);
+
+      返回值同java文件所述："NotEnoughFragments"或"Error"或“OK”
+
+    * progressCheck： FileDownloader::progressCheck(params.path,params.name);
+
+      返回值:"Error"或者进度的数值的字符串形式
+
+    * decodeFile：FileDownloader::decodeFile(params.path,params.name); 返回“Error”或“OK”
+
+  * FileDownloader::GetFileList.execute(params.QueryPath); 返回值为字符串html(后续再做错误处理)
+
+
+
+项目框架：
+
+client和server：客户端运行，把文件放进指定文件夹，然后会被分块，传输给服务端，服务端则会把碎片分发给各个客户端，然后在数据库里做相应记录
+
+前后端：本来是打算采用Node.js来写，但是后续调研发现WebAssembly编译Rust存在较大的局限性，所以整个项目编译为WebAssembly是不现实的，主要还是在前端做一定的编译。然后随后调研，查阅资料后发现，考虑到17级已经实现了比较完整的前后端。那么我们初步设定目标就是写好client和server
+
+然后后续为了和我们的项目契合，以及统一项目工程，是考虑的逐步用rust取代原来的Tomcat服务器为中心构建的前后端。
+
+目前我们是考虑在前后端分离，采用actix_web框架实现后端，采用Seed实现前端。目前后端工作基本完成，还在调试阶段。主要考虑的是对采用Tomcat启动的前端的事件作ajax响应，把其发送到后端，然后后端和数据库做交互，最后把结果返回给前端
+
+前端这一块，考虑用seed框架来完成，其内置了把rust编译为webAssembly的几个包，是比较理想的完成方式，但是由于前端开始的相对较晚(前期准备不充分，低估了rust写前端的难度)，所以目前进度不算理想，可能考虑后续完善。
+
+
+
+锁机制：先是创建锁（其包含一个状态值），并分别clone到folderScanner和ServerConnecter两个线程；然后主线程调用wait进入睡眠；最后若另外两个线程发生错误，则会获取锁并修改状态值，再唤醒主线程；主线程检测到状态值改变，则会输出相应报错信息，最后终止所有client的线程
+
+整个从server，client，到前后端的实现的构思
+
+
+
+what why how
+
+* 项目的架构：整体的展示。 （图）
+
+* 分部分介绍和亮点：和数据库交互的模块，接口实现；
+
+  * client
+
+  * server
+
+    考虑前后端分离，然后分别采用两个rust框架来实现。
+
+  * 后端actix-web
+
+  * 前端seed
+
+* 意义价值、愿景（多少年以后）
+
+  * rust+webAssembly的前沿性和优势（安全性，rust机制）
+
+  * 完整项目的缺失，需要来实践这么一个项目。
+
+  * 为rust和webAssembly开源社区做贡献
+
+  * 项目初衷(17级  详细设计报告和答辩报告（创新计划和答辩报告）)
+
+  * 调研报告：低功耗、低内存占用；闲置系统，极其受限
+
+  * 分布式在线服务；
+
+  * 我们的调研和可行性报告
+
+  * 稳定性？怎么测试
+
+* 与现有系统的比较，他们做到了什么程度，有什么优缺点，资源浪费，我们又有什么思路来完成；
+
+  现有项目存在的问题：资源浪费、效率低下等；现有相关工作？我们的思路、可能遇到的挑战、对挑战的克服方法、项目愿景和可能的贡献；
+
+  * 将分布式文件系统：17级gfs等
+
+  * 17级项目：rust，低功耗
+
+  * 我们思路：rust实现（优势），WebAssembly，整体用rust来实践
+
+    遇到的挑战：写client和server的时候遇到的挑战：
+
+  * 愿景和贡献：实现一个完全以rust和WebAssembly来成的完整的分布式文件系统并部署到公网。
+
+* demo：想想问点什么东西？：rust学习曲线；rsut前端确实还未完善，本身一些功能还没有很好的示例，也是我们在试着解决的任务
+
+* 性能和功能分析：内存占用，cpu，time
+
+
+
 
 
 ### Rust Web应用程序简介：https://erwabook.com/intro/
@@ -1946,3 +2050,42 @@ Seed app blocks should be in this order:
 6. `Start`
 7. `Exported` (optional, Rust functions available in JS/TS)
 8. `Extern` (optional, JS items used in Rust)
+
+
+
+
+
+
+
+数据库的migration操作？
+
+自己写数据库？
+
+### 数据库
+
+本教程约定：SQL关键字总是大写，以示突出，表名和列名均使用小写
+
+#### 关系数据库概述
+
+* 数据库按照数据结构来组织、存储和管理数据，实际上，数据库一共有三种模型：
+  * 层次模型
+  * 网状模型
+  * 关系模型
+
+* 支持的数据类型
+
+* SQL是结构化查询语言的缩写，用来访问和操作数据库系统。SQL语句既可以查询数据库中的数据，也可以添加、更新和删除数据库中的数据，还可以对数据库进行管理和维护操作
+
+  * DDL：Data Definition Language
+
+    DDL允许用户定义数据，也就是创建表、删除表、修改表结构这些操作。通常，DDL由数据库管理员执行。
+
+  * DML：Data Manipulation Language
+
+    DML为用户提供添加、删除、更新数据的能力，这些是应用程序对数据库的日常操作。
+
+  * DQL：Data Query Language
+
+    DQL允许用户查询数据，这也是通常最频繁的数据库日常操作
+
+#### 关系模型
