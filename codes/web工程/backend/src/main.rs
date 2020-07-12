@@ -11,7 +11,9 @@ struct UserReg {
 }
 */
 
-
+mod userManagement;
+mod database;
+mod com;
 
 #[derive(Serialize, Deserialize)]//用户名和密码，注册登录时用到
 pub struct User {
