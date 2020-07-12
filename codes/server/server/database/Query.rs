@@ -691,13 +691,15 @@ impl Query{
         //suc为INSERT的用户在mysql中的id
         let mut suc:i32 = -1;
         for mut stmt in self.pool.prepare(r"INSERT INTO DFS.USER (NAME,PASSWD) VALUES (:name, :passwd)").into_iter() {
-            suc = stmt.execute(params!{
+            let res = stmt.execute(params!{
                 "name" => name.clone(),
                 "passwd" => passwd.clone()
-            }).unwrap().last_insert_id().try_into().unwrap();
-            //此处未处理execute不成功的情况
+            });//unwrap().last_insert_id().try_into().unwrap();
+            suc = match res{
+                Ok(_) => res.unwrap().last_insert_id().try_into().unwrap(),
+                Err(_) => -1
+            };
         }
-        suc = 1;
         return suc;
     }
 

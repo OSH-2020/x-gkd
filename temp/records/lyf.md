@@ -1233,6 +1233,16 @@ assert!(now.elapsed() >= ten_millis);
 3. u'字符串' 
        u便是Unicode，u前缀的字符串表示以Unicode编码，一般将包含中文的字符串加上u前缀，以避免错误。    
 
+**git merge**
+
+1.按键盘字母 i 进入insert模式
+
+2.修改最上面那行黄色合并信息,可以不修改
+
+3.按键盘左上角"Esc"
+
+4.输入":wq",注意是冒号+wq,按回车键即可
+
 # IV 改写的问题
 
 ### Encoder 部分
@@ -1853,4 +1863,10 @@ client、server各有main，做成两个包这样，然后直接cargo run
 node.js的防火墙权限局限在了专用网络
 
 将zhihui-home改为专用网络了
+
+## VI Web相关
+
+### 什么是Web框架？
+
+链接：https://www.cnblogs.com/hazir/p/what_is_web_framework.html
 
