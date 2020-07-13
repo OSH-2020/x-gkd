@@ -49,9 +49,9 @@ impl GetFileList {
 
 
     pub fn execute(Querypath1:String) -> String {
-        let query = Query::new();
-        let tpath: Option<String> = Some(QueryPath1);
-        let file_array = query.queryFile_Bypath(tpath);
+        let query = Query::Query::new();
+        let tpath: Option<String> = Some(Querypath1);
+        let mut file_array = query.queryFile_Bypath(tpath);
 
         let mut html:String = String::new();
         html = html + 
@@ -63,7 +63,7 @@ impl GetFileList {
                 "</tr>"+
                 "<td> </td>";
 
-        let mut return_val = String::new();
+        //let mut return_val = String::new();
 
         if file_array.len() == 0 {
             let status = String::from("false");

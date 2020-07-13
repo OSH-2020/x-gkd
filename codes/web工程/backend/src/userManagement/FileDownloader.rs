@@ -1,5 +1,4 @@
 use std::path::PathBuf;
-use std::fs::File;
 use std::path::Path;
 use std::ffi::{OsStr, OsString};
 use std::fs::{self, File, DirEntry, remove_file};
@@ -7,7 +6,6 @@ use std::fs::{self, File, DirEntry, remove_file};
 use super::super::database::Query::Query;
 use super::super::com::Decoder::Decoder;
 use super::super::database::RequestItem::RequestItem;
-//use decoder
 
 pub struct FileDownloader{
     path: String,
@@ -61,11 +59,11 @@ impl FileDownloader {
         println!("downloadRegister is called");
 
         //let mut return_val = String::new();
-        let query = Query::new();
+        let query = Query::Query::new();
         let qpath: Option<String> = Some(path1);
         let qname: Option<String> = Some(name1);
         let file_item = query.queryFile_Bypathname(qpath, qname);
-        let online_device = query.queryOnlineDevice();
+        let mut online_device = query.queryOnlineDevice();
 
         if online_device.len() == 0 {
             let result = String::from("NotEnoughFragments");
@@ -83,17 +81,17 @@ impl FileDownloader {
         else {
             let noa = file_item.get_noa();
             let id = file_item.get_id();
-            let mut str = String::new();
-            let mut request_items: Vec<RequestItem> = Vec::new();
+            //let mut str = String::new();
+            let mut request_items: Vec<RequestItem::RequestItem> = Vec::new();
             for i in 0..noa {
-                str = query.queryFragment(id * 100 + i);
+                let str = query.queryFragment(id * 100 + i);
                 if str == "" || str == "-1" {
                     continue;
                 }
                 let device_id: i32 = str.parse().unwrap();
                 for j in 0..online_device.len() {
                     if online_device[j].get_id() == device_id {
-                        request_items.push(RequestItem.new(1, id*100 + 1, device_id));
+                        request_items.push(RequestItem::RequestItem::init_2(1, id*100 + 1, device_id));
                         break;
                     }
                 }
@@ -107,7 +105,7 @@ impl FileDownloader {
             }
             else {
                 for i in 0..temp {
-                    query.addRequest(request_items[i]);
+                    query.addRequest(request_items[i].clone());
                 }
                 let result = String::from("OK");
                 //return_val = String::form("success");
@@ -121,16 +119,16 @@ impl FileDownloader {
         //return -1 if error
 		//else, return a number from 0 to 100 as # of fragments which have been downloaded
         //let mut return_val = String::new();
-        let fragmentFolderPath=PathBuf::from("D:webapps/DFS/CloudDriveServer/downloadFragment/"),
-        let fileFolderPath=PathBuf::from("D:webapps/DFS/CloudDriveServer/tmpFile/"),
+        let fragmentFolderPath=PathBuf::from("D:webapps/DFS/CloudDriveServer/downloadFragment/");
+        //let fileFolderPath=PathBuf::from("D:webapps/DFS/CloudDriveServer/tmpFile/");
 
-        let query = Query::new();
+        let query = Query::Query::new();
         let qpath: Option<String> = Some(path1);
         let qname: Option<String> = Some(name1);
         let file_item = query.queryFile_Bypathname(qpath, qname);
         
         let file_id = file_item.get_id().to_string();
-        if(file_id == "-1"){
+        if file_id == "-1" {
             let result = String::from("Error");
             return result;
         }
@@ -165,20 +163,20 @@ impl FileDownloader {
     pub fn decodeFile(path1:String, name1:String) -> String {
 		//return 1 and DELETE ALL FRAGMENTS OF INPUT FILE if decode successfully
         //else, return 0
-        let fragmentFolderPath=PathBuf::from("D:webapps/DFS/CloudDriveServer/downloadFragment/"),
-        let fileFolderPath=PathBuf::from("D:webapps/DFS/CloudDriveServer/tmpFile/"),
+        let fragmentFolderPath=PathBuf::from("D:webapps/DFS/CloudDriveServer/downloadFragment/");
+        let fileFolderPath=PathBuf::from("D:webapps/DFS/CloudDriveServer/tmpFile/");
         println!("decodeFile is called");
-        let query = Query::new();
-        let qpath: Option<String> = Some(path1);
-        let qname: Option<String> = Some(name1);
+        let query = Query::Query::new();
+        let qpath: Option<String> = Some(path1.clone());
+        let qname: Option<String> = Some(name1.clone());
         let file_item = query.queryFile_Bypathname(qpath, qname);
         
         //com.backblaze.erasure.Decoder.decode()
         //decode(shardsFolder:PathBuf,fileFolder:PathBuf,fid:i32,noa:i32) -> bool
         let file_id = file_item.get_id().to_string();
-        let mut str = String::new();
-        let file_folder = fileFolderPath.join(self.name);
-        if Decoder::decode(fragmentFolderPath, file_folder, file_item.get_id(), file_item.get_noa()) {
+        //let mut str = String::new();
+        let file_folder = fileFolderPath.join(name1);
+        if Decoder::Decoder::decode(fragmentFolderPath.clone(), file_folder, file_item.get_id(), file_item.get_noa()) {
 
             for entry in fragmentFolderPath.read_dir().unwrap(){
                 let path = entry.unwrap().path();
