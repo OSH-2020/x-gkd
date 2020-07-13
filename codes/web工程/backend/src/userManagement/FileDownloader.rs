@@ -14,8 +14,8 @@ pub struct FileDownloader{
     name: String,
     result: String,
     serialVersionUID: i64,
-    fragmentFolderPath: PathBuf,
-    fileFolderPath: PathBuf,
+    fragmentFolderPath1: PathBuf,
+    fileFolderPath1: PathBuf,
 }
 
 impl FileDownloader {
@@ -25,8 +25,8 @@ impl FileDownloader {
             name: String::new(),
             result: String::new(),
             serialVersionUID: 1,
-            fragmentFolderPath:PathBuf::from("D:webapps/DFS/CloudDriveServer/downloadFragment/"),
-            fileFolderPath:PathBuf::from("D:webapps/DFS/CloudDriveServer/tmpFile/"),
+            fragmentFolderPath1:PathBuf::from("D:webapps/DFS/CloudDriveServer/downloadFragment/"),
+            fileFolderPath1:PathBuf::from("D:webapps/DFS/CloudDriveServer/tmpFile/"),
         }
     }
 
@@ -54,7 +54,7 @@ impl FileDownloader {
         self.name = nname;
     }
 
-    pub fn downloadRegister(&mut self) -> String {
+    pub fn downloadRegister(path1:String, name1:String) -> String {
         //return -1 if error
 		//return 0 if can not collect enough fragments
         //else, return 1
@@ -62,23 +62,23 @@ impl FileDownloader {
 
         //let mut return_val = String::new();
         let query = Query::new();
-        let qpath: Option<String> = Some(self.path);
-        let qname: Option<String> = Some(self.name);
+        let qpath: Option<String> = Some(path1);
+        let qname: Option<String> = Some(name1);
         let file_item = query.queryFile_Bypathname(qpath, qname);
         let online_device = query.queryOnlineDevice();
 
         if online_device.len() == 0 {
-            self.result = String::from("NotEnoughFragments");
+            let result = String::from("NotEnoughFragments");
             //return_val = String::form("success");
             //return return_val;
-            return self.result.clone();
+            return result;
         }
 
         if file_item.get_noa() < 1 {
-            self.result = String::from("Error");
+            let result = String::from("Error");
             //return_val = String::form("success");
             //return return_val;
-            return self.result.clone();
+            return result;
         }
         else {
             let noa = file_item.get_noa();
@@ -100,76 +100,87 @@ impl FileDownloader {
             }
             let temp = (noa / 2) as usize;
             if request_items.len() < temp {
-                self.result = String::from("NotEnoughFragments");
+                let result = String::from("NotEnoughFragments");
                 //return_val = String::form("success");
                 //return return_val;
-                return self.result.clone();
+                return result;
             }
             else {
                 for i in 0..temp {
                     query.addRequest(request_items[i]);
                 }
-                self.result = String::from("OK");
+                let result = String::from("OK");
                 //return_val = String::form("success");
                 //return return_val;
-                return self.result.clone();
+                return result;
             }
         }
     }
 
-    pub fn progressCheck(&mut self) -> String{
+    pub fn progressCheck(path1:String, name1:String) -> String{
         //return -1 if error
 		//else, return a number from 0 to 100 as # of fragments which have been downloaded
-		//let mut return_val = String::new();
+        //let mut return_val = String::new();
+        let fragmentFolderPath=PathBuf::from("D:webapps/DFS/CloudDriveServer/downloadFragment/"),
+        let fileFolderPath=PathBuf::from("D:webapps/DFS/CloudDriveServer/tmpFile/"),
+
         let query = Query::new();
-        let qpath: Option<String> = Some(self.path);
-        let qname: Option<String> = Some(self.name);
+        let qpath: Option<String> = Some(path1);
+        let qname: Option<String> = Some(name1);
         let file_item = query.queryFile_Bypathname(qpath, qname);
         
-        let file_id = file_item.get_id().to_string().to_os_string();
-        let mut collected_files: i32 = 0;
-        for entry in self.fragmentFolderPath.read_dir().unwrap(){
-            let path = entry.unwrap().path();
-            let str = path.file_name();
-            match str {
-                None => continue,
-                Some(str) => {
-                    let mut name = str.to_os_string().into_string().unwrap();
-                    name.pop();
-                    name.pop();
-                    if name == file_id {
-                        collected_files = collected_files + 1;
+        let file_id = file_item.get_id().to_string();
+        if(file_id == "-1"){
+            let result = String::from("Error");
+            return result;
+        }
+        else{
+            let mut collected_files: i32 = 0;
+            for entry in fragmentFolderPath.read_dir().unwrap(){
+                let path = entry.unwrap().path();
+                let str = path.file_name();
+                match str {
+                    None => continue,
+                    Some(str) => {
+                        let mut name = str.to_os_string().into_string().unwrap();
+                        name.pop();
+                        name.pop();
+                        if name == file_id {
+                            collected_files = collected_files + 1;
+                        }
                     }
                 }
             }
-        }
-        let t1 = collected_files as f64;
-        let t2 = file_item.get_noa() as f64;
-        let percentage: f64 = 2.0 * t1 / t2;
-        collected_files = (percentage * 100.0) as i32;
-        println!("pregress check is called, return {}", collected_files);
+            let t1 = collected_files as f64;
+            let t2 = file_item.get_noa() as f64;
+            let percentage: f64 = 2.0 * t1 / t2;
+            collected_files = (percentage * 100.0) as i32;
+            println!("pregress check is called, return {}", collected_files);
 
-        self.result = collected_files.to_string();
-        self.result.clone()
+            let result = collected_files.to_string();
+            result
+        }  
     }
 
-    pub fn decodeFile(&mut self) -> String {
+    pub fn decodeFile(path1:String, name1:String) -> String {
 		//return 1 and DELETE ALL FRAGMENTS OF INPUT FILE if decode successfully
-		//else, return 0
+        //else, return 0
+        let fragmentFolderPath=PathBuf::from("D:webapps/DFS/CloudDriveServer/downloadFragment/"),
+        let fileFolderPath=PathBuf::from("D:webapps/DFS/CloudDriveServer/tmpFile/"),
         println!("decodeFile is called");
         let query = Query::new();
-        let qpath: Option<String> = Some(self.path);
-        let qname: Option<String> = Some(self.name);
+        let qpath: Option<String> = Some(path1);
+        let qname: Option<String> = Some(name1);
         let file_item = query.queryFile_Bypathname(qpath, qname);
         
         //com.backblaze.erasure.Decoder.decode()
         //decode(shardsFolder:PathBuf,fileFolder:PathBuf,fid:i32,noa:i32) -> bool
         let file_id = file_item.get_id().to_string();
         let mut str = String::new();
-        let file_folder = self.fileFolderPath.join(self.name);
-        if Decoder::decode(self.fragmentFolderPath, file_folder, file_item.get_id(), file_item.get_noa()) {
+        let file_folder = fileFolderPath.join(self.name);
+        if Decoder::decode(fragmentFolderPath, file_folder, file_item.get_id(), file_item.get_noa()) {
 
-            for entry in self.fragmentFolderPath.read_dir().unwrap(){
+            for entry in fragmentFolderPath.read_dir().unwrap(){
                 let path = entry.unwrap().path();
                 let str = path.file_name();
                 match str {
@@ -185,14 +196,14 @@ impl FileDownloader {
                 }
             }
             
-            self.result = String::from("OK");
+            let result = String::from("OK");
             //return_val = String::form("success");
-            return self.result.clone();
+            return result;
         }
         else {
-            self.result = String::from("Error");
+            let result = String::from("Error");
             //return_val = String::form("success");
-            return self.result.clone();
+            return result;
         }
     }
 

@@ -18,6 +18,7 @@ mod com;
 use userManagement::UserReg::UserReg;
 use userManagement::UserLogin::UserLogin;
 use userManagement::FileDownloader::FileDownloader;
+use userManagement::GetFileList::GetFileList;
 
 #[derive(Serialize, Deserialize)]//用户名和密码，注册登录时用到
 pub struct User {
@@ -80,7 +81,7 @@ async fn downloadreg(params: web::Json<FileDownloader_param>) -> web::Json<Retur
 #[post("/GetFileList")]
 async fn getfilelist(params: web::Json<GetFileList_param>) -> web::Json<Return_string> {
     println!("Querypath: {0} ",params.QueryPath);
-    let result:String = FileDownloader::GetFileList.execute(params.QueryPath);
+    let result:String = GetFileList::execute(params.QueryPath);
     web::Json(Return_string {
         result,//返回的是html代码的字符串
     })
@@ -138,11 +139,11 @@ async fn main()  -> std::io::Result<()>{
                     .finish(),
             )
             .service(register)
-            .servive(login)
-            .servive(downloadreg)
-            .servive(getfilelist)
-            .servive(progresscheck)
-            .servive(decodefile)
+            .service(login)
+            .service(downloadreg)
+            .service(getfilelist)
+            .service(progresscheck)
+            .service(decodefile)
     })
     .bind("127.0.0.1:8000")?
     .run()
