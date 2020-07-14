@@ -96,20 +96,25 @@ impl ClientThread{
         loop{
             let mut sentence = String::new();
             sentence.clear();
-            in_from_client.read_line(&mut sentence).unwrap();
+            let result = in_from_client.read_line(&mut sentence);
+            if let Err(e) = result {
+                println!("client break down");
+                break;
+            }
             //println!("control Connect - ClientThread ：after read line!\n");
             if self.readsentence(&sentence) == 0 {
+                //println!("control Connect - ClientThread ：sentence：{}，break\n",sentence);
                 break;
                 //println!("control Connect - ClientThread ：sentence：{}，break\n",sentence);
             }
             println!("C-RECV: {}", sentence);
         }
         if self.client_id != -1 {
-            /*let query = database::Query::new();
-            let deviceitem = query.queryDevice(client_id);
-            deviceitem.setIsOnline(false);
+            let query = Query::new();
+            let mut deviceitem = query.queryDevice(self.client_id);
+            deviceitem.set_is_online(false);
 			query.alterDevice(deviceitem);
-			query.closeConnection();*/
+			//query.closeConnection();
         }
         println!("C-client thread ended");
     }
