@@ -1103,6 +1103,8 @@ seed
 
 # Rocket
 
+
+
 ## Overview
 
 - dynamic params <name>
@@ -1116,5 +1118,194 @@ seed
 
 
 
-Requests
+## Requests
+
+- validate dynamic path segment, *several* dynamic path segments, incoming body data, query strings, forms, and form values, incoming or outgoing format of a request,  arbitrary, user-defined security or validation policies.
+
+- Rocket route attribute: get`, `put`, `post`, `delete`, `head`, `patch`, or `options
+
+- dynamic path: #[get("/hello/<name>")]
+
+- multiple segments: 
+
+  ```
+  #[get("/page/<path..>")]
+  fn get_page(path: PathBuf) { /* ... */ }
+  ```
+
+- forwarding: When a parameter type mismatch occurs, Rocket *forwards* the request to the next matching route, if there is any. Routes are attempted in increasing *rank* order.
+
+  ```
+  #[get("/user/<id>")]
+  fn user(id: usize) { /* ... */ }
+  
+  #[get("/user/<id>", rank = 2)]
+  fn user_int(id: isize) { /* ... */ }
+  
+  #[get("/user/<id>", rank = 3)]
+  fn user_str(id: &RawStr) { /* ... */ }
+  ```
+
+- default ranking: 
+
+- query strings: #[get("/hello?wave&<name>")]
+
+- Optional Parameters: use `Option<T>` as the parameter type
+
+  ```
+  #[get("/hello?wave&<name>")]
+  fn hello(name: Option<String>) -> String {
+      name.map(|name| format!("Hi, {}!", name))
+          .unwrap_or_else(|| "Hello!".into())
+  }
+  ```
+
+- request guards: Rocket将在调用处理程序之前自动调用请求保护程序的FromRequest实现。
+
+- forwarding guards: 
+
+  ```
+  use rocket::response::{Flash, Redirect};
+  
+  #[get("/login")]
+  fn login() -> Template { /* .. */ }
+  
+  #[get("/admin")]
+  fn admin_panel(admin: AdminUser) -> &'static str {
+      "Hello, administrator. This is the admin panel!"
+  }
+  
+  #[get("/admin", rank = 2)]
+  fn admin_panel_user(user: User) -> &'static str {
+      "Sorry, you must be an administrator to access this page."
+  }
+  
+  #[get("/admin", rank = 3)]
+  fn admin_panel_redirect() -> Redirect {
+      Redirect::to(uri!(login))
+  }
+  ```
+
+- cookies: important, built-in request guard
+
+  private cookies: Cookies::add()	
+
+  secret key: 256-bit, 私有cookie只能使用加密时使用的同一密钥进行解密
+
+  at most one `Cookies` instance be active at a time
+
+- format
+
+  ```
+  #[post("/user", format = "application/json", data = "<user>")]
+  fn new_user(user: User) { /* ... */ }
+  ```
+
+  当路由指示有效负载支持方法（PUT、POST、DELETE和PATCH）时，format route参数指示Rocket检查传入请求的Content-Type头。只有内容类型标头与格式参数匹配的请求才会与路由匹配。当路由指示非有效负载支持方法（GET、HEAD、OPTIONS）时，format route参数指示Rocket对照传入请求的Accept报头进行检查。路由只接受与媒体类型匹配的请求。
+
+- body data:
+
+  ```
+  #[post("/", data = "<input>")]
+  fn new(input: T) { /* .. */ }
+  ```
+
+
+
+
+# PPT
+
+所有权
+
+rust 中每一个值被有且仅有一个所有者持有，当所有者离开作用域时，这个值就会被丢弃。
+
+1. Rust 中的每一个值都有一个被称为其 **所有者**（*owner*）的变量。
+2. 值有且只有一个所有者。
+3. 当所有者（变量）离开作用域，这个值将被丢弃。
+
+- 当 `s` **进入作用域** 时，它就是有效的。
+- 这一直持续到它 **离开作用域** 为止。
+
+
+
+Rust 中的每一个引用都有其 **生命周期**（*lifetime*），也就是引用保持有效的作用域。
+
+它们允许你使用值但不获取其所有权
+
+生命周期
+
+Rust 中的引用允许你使用值但不获取其所有权，但都有其生命周期，也就是引用保持有效的作用域。
+
+
+
+rust 中每一个值被有且仅有一个所有者持有，当所有者离开作用域时，这个值就会被丢弃。在有 垃圾回收的语言中，  垃圾回收会自动记录并清除不再使用的内存。没有 垃圾回收的话，我们就要自己识别出不再使用的内存并调用代码显式释放。但 Rust 采取了一个不同的策略：内存在拥有它的变量离开作用域后就被自动释放，所以可以在没有垃圾回收器的情况下实现内存回收，不需要 close 等函数。
+
+
+
+总的设计相关
+
+what why how
+
+现有系统比较
+
+
+
+## PPT 思路
+
+- 
+
+- 项目 demo 展示
+
+- 项目框架
+
+  client和server：客户端运行，把文件放进指定文件夹，然后会被分块，传输给服务端，服务端则会把碎片分发给各个客户端，然后在数据库里做相应记录
+
+  前后端：本来是打算采用Node.js来写，但是后续调研发现WebAssembly编译Rust存在较大的局限性，所以整个项目编译为WebAssembly是不现实的，主要还是在前端做一定的编译。然后随后调研，查阅资料后发现，考虑到17级已经实现了比较完整的前后端。那么我们初步设定目标就是写好client和server
+
+  然后后续为了和我们的项目契合，以及统一项目工程，是考虑的逐步用rust取代原来的Tomcat服务器为中心构建的前后端。
+
+  目前我们是考虑在前后端分离，采用actix_web框架实现后端，采用Seed实现前端。目前后端工作基本完成，还在调试阶段。主要考虑的是对采用Tomcat启动的前端的事件作ajax响应，把其发送到后端，然后后端和数据库做交互，最后把结果返回给前端
+
+  前端这一块，考虑用seed框架来完成，其内置了把rust编译为webAssembly的几个包，是比较理想的完成方式，但是由于前端开始的相对较晚(前期准备不充分，低估了rust写前端的难度)，所以目前进度不算理想，可能考虑后续完善。
+
+- 项目架构介绍
+  - client
+  - server
+  - 后端 actix-web
+  - 前端 seed
+  
+- 项目亮点介绍
+  - 纠删码
+  
+    
+  
+  - rust
+  
+    - 所有权&生命周期
+    - 错误处理准确且多样
+      - panic：溢出等错误，直接报错，没有修复的可能
+      - 可恢复的错误：Result 和 Option 类型，出错时返回错误，可以使用 unwrap 返回 panic，或者使用 expect 返回指定错误信息
+    - Java的整型操作均是封装好的（并没有溢出检查），而 Rust 会在调试模式时进行溢出检查，在发布模式下进行封装时不做检查。
+  
+  - 锁机制
+  
+    先是创建锁（其包含一个状态值），并分别 clone 到 folderScanner 和ServerConnecter 两个线程；然后主线程调用 wait 进入睡眠；最后若另外两个线程发生错误，则会获取锁并修改状态值，再唤醒主线程；主线程检测到状态值改变，则会输出相应报错信息，最后终止所有 client 的线程
+  
+  - web 服务器搭建
+  
+    采用 actix-web 框架做后端以实现对路由的挂载，以及与数据库的交互
+  
+    预期采用 seed 框架做前端以实现对浏览器页面的加载与交互，并利用 rust 的 web-pack 等包编译 rust 为 WebAssembly 以运行在浏览器中：已在设计中，还未完成
+  
+  - 
+  
+- 与现有系统比较
+
+  - MooseFS	用perl编写，比较轻量级，国内用的人比较多，易用，稳定，对小文件很高效，性能相对较差，对master服务器有单点依赖。
+  - MogileFS    主要用在web领域处理海量小图片，效率相比mooseFS高很多，只适合存储静态只读小文件。perl编写的代码， 对外提供API来进行使用， 因为需要安装很多依赖的第三方perl包，搭建相对比较复杂一点。
+  - ceph    彻底的分布式，没有单点依赖，用C编写，性能较好。基于不成熟的btrfs，其本身也非常不成熟 
+  - 目前网络上比较流行的商用分布式文件系统如GFS，AFS过于面向大型企业与团体，性能要求高、可靠性要强，只支持在局域网上运行；
+
+- 意义价值、愿景
+- Q&A
 
