@@ -2,6 +2,7 @@ use std::path::PathBuf;
 use std::{thread, time};
 use std::convert::TryInto;
 use std::collections::linked_list::LinkedList;
+use std::time::Instant; // timer
 
 use super::FileUtil::FileUtil;
 //use crate::client::client::SynItem::SynItem;
@@ -12,7 +13,7 @@ use crate::client::com;
 use std::sync::{Arc, Mutex, Condvar};
 
 const BYTES_IN_SHARDS:u32 = 500000;
-const interval:u32 = 60000;
+const interval:u32 = 20000;
 
 /* NOTE:
    两个try catch 语句未实现
@@ -166,7 +167,8 @@ impl FolderScanner{
 
             return false;
         }
-        
+
+         let start_time = Instant::now();
         for j in 0.. noa {
             if !fUploader.pushFragment(id,j,noa) {
                 println!("ERR: can not upload fragments");
@@ -181,6 +183,11 @@ impl FolderScanner{
             }
             
         }
+
+         println!("time cost: {:?} ms", start_time.elapsed().as_millis());// ms
+         println!("time cost: {:?} us", start_time.elapsed().as_micros());// us
+         println!("time cost: {:?} ns", start_time.elapsed().as_nanos());// us
+
 
         let FileUtil:FileUtil = FileUtil::new();
         // 处理完毕，清空块文件夹

@@ -23,8 +23,8 @@ impl FileDownloader {
             name: String::new(),
             result: String::new(),
             serialVersionUID: 1,
-            fragmentFolderPath1:PathBuf::from("D:webapps/DFS/CloudDriveServer/downloadFragment/"),
-            fileFolderPath1:PathBuf::from("D:webapps/DFS/CloudDriveServer/tmpFile/"),
+            fragmentFolderPath1:PathBuf::from("E:/Tomcat 9.0/webapps/DFS/CloudDriveServer/downloadFragment/"),
+            fileFolderPath1:PathBuf::from("E:/Tomcat 9.0/webapps/DFS/CloudDriveServer/tmpFile/"),
         }
     }
 
@@ -59,7 +59,7 @@ impl FileDownloader {
         println!("downloadRegister is called");
 
         //let mut return_val = String::new();
-        let query = Query::Query::new();
+        let query = Query::new();
         let qpath: Option<String> = Some(path1);
         let qname: Option<String> = Some(name1);
         let file_item = query.queryFile_Bypathname(qpath, qname);
@@ -82,7 +82,7 @@ impl FileDownloader {
             let noa = file_item.get_noa();
             let id = file_item.get_id();
             //let mut str = String::new();
-            let mut request_items: Vec<RequestItem::RequestItem> = Vec::new();
+            let mut request_items: Vec<RequestItem> = Vec::new();
             for i in 0..noa {
                 let str = query.queryFragment(id * 100 + i);
                 if str == "" || str == "-1" {
@@ -91,7 +91,7 @@ impl FileDownloader {
                 let device_id: i32 = str.parse().unwrap();
                 for j in 0..online_device.len() {
                     if online_device[j].get_id() == device_id {
-                        request_items.push(RequestItem::RequestItem::init_2(1, id*100 + 1, device_id));
+                        request_items.push(RequestItem::init_2(1, id*100 + i, device_id));//pqz,1改为i
                         break;
                     }
                 }
@@ -119,10 +119,10 @@ impl FileDownloader {
         //return -1 if error
 		//else, return a number from 0 to 100 as # of fragments which have been downloaded
         //let mut return_val = String::new();
-        let fragmentFolderPath=PathBuf::from("D:webapps/DFS/CloudDriveServer/downloadFragment/");
+        let fragmentFolderPath=PathBuf::from("E:/Tomcat 9.0/webapps/DFS/CloudDriveServer/downloadFragment/");
         //let fileFolderPath=PathBuf::from("D:webapps/DFS/CloudDriveServer/tmpFile/");
 
-        let query = Query::Query::new();
+        let query = Query::new();
         let qpath: Option<String> = Some(path1);
         let qname: Option<String> = Some(name1);
         let file_item = query.queryFile_Bypathname(qpath, qname);
@@ -163,10 +163,10 @@ impl FileDownloader {
     pub fn decodeFile(path1:String, name1:String) -> String {
 		//return 1 and DELETE ALL FRAGMENTS OF INPUT FILE if decode successfully
         //else, return 0
-        let fragmentFolderPath=PathBuf::from("D:webapps/DFS/CloudDriveServer/downloadFragment/");
-        let fileFolderPath=PathBuf::from("D:webapps/DFS/CloudDriveServer/tmpFile/");
+        let fragmentFolderPath=PathBuf::from("E:/Tomcat 9.0/webapps/DFS/CloudDriveServer/downloadFragment/");
+        let fileFolderPath=PathBuf::from("E:/Tomcat 9.0/webapps/DFS/CloudDriveServer/tmpFile/");
         println!("decodeFile is called");
-        let query = Query::Query::new();
+        let query = Query::new();
         let qpath: Option<String> = Some(path1.clone());
         let qname: Option<String> = Some(name1.clone());
         let file_item = query.queryFile_Bypathname(qpath, qname);
@@ -176,8 +176,8 @@ impl FileDownloader {
         let file_id = file_item.get_id().to_string();
         //let mut str = String::new();
         let file_folder = fileFolderPath.join(name1);
-        if Decoder::Decoder::decode(fragmentFolderPath.clone(), file_folder, file_item.get_id(), file_item.get_noa()) {
-
+        //println!("{}", file_folder.display());
+        if Decoder::decode(fragmentFolderPath.clone(), file_folder, file_item.get_id(), file_item.get_noa()) {
             for entry in fragmentFolderPath.read_dir().unwrap(){
                 let path = entry.unwrap().path();
                 let str = path.file_name();

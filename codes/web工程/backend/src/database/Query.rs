@@ -1,8 +1,13 @@
 use std::*;
 use std::convert::TryInto;
-include!("FileItem.rs");
-include!("RequestItem.rs");
-include!("DeviceItem.rs");
+
+
+//include!("FileItem.rs");
+//include!("RequestItem.rs");
+//include!("DeviceItem.rs");
+use super::FileItem::FileItem;
+use super::DeviceItem::DeviceItem;
+use super::RequestItem::RequestItem;
 use mysql as my;
 
 struct UserItem {

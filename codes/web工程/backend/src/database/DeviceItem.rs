@@ -1,9 +1,9 @@
 pub struct DeviceItem {
-    id: i32,
-    ip: String,
-    port: i32,
-    is_online: bool,
-    rs: i32,
+    pub id: i32,
+    pub ip: String,
+    pub port: i32,
+    pub is_online: bool,
+    pub rs: i32,
 }
 
 impl DeviceItem {

@@ -1,5 +1,3 @@
-
-
 pub struct RequestItem {
     pub id: i32,
     pub type_: i32,

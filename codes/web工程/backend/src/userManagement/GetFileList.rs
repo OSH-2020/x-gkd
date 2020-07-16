@@ -49,7 +49,7 @@ impl GetFileList {
 
 
     pub fn execute(Querypath1:String) -> String {
-        let query = Query::Query::new();
+        let query = Query::new();
         let tpath: Option<String> = Some(Querypath1);
         let mut file_array = query.queryFile_Bypath(tpath);
 
@@ -60,8 +60,7 @@ impl GetFileList {
                 "<td> <label><input type=\"checkbox\">&emsp;&emsp;</label><span class=\"glyphicon glyphicon-folder-open\"></span>&emsp;../</td>"+
                 "<td> </td>"+
                 "<td> </td>"+
-                "</tr>"+
-                "<td> </td>";
+                "</tr>";
 
         //let mut return_val = String::new();
 
@@ -87,7 +86,7 @@ impl GetFileList {
                 html = html + 
                     "<td> <label><input type=\"checkbox\"></label> 　　<span class=\"glyphicon glyphicon-file\"></span>　"+
                         &file_array[i].get_name()+
-                    "</td>"
+                    "</td>";
             }
             html = html +    
                 "<td>"+

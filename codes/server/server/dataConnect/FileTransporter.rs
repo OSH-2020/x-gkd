@@ -10,8 +10,12 @@ pub fn recv_file(mut f: File, mut soc_in: &TcpStream)->bool{
     //soc_in.read_exact(&mut buffer).unwrap();
     let size = soc_in.read_exact(&mut buffer);
     if let Err(e) = size {
+
         return false;
     }
+    /*for i in 0..8{
+        println!("{} {}", i, buffer[i]);
+    }*/
     //Java 数据传输都是big endian，此处也默认读到数据是big endian
     //from_bytes is a nightly-only experimental API.
     //let file_length = i64::from_bytes(buffer);

@@ -708,3 +708,8 @@ fn download_data_uri_as(data_uri: &str, filename: &str) {
 
 ### 异步and同步ajax？
 
+# Tomcat与web有关内容
+
+* ![img](https://images2015.cnblogs.com/blog/1120165/201705/1120165-20170523095549460-920259459.png)
+
+* 

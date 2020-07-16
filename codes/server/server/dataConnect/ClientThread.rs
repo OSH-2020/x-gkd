@@ -38,8 +38,8 @@ impl ClientThread{
         ClientThread{
             client_socket: stream,
             sentence: String::new(),
-            download_folder_path: PathBuf::from("D:webapps/DFS/CloudDriveServer/downloadFragment/"),
-            upload_folder_path: PathBuf::from("D:webapps/DFS/CloudDriveServer/uploadFragment/"),
+            download_folder_path: PathBuf::from("E:/Tomcat 9.0/webapps/DFS/CloudDriveServer/downloadFragment/"),
+            upload_folder_path: PathBuf::from("E:/Tomcat 9.0/webapps/DFS/CloudDriveServer/uploadFragment/"),
         }
     }
 
@@ -78,6 +78,53 @@ impl ClientThread{
         }
     }
 
+    /*pub fn recv_required_fragment(mut self)->bool{
+        let mut status:bool = true;
+        let command:Vec<&str> = self.sentence[..].split(' ').collect();
+        let id:i32 = command[1].parse().unwrap();
+        let fid:i32 = command[2].trim().parse().unwrap();
+
+        let query = Query::new();
+        let mut request = query.queryRequest_Byid(id);
+
+        if request.get_fragment_id() != fid || request.get_type() != 1{
+            self.client_socket.write(b"ERROR!\n");
+            self.client_socket.flush();
+            status = false;
+        }
+        else{
+            println!("else\n");
+            let mut s: String = self.download_folder_path.into_os_string().into_string().unwrap();
+            s.push_str(&fid.to_string());
+                //+ &fid.to_string();
+            let recv_file = File::create(s).unwrap();
+            self.client_socket.write(b"received!\n");
+            self.client_socket.flush();
+            status = super::FileTransporter::recv_file(recv_file, &self.client_socket);
+            println!("status:{}\n", status);
+            /*if status {
+                self.client_socket.write(b"received!\n");
+                self.client_socket.flush();
+                query.deleteRequest(request.get_id());
+            }*/
+            if status {
+                self.client_socket.write(b"received!\n");
+                self.client_socket.flush();
+                query.deleteRequest(request.get_id());
+            } else {
+                let mut f2 = File::create(&s).unwrap();
+                let mut socket2 = self.client_socket.try_clone().expect("clone failed");
+                if(super::FileTransporter::recv_file(f2, &socket2)) {
+                    socket2.write(b"received!\n");
+                    socket2.flush();
+                    query.deleteRequest(request.get_id());
+                }
+            }
+        }
+        //query.closeConnection();
+        status
+    }*/
+
     pub fn recv_required_fragment(mut self)->bool{
         let mut status:bool = true;
         let command:Vec<&str> = self.sentence[..].split(' ').collect();
@@ -95,8 +142,8 @@ impl ClientThread{
         else{
             let mut s: String = self.download_folder_path.into_os_string().into_string().unwrap();
             s.push_str(&fid.to_string());
-                //+ &fid.to_string();
-            let recv_file = File::create(s).unwrap();
+            //+ &fid.to_string();
+            let recv_file = File::create(&s).unwrap();
             self.client_socket.write(b"received!\n");
             self.client_socket.flush();
             status = super::FileTransporter::recv_file(recv_file, &self.client_socket);
@@ -104,6 +151,14 @@ impl ClientThread{
                 self.client_socket.write(b"received!\n");
                 self.client_socket.flush();
                 query.deleteRequest(request.get_id());
+            } else {
+                let mut f2 = File::create(&s).unwrap();
+                let mut socket2 = self.client_socket.try_clone().expect("clone failed");
+                if(super::FileTransporter::recv_file(f2, &socket2)) {
+                    socket2.write(b"received!\n");
+                    socket2.flush();
+                    query.deleteRequest(request.get_id());
+                }
             }
         }
         //query.closeConnection();
@@ -266,6 +321,7 @@ impl ClientThread{
             let mut s1: String = self.upload_folder_path.clone().into_os_string().into_string().unwrap();
             //let mut s1: String = s.clone();
             s.push_str(&temp.to_string());
+            println!("{}",s);
             let recv_file = File::create(&s).unwrap();
             self.client_socket.write(b"received!\n").unwrap();
             self.client_socket.flush();

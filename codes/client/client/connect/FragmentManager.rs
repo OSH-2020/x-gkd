@@ -117,15 +117,25 @@ impl FragmentManager {
     fn sendFragment(&mut self) -> bool {
         let mut status = true;
         let mut sentense = String :: new();
-        let mut pathBuf = PathBuf::new();
+        /*let mut pathBuf = PathBuf::new();
         pathBuf.push(&self.fragmentFolder);
-        pathBuf.push("/");
+        println!("{}", self.fragmentFolder);
+        pathBuf.push("\\");
         pathBuf.push(&self.fragmentID.to_string());
         //可能会根据运行平台的不同添加/,分为posix和windows
-        let mut f = File::create(pathBuf).unwrap();
+        println!("{}", pathBuf.display());
+        let mut f = File::open(pathBuf).unwrap();*/
         /*if !f.is_ok() {//如何判断一个文件是否存在？
             panic!("Error happens on File");
         }*/
+        let mut s = String:: new();
+        s.push_str(&self.fragmentFolder);
+        s.push('\\');
+        s.push_str(&self.fragmentID.to_string());
+        println!("{}", s);
+        let mut path = Path::new(&s);
+        //可能会根据运行平台的不同添加/,分为posix和windows
+        let mut f = File::open(&path).unwrap();
 
         //@SuppressWarnings("deprecation")
         match &mut self.toServer {
@@ -137,7 +147,7 @@ impl FragmentManager {
                 let socket2 = socket.try_clone().expect("clone failed");//克隆端口
                 let mut inFromServer = BufReader::new(socket1);
                 inFromServer.read_line(&mut sentense).unwrap();
-                let recv = String :: from("received!");
+                let recv = String :: from("received!\n");
                 if !sentense.eq(&recv) {
                     return false;
                 }

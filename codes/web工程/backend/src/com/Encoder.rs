@@ -57,12 +57,12 @@ impl Encoder{
         }
         inputFile.read_to_end(&mut allBytes);   //appended,故不需要指定off
 
-        if allBytes.len() != (fileSize + 4).try_into().unwrap() {
+        if allBytes.len() != (fileSize + 4) as usize {//pqz
             panic!("not enough bytes read");
             //注：原程序为throw IOException
         }
 
-        if allBytes.len() > bufferSize.try_into().unwrap() {
+        if allBytes.len() > bufferSize as usize {//pqz
             allBytes.resize(bufferSize.try_into().unwrap(),0);
         }
         

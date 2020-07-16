@@ -1,11 +1,11 @@
 pub struct FileItem {
-    id: i32,
-    name: String,
-    path: String,
-    attribute: String,
-    time: String,
-    noa: i32,
-    is_folder: bool,
+    pub id: i32,
+    pub name: String,
+    pub path: String,
+    pub attribute: String,
+    pub time: String,
+    pub noa: i32,
+    pub is_folder: bool,
 }
 
 impl FileItem {

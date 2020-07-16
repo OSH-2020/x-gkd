@@ -42,6 +42,8 @@ impl Decoder{
                 shardPresent.push(true);
                 shardCount += 1;
                 &shards[i].append(&mut fs::read(&shardFile_path).unwrap());
+            }else {
+                shardPresent.push(false);
             }
             
         }
@@ -53,15 +55,19 @@ impl Decoder{
         }
 
         // Make empty buffers for the missing shards.
+
+        let mut shards:Vec<_> = shards.iter().cloned().map(Some).collect();
+
         for i in 0..totalShards as usize {
             if !shardPresent[i] {
-                for j in 0..shardSize {
-                    &shards[i].push(0);
-                }
+                // for j in 0..shardSize {
+                //     &shards[i].push(0);
+                // }
+                shards[i] = None;
             }
         }
 
-        let mut shards:Vec<_> = shards.iter().cloned().map(Some).collect();
+
         // Use Reed-Solomon to fill in the missing shards
         let mut reedSolomon = ReedSolomon::new(dataShards.try_into().unwrap(),(totalShards - dataShards).try_into().unwrap()).unwrap();
         //reedSolomon.reconstruct(shards).unwrap();
@@ -81,13 +87,15 @@ impl Decoder{
         //filesize
 
         // Write the decoded file
-        let pathbuf = fileFolder.join(Path::new(&(fid).to_string()));
-        let decodedFile_path:&Path = pathbuf.as_path();
+        //println!("{}",fileFolder.display());
+        //let pathbuf = fileFolder.join(Path::new(&(fid).to_string()));
+        //let decodedFile_path:&Path = fileFolder.as_path();
         allBytes.remove(0);
         allBytes.remove(0);
         allBytes.remove(0);
         allBytes.remove(0);
-        fs::write(&decodedFile_path,allBytes).unwrap();
+        //println!("{}",decodedFile_path.display());
+        fs::write(fileFolder,allBytes).unwrap();
         
         println!("Decode Success");
         return true;

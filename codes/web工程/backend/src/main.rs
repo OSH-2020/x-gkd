@@ -1,8 +1,13 @@
+#[macro_use]
+extern crate mysql;
+
 use serde::{Deserialize, Serialize};
 use actix_web::{
     get,post,http::header,middleware, web, App, HttpRequest, HttpResponse, HttpServer, Responder, Result,
 };
 use actix_cors::Cors;
+
+
 /*
 #[derive(Debug, Serialize, Deserialize)]
 struct UserReg {
@@ -19,6 +24,8 @@ use userManagement::UserReg::UserReg;
 use userManagement::UserLogin::UserLogin;
 use userManagement::FileDownloader::FileDownloader;
 use userManagement::GetFileList::GetFileList;
+
+
 
 #[derive(Serialize, Deserialize)]//用户名和密码，注册登录时用到
 pub struct User {
@@ -42,6 +49,8 @@ pub struct GetFileList_param {
 struct Return_string {
     result: String,
 }
+
+
 /*
 #[get("/index1")]
 async fn index() -> impl Responder {
@@ -50,9 +59,9 @@ async fn index() -> impl Responder {
 }
 */
 #[post("/UserReg")]
-async fn register(params: web::Json<User>) -> web::Json<Return_string> {
+async fn register(params: web::Json<User>) -> web::Json<Return_string> {//pqz
     println!("username: {0} ,userPasswd:{1}",params.userName,params.userPasswd);
-    let result:String = UserReg::execute(params.userName,params.userPasswd);
+    let result:String = UserReg::execute(params.userName.clone(),params.userPasswd.clone());
     //let result:String=String::from("sddd");
     web::Json(Return_string {
         result,
@@ -62,7 +71,7 @@ async fn register(params: web::Json<User>) -> web::Json<Return_string> {
 #[post("/UserLogin")]
 async fn login(params: web::Json<User>) -> web::Json<Return_string> {
     println!("username: {0} ,userPasswd:{1}",params.userName,params.userPasswd);
-    let result:String = UserLogin::execute(params.userName,params.userPasswd);
+    let result:String = UserLogin::execute(params.userName.clone(),params.userPasswd.clone());//pqz
     web::Json(Return_string {
         result,
     })
@@ -70,8 +79,10 @@ async fn login(params: web::Json<User>) -> web::Json<Return_string> {
 
 #[post("/DownloadReg")]
 async fn downloadreg(params: web::Json<FileDownloader_param>) -> web::Json<Return_string> {
+    println!("hhh");
     println!("path: {0} ,name:{1}",params.path,params.name);
-    let result:String = FileDownloader::downloadRegister(params.path,params.name);
+    let result:String = FileDownloader::downloadRegister(params.path.clone(),params.name.clone());
+    println!("{}", result);
     web::Json(Return_string {
         result,
     })
@@ -81,7 +92,8 @@ async fn downloadreg(params: web::Json<FileDownloader_param>) -> web::Json<Retur
 #[post("/GetFileList")]
 async fn getfilelist(params: web::Json<GetFileList_param>) -> web::Json<Return_string> {
     println!("Querypath: {0} ",params.QueryPath);
-    let result:String = GetFileList::execute(params.QueryPath);
+    let result:String = GetFileList::execute(params.QueryPath.clone());
+    //println!("{}", result);
     web::Json(Return_string {
         result,//返回的是html代码的字符串
     })
@@ -90,7 +102,8 @@ async fn getfilelist(params: web::Json<GetFileList_param>) -> web::Json<Return_s
 #[post("/progressCheck")]
 async fn progresscheck(params: web::Json<FileDownloader_param>) -> web::Json<Return_string> {
     println!("path: {0} ,name:{1}",params.path,params.name);
-    let result:String = FileDownloader::progressCheck(params.path,params.name);
+    let result:String = FileDownloader::progressCheck(params.path.clone(),params.name.clone());
+    println!("{}", result);
     web::Json(Return_string {
         result,//进度条数值的字符串形式或"Error"
     })
@@ -99,7 +112,8 @@ async fn progresscheck(params: web::Json<FileDownloader_param>) -> web::Json<Ret
 #[post("/decodeFile")]
 async fn decodefile(params: web::Json<FileDownloader_param>) -> web::Json<Return_string> {
     println!("path: {0} ,name:{1}",params.path,params.name);
-    let result:String = FileDownloader::decodeFile(params.path,params.name);
+    let result:String = FileDownloader::decodeFile(params.path.clone(),params.name.clone());
+    println!("{}", result);
     web::Json(Return_string {
         result,//"Error"或"OK"
     })
