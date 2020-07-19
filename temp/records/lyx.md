@@ -1408,23 +1408,31 @@ Rocket遇到的问题与思考
 
 * 接口：
 
-  * UserReg.execute(params.userName,params.userPasswd);成功返回字符串"success",失败返回字符串"fail"
+  * UserReg::execute(params.userName,params.userPasswd);
 
-  * UserLogin.execute(params.userName,params.userPasswd); 成功返回字符串"login sucessfully!"，失败返回字符串"login fail!"
+     	成功返回字符串"success",失败返回字符串"fail"
+
+  * UserLogin::execute(params.userName,params.userPasswd);
+
+    ​	 成功返回字符串"login sucessfully!"，失败返回字符串"login fail!"
 
   * FileDownloader:
 
     * downloadRegister:  FileDownloader::downloadRegister(params.path,params.name);
 
-      返回值同java文件所述："NotEnoughFragments"或"Error"或“OK”
+      ​	返回值同java文件所述："NotEnoughFragments"或"Error"或“OK”
 
     * progressCheck： FileDownloader::progressCheck(params.path,params.name);
 
-      返回值:"Error"或者进度的数值的字符串形式
+      ​	返回值:"Error"或者进度的数值的字符串形式
 
-    * decodeFile：FileDownloader::decodeFile(params.path,params.name); 返回“Error”或“OK”
+    * decodeFile：FileDownloader::decodeFile(params.path,params.name);
 
-  * FileDownloader::GetFileList.execute(params.QueryPath); 返回值为字符串html(后续再做错误处理)
+      ​	 返回“Error”或“OK”
+
+  * FileDownloader::GetFileList.execute(params.QueryPath); 
+
+    返回值为字符串html(后续再做错误处理)
 
 
 
