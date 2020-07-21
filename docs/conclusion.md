@@ -1,6 +1,10 @@
-# **基于 Rust 和 WebAssembly 的分布式文件系统**详细设计报告
+# **基于 Rust 和 WebAssembly 的分布式文件系统**
 
 雷雨轩 裴启智 刘逸菲 孙一鸣 曲阳
+
+[TOC]
+
+
 
 ## 一. 项目背景
 
@@ -25,7 +29,7 @@
 
 在调研报告和可行性报告部分，我们已经对于我们实现思路做了分析。现在首先简要概括本项目的完成情况：
 
-在[原基于互联网的小型分布式文件系统项目](https://github.com/IngramWang/DFS_OSH2017_USTC)的基础上，小组成员齐心协力，学习rust语言并完成了client、server端的完全改写，实现了整个分布式文件系统的逻辑架构。此外，采用前后端分离的模式，采用actix-web框架将web应用的后端用rust语言改写，并与原项目的web前端衔接，最终呈现出完整的分布式文件系统，并在浏览器端提供了用户对文件系统的管理操作。
+在原[基于互联网的小型分布式文件系统项目](https://github.com/IngramWang/DFS_OSH2017_USTC)的基础上，小组成员齐心协力，学习rust语言并完成了client、server端的完全改写，实现了整个分布式文件系统的逻辑架构。此外，采用前后端分离的模式，采用actix-web框架将web应用的后端用rust语言改写，并与原项目的web前端衔接，最终呈现出完整的分布式文件系统，并在浏览器端提供了用户对文件系统的管理操作。
 
 ## 二. 总体设计架构
 
@@ -114,7 +118,17 @@
 
   - Mysql中的表
 
-    数据库中有DEVICE,FRAGMENT,FILE,REQUEST,USER 五张表。DEVICE 表登记存储端设备的ID,IP地址,端口号,是否在线，剩余空间等信息。FRAGMENT 表登记碎片的ID和路径。FILE 表登记分布式文件系统中的文件名称、文件逻辑路径、 属性、修改时间、分成的文件碎片数量、是否为文件夹等。REQUEST 表登记请求的ID、请求类型（1服务器分块，2服务器将分块发送给客户端，3删除客户端上的分块）、需处理此请求的设备ID、需被处理的碎片ID等。USER 表登记用户的姓名和密码。
+    数据库中有DEVICE,FRAGMENT,FILE,REQUEST,USER 五张表。
+    
+    DEVICE 表登记存储端设备的ID,IP地址,端口号,是否在线，剩余空间等信息。
+    
+    FRAGMENT 表登记碎片的ID和路径。
+    
+    FILE 表登记分布式文件系统中的文件名称、文件逻辑路径、 属性、修改时间、分成的文件碎片数量、是否为文件夹等。
+    
+    REQUEST 表登记请求的ID、请求类型（1服务器分块，2服务器将分块发送给客户端，3删除客户端上的分块）、需处理此请求的设备ID、需被处理的碎片ID等。
+    
+    USER 表登记用户的姓名和密码。
 
 - 客户端与服务器的通信
 
@@ -159,11 +173,11 @@
 
 ## 三. 学习记录
 
-### 3.1 **rust 教程及 crate 文档**
+### 3.1 rust 教程及 crate 文档
 
 项目初期，我们认真阅读了 [rust 的官方教程](http://120.78.128.153/rustbook/title-page.html) ，初步了解了 rust 语言的构成、概念、特性与优势。在 client 和 server 的代码改写阶段，为寻找与原项目中使用的 java 库函数对应的 rust 函数，我们阅读了大量的 crate 文档，例如：[mysql](https://docs.rs/mysql/17.0.0/mysql/) , [reed-solomon-erasure](https://docs.rs/reed-solomon-erasure/4.0.2/reed_solomon_erasure/) 等。在改写过程中，我们深刻体会了 rust 在线程并发、生命周期及所有权方面的优越特性。代码调试的过程更是锻炼了我们的调试能力，帮助我们对 rust 的错误处理机制有了更深层次的理解。
 
-### **3.2 数据库**
+### 3.2 数据库
 
 首先，我们基于廖雪峰的 SQL 基础教程学习了数据库的基本知识，学习了有关关系模型、查询数据 SELECT 语句、修改数据 UPDATE 语句、删除数据 DELETE 语句、增加数据 INSERT 语句和具体使用 MySQL 的方法等等。而后我们搜索了 Rust 中的 MySQL 使用，找到了[Rust 文档中的 MySQL 官方库](https://docs.rs/mysql/17.0.0/mysql/)，在学习了文档中的示例之后，我们首先使用示例进行了测试，而后仿照示例完成了我们的改写代码，在实际测试中也完善了错误处理，最后成功实现了数据库模块的功能。
 
@@ -246,7 +260,7 @@
 
     但在rust中，本身没有类这个概念，锁机制的使用也有所不同，所以考虑直接创建带有条件变量的锁,并把锁分别clone到folderScanner和ServerConnecter两个线程；
 
-    ```
+    ```Rust
     //线程创建
         let status = Arc::new((Mutex::new(0), Condvar::new()));
         let connect_status = status.clone();
@@ -268,7 +282,7 @@
 
     然后主线程调用wait进入睡眠；由于该条件变量的存在，当子线程出错时，则子线程会互斥的修改该条件变量，再唤醒wait中的主线程，主线程检测到状态值改变，则会输出相应报错信息，最后终止所有client的线程。这样一来SynItem类就不再需要了
 
-    ```
+    ```rust
     //主线程进入wait
     let &(ref lock, ref cvar) = &*status;
     let mut status_cur = lock.lock().unwrap();
@@ -279,7 +293,7 @@
     }
     ```
 
-    ```
+    ```rust
     //子线程出错时唤醒主线程
     let &(ref lock, ref cvar) = &*status;
     let mut status_cur = lock.lock().unwrap();
@@ -306,19 +320,19 @@
 
         原项目的 java 代码中，通过 `byte [] [] shards = new byte [totalShards] [shardSize];` 一句声明了一个大小由变量 totalShards 和 shardSize 规定的二维数组，但 rust 的相关多个教程中均未提到二维数组的概念，查询许多文档、尝试多种实现后，最后选择使用 `Vec<Vec<u8>>` 这种灵活的结构实现二维 vector。
 
-        ```
+        ```rust
         let mut shards:Vec<Vec<u8>> = vec![vec![0;shardSize.try_into().unwrap()];totalShards.try_into().unwrap()];
         ```
 
         另外，原 java 代码中，使用 buffersize 声明一维数组 allBytes 的大小，用于暂存文件大小与文件内容。在 rust 中也改为使用灵活的 vec 结构实现，这种改动也为使用 `struct std::fs::File` 结构的`fn read_to_end(&mut self, buf: &mut Vec<u8>) -> Result<usize>` 方法读取文件内容提供方便。
 
-        ```
+        ```rust
         //java
         final int bufferSize = shardSize * dataShards;
         final byte [] allBytes = new byte[bufferSize];
         ```
 
-        ```
+        ```rust
         //rust
         let mut allBytes:Vec<u8> = Vec::new();
         inputFile.read_to_end(&mut allBytes);   //append
@@ -326,7 +340,7 @@
 
         原 java 代码中使用 `void java.lang.System.arraycopy(Object src, int srcPos, Object dest, int destPos, int length)` 函数实现从一维数组 allBytes 到二维数组 shards 的拷贝，在 rust 中选择使用 vec 的 push 方法将每个字节依次放入 shards 中。
 
-        ```
+        ```rust
         if dataShards > 1{
         	for i in 0..(dataShards-1) as usize {
             	&shards[i].clear();
@@ -355,14 +369,14 @@
 
       在已知 fid （文件 ID）与 noa （文件碎片数）时，原 java 代码通过 File 类的构造方法`java.io.File.File(File parent, String child)` 构造各文件碎片对应的 File 实例。
 
-      ```
+      ```java
       //java
       File shardFile = new File(shardsFolder, Integer.toString(fid * 100 + i));
       ```
 
       在 rust 中，使用 `std::path::PathBuf` 结构的 `pub fn join<P:AsRef<Path>>(&self,path:P) -> PathBuf` 方法构造各文件碎片对应的路径。
 
-      ```
+      ```rust
       //rust
       let pathbuf = shardsFolder.join(Path::new(&(fid * 100 +i as i32).to_string()));
       ```
@@ -379,7 +393,7 @@
       Java 是面向对象语言，FileTransporter 模块原代码中定义了一个没有字段只有方法的抽象类；而 Rust 并非面向对象语言，因此不再定义 FileTransporter 类，直接定义 send_file, recv_file 两个函数。
       又考虑到 Rust 标准库与 Java 区别，结合本文件功能，确定 DataInputStream, DataOutputStream 类型对应参数改为 TcpStream 。再由于 Rust 所有权规则，直接使用 TcpStream 类型参数，会在函数返回时结束该变量的生命周期，因此改为 &TcpStream 。
 
-      ```
+      ```rust
       pub fn recv_file(mut f: File, mut soc_in: &TcpStream)->bool{
         ...
       }
@@ -425,7 +439,7 @@
 
       - Java 中使用了 lastIndexOf 函数来找到字符串中的最后一个 /，Rust 实现时使用了循环来找到最后一个字符。而后针对不同情况分别发送路径到服务器。
 
-        ```
+        ```rust
         while i < addr.len() {
                     let c = addr[i].chars();
                     let mut j = -1;
@@ -471,7 +485,7 @@
 
         由于 rust 不能像 java 一样使用 static 关键字声明类变量，因此选择先在 init 方法中，将“类变量”的值赋给可变全局变量（用static mut 声明）；再在每次使用 new 方法获得结构体时，利用全局变量给结构体中的字段赋值。
 
-        ```
+        ```rust
         pub fn init(tmp:&String){
            unsafe{
                  //static_tmp为可变全局变量
@@ -505,7 +519,7 @@
 
         对应于 java 中的 `java.io.File.listFiles()` 方法，在 rust 中采用 Function [std](https://doc.rust-lang.org/std/index.html)::[fs](https://doc.rust-lang.org/std/fs/index.html)::[read_dir](https://doc.rust-lang.org/std/fs/fn.read_dir.html) 返回目录下的条目迭代器，并通过以下方式获取条目的路径，再对路径为目录还是文件进行判断。
 
-        ```
+        ```rust
         if let Ok(entries) = fs::read_dir(dir){
         	for entry in entries{
             	if let Ok(entry) = entry{
@@ -541,7 +555,7 @@
 
     DeviceItem、FileItem 和 RequestItem 定义了数据库所需结构体，并且也配备了相应的获取值和改变值的方法。
 
-    ```
+    ```rust
     pub fn get_port(&mut self) -> i32 {
             self.port
         }
@@ -553,7 +567,7 @@
 
     Query 中 new 方法连接到了 pool 连接池，从中进行查询。而后使用 MySQL 的 statement 语句对信息进行增删改查。查询信息处，查询失败返回 id 值为-1，查询成功但库中没有对应信息返回 id 值为0，查询成功并且库中有对应信息返回相应信息。若有可能查询到多个相应信息，则返回对应信息的向量。增加、删除、修改也使用对应 statement 进行操作。
 
-    ```
+    ```rust
     pub fn queryFile_Bypath(&self, path: Option<String>) -> Vec<FileItem>{
             let selected_files: Result<Vec<FileItem>, mysql::Error> =
             self.pool.prep_exec("SELECT * FROM DFS.file WHERE PATH = :path", 
@@ -609,7 +623,7 @@
 
     - 查询数量时，首先把符合要求的信息都储存到一个向量中，而后计算向量的长度，即为所需数量。
 
-      ```
+      ```rust
       let mut i: i32 = 0;
       for _f in selected_fragments.unwrap() {
           i = i+1;
@@ -625,7 +639,7 @@
 
     - ClientThread 接收从客户端发回的报文，根据报文调用相应的函数处理。可以进行发送、接收、查询、删除、记录碎片操作。报文第一位是操作命令，后几位是命令参数。
 
-      ```
+      ```rust
           status = match command[0] {
               "1" => self.recv_required_fragment(),
               "2" => self.send_fragment(),
@@ -671,7 +685,7 @@
 
         原 Java 文件中变量 RequestItems 类型为一个功能封装好的链表。由于 Rust 对引用和指针的限制，用安全的 Rust 实现链表比较麻烦；而且 RequestItems 的结点类型是由四个 i32 (int) 字段组成的结构体，数据复制的代价很小，不必移动数据，因此也不必使用链表；最终改用数组实现。
 
-        ```
+        ```rust
         let mut request_items: Vec<RequestItem> = Vec::new();
             for i in 0..noa {
                 ...
@@ -728,7 +742,7 @@
 
   - main：利用actix-web框架的语法，开启端口 [http://localhost:8080](http://localhost:8080) 进行监听，并匹配前端发出的每个http请求的url，以对不同的前端操作做出不同的响应。
 
-    ```
+    ```rust
     #[post("/DownloadReg")]
     async fn downloadreg(params: web::Json<FileDownloader_param>) -> web::Json<Return_string> {
         println!("path: {0} ,name:{1}",params.path,params.name);
@@ -742,7 +756,7 @@
 
     需要注意的是，前后端数据传输均采用的是Json格式，那么在Rust中，则需要web::Json来将某个rust类型数据Json格式化，且T这个类型需要有Serialize, Deserialize两个traits。针对需要在前后端传输的数据，需要自定义结构体，并由rust自动生成两个traits
 
-    ```
+    ```rust
     #[derive(Serialize, Deserialize)]//添加下载请求时的数据格式
     pub struct FileDownloader_param {
       path: String,
@@ -819,25 +833,7 @@
 
 ### 7.1前端设想
 
-目前我们使用的是原项目的前端 Java 代码，它上传下载的一些功能还不完善。我们计划使用 Rust 重新编写前端，完善功能、并在网页端应用 WebAssembly 。
-
-- Rust 前端架构选择：
-
-  - Yew
-
-    Yew 是受 Elm 和 React 启发的 Rust 前端框架，主要目的是使用 WebAssembly 来创建多线程的前端 web 应用。它与 JavaScript 有良好的互操作性。
-
-  - Seed
-
-    Seed 是采用类似 elm 结构的 Rust 前端框架，同样在网页前端结合应用 Rust 和 WebAssembly 。极少地需要额外费用、配置和样板文件。
-
-  - Ruukh
-
-    一个实验性的 Rust web 前端框架，用于完全使用 Rust 编写 web 应用。
-
-    Ruukh 目前处于开发和试验中，非常不稳定。
-
-  考虑到我们 Rust 全栈开发的目标和对项目稳定性的需求，我们决定选择 Seed 。
+目前我们使用的是原项目的前端 Java 代码，它上传下载的一些功能还不完善。由于时间关系，我们计划在大作业结束后使用 Rust 重新编写前端，完善功能、并在网页端应用 WebAssembly 。
 
 - Seed 简介
 
@@ -904,11 +900,13 @@
 
 ## 八. 参考文献
 
+[Rust docs](https://www.rust-lang.org/)
+
+[Rust锁机制](https://www.jianshu.com/p/64d75041b8c0)
+
 [Yew 中文文档](https://yew.rs/docs/v/zh_cn/)
 
 [Ruukh 仓库](https://github.com/pepsighan/ruukh)
-
-[about Seed](https://seed-rs.org/)
 
 [Rust工具简介及环境优化](https://blog.csdn.net/mr_black_man/article/details/102939816)
 
@@ -925,8 +923,6 @@
 [Rust Web框架列表](https://www.jdon.com/50236)
 
 [Actix Document](https://actix.rs/docs/)
-
-[yew](https://github.com/yewstack/yew)
 
 [actix-web](https://github.com/actix/actix-web)
 
