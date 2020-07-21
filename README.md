@@ -30,43 +30,43 @@
 │  ├─client</br>
 │  │  │  Cargo.toml</br>
 │  │  └─src</br>
-│  │      └─client
-│  │          ├─client
-│  │          ├─com
-│  │          ├─connect
-│  │          └─fileDetector
-│  ├─server
-│  │  │  Cargo.toml
-│  │  └─src
-│  │      └─server
-│  │          ├─controlConnect
-│  │          ├─database
-│  │          └─dataConnect
-│  └─web工程
-│      ├─backend
-│      │  │  Cargo.toml
-│      │  └─src
-│      │      ├─com
-│      │      ├─database
-│      │      └─userManagement
-│      ├─frontend
-│      └─seed-frontend
-│
-├─discussion
-│
-├─docs
-│  │  中期报告.pptx
-│  │  可行性报告.md
-│  │  可行性报告.pdf
-│  │  详细设计报告.md
-│  │  调研报告.md
-│  │  调研报告.pdf
-│  └─部署说明文档.md
-│
-└─temp
-    │  17级项目框架整理.md
-    │  思维导图.png
-    ├─records
-    ├─web端调研
-    ├─中期报告整理
-    └─可行性调研
+│  │      └─client</br>
+│  │          ├─client</br>
+│  │          ├─com</br>
+│  │          ├─connect</br>
+│  │          └─fileDetector</br>
+│  ├─server</br>
+│  │  │  Cargo.toml</br>
+│  │  └─src</br>
+│  │      └─server</br>
+│  │          ├─controlConnect</br>
+│  │          ├─database</br>
+│  │          └─dataConnect</br>
+│  └─web工程</br>
+│      ├─backend</br>
+│      │  │  Cargo.toml</br>
+│      │  └─src</br>
+│      │      ├─com</br>
+│      │      ├─database</br>
+│      │      └─userManagement</br>
+│      ├─frontend</br>
+│      └─seed-frontend</br>
+│</br>
+├─discussion</br>
+│</br>
+├─docs</br>
+│  │  中期报告.pptx</br>
+│  │  可行性报告.md</br>
+│  │  可行性报告.pdf</br>
+│  │  详细设计报告.md</br>
+│  │  调研报告.md</br>
+│  │  调研报告.pdf</br>
+│  └─部署说明文档.md</br>
+│</br>
+└─temp</br>
+    │  17级项目框架整理.md</br>
+    │  思维导图.png</br>
+    ├─records</br>
+    ├─web端调研</br>
+    ├─中期报告整理</br>
+    └─可行性调研</br>
